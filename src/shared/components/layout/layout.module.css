@@ -1,0 +1,121 @@
+/* ============================================
+   Layout – From Figma
+   ============================================ */
+
+.layoutWrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  direction: rtl;
+  font-family: 'Cairo', sans-serif;
+}
+
+.mainArea {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #F9FAFB;
+}
+
+/* ---------- Header ---------- */
+.header {
+    height: 80px;
+    background: #ffffff;
+    border-bottom: 1px solid #E8E8E8;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    direction: rtl;
+}
+
+.headerContent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.headerRight {
+    display: flex;
+    flex-direction: column;
+}
+
+.headerPageTitle {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+    line-height: 32px;
+}
+
+.headerPageSubtitle {
+    font-size: 14px;
+    font-weight: 400;
+    color: #888;
+    margin: 0;
+    line-height: 24px;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.userAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #1B4B8F;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.userInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.userName {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a2e;
+    line-height: 24px;
+}
+
+.userRole {
+    font-size: 13px;
+    font-weight: 400;
+    color: #888;
+    line-height: 20px;
+}
+
+.notificationBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #E8E8E8;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    color: #555;
+}
+
+.notificationBtn:hover {
+    background: #f5f8ff;
+    color: #1B4B8F;
+}
+
+/* ---------- Content ---------- */
+.pageContent {
+    flex: 1;
+    padding: 14px 24px 24px;
+}

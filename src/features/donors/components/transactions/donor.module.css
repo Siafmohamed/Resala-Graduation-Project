@@ -1,0 +1,13 @@
+.donorFiltersContainer {
+  display: flex;
+  width: 1136px;
+  height: 120px;
+  padding: 24px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 1px solid #E0E7EE;
+  background: #FFF;
+}

@@ -1,0 +1,348 @@
+/* ============================================
+   Auth Pages – Pixel-perfect from Figma
+   ============================================ */
+
+/* ---------- Page wrapper ---------- */
+.authPage {
+    min-height: 100vh;
+    width: 100%;
+    background-color: ;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Cairo', sans-serif;
+    direction: rtl;
+}
+
+/* ---------- Logo header ---------- */
+.logoHeader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 68px;
+    margin-bottom: 40px;
+}
+
+.logoImage {
+    width: 225px;
+    height: auto;
+    margin-bottom: 0;
+}
+
+.logoTitle {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0;
+    line-height: 28px;
+}
+
+.logoSubtitle {
+    font-size: 12px;
+    font-weight: 400;
+    color: #888;
+    margin: 4px 0 0;
+    line-height: 16px;
+}
+
+/* ---------- Form card ---------- */
+.formCard {
+    width: 744px;
+    max-width: calc(100% - 32px);
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+    padding: 44px 32px 44px;
+}
+
+.formTitle {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1B4B8F;
+    margin: 0 0 10px;
+    line-height: 36px;
+}
+
+.formSubtitle {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 400;
+    color: #888;
+    margin: 0 0 34px;
+    line-height: 24px;
+}
+
+/* ---------- Form fields ---------- */
+.formGroup {
+    margin-bottom: 24px;
+}
+
+.formLabel {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+    text-align: right;
+    line-height: 24px;
+}
+
+.inputWrapper {
+    position: relative;
+    width: 100%;
+}
+
+.formInput {
+    width: 100%;
+    height: 50px;
+    border: 1px solid #D9D9D9;
+    border-radius: 10px;
+    padding: 0 16px;
+    font-size: 15px;
+    font-family: 'Cairo', sans-serif;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.2s ease;
+    direction: rtl;
+    text-align: right;
+}
+
+.formInput::placeholder {
+    color: #B0B0B0;
+    font-size: 15px;
+}
+
+.formInput:focus {
+    border-color: #1B4B8F;
+    box-shadow: 0 0 0 3px rgba(27, 75, 143, 0.08);
+}
+
+.formInput.hasError {
+    border-color: #e74c3c;
+}
+
+.passwordToggle {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    outline: none;
+}
+
+.passwordToggle:hover {
+    color: #1B4B8F;
+}
+.loading {
+  text-align: center;
+  padding: 10px;
+  margin-bottom: 10px;
+  color: #1B4B8F;
+  font-weight: 600;
+}
+/* ---------- Submit button ---------- */
+.submitBtn {
+    width: 100%;
+    height: 56px;
+    background: #1B4B8F;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    margin-top: 24px;
+    line-height: 24px;
+}
+
+.submitBtn:hover {
+    background: #153d75;
+}
+
+.submitBtn:active {
+    transform: scale(0.99);
+}
+
+.submitBtn:disabled {
+    background: #8fadd4;
+    cursor: not-allowed;
+}
+
+/* ---------- Links ---------- */
+.forgotLink {
+    display: block;
+    text-align: center;
+    margin-top: 18px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #1B4B8F;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 24px;
+}
+
+.forgotLink:hover {
+    text-decoration: underline;
+    color: #153d75;
+}
+
+.backLink {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 18px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #888;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.backLink:hover {
+    color: #1B4B8F;
+}
+
+/* ---------- Error message ---------- */
+.errorMessage {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    text-align: right;
+}
+
+.successMessage {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    text-align: right;
+}
+
+.fieldError {
+    color: #dc2626;
+    font-size: 13px;
+    margin-top: 4px;
+    text-align: right;
+}
+
+/* ---------- OTP specific ---------- */
+.otpContainer {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    direction: ltr;
+    margin-bottom: 24px;
+}
+
+.otpInput {
+    width: 56px;
+    height: 56px;
+    border: 2px solid #D9D9D9;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    font-family: 'Cairo', sans-serif;
+    color: #1a1a2e;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background: #fff;
+}
+
+.otpInput:focus {
+    border-color: #1B4B8F;
+    box-shadow: 0 0 0 3px rgba(27, 75, 143, 0.12);
+}
+
+.otpInput.filled {
+    border-color: #1B4B8F;
+    background: #f0f4ff;
+}
+
+.resendRow {
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.resendText {
+    font-size: 14px;
+    color: #888;
+}
+
+.inputWrapper {
+  position: relative;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.resendBtn {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1B4B8F;
+    font-family: 'Cairo', sans-serif;
+    cursor: pointer;
+    margin-right: 4px;
+}
+
+.resendBtn:hover {
+    text-decoration: underline;
+}
+
+.resendBtn:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 800px) {
+    .formCard {
+        width: 100%;
+        border-radius: 12px;
+        padding: 32px 20px;
+    }
+
+    .logoHeader {
+        padding-top: 40px;
+    }
+
+    .logoImage {
+        width: 180px;
+    }
+
+    .otpInput {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+}
