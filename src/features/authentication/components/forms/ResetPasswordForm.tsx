@@ -105,7 +105,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
       <button
         type="submit"
         className={styles.submitBtn}
-        disabled={isLoading}
+        disabled={isLoading || !!successMessage}
       >
         {isLoading ? 'جاري تغيير كلمة المرور...' : 'تغيير كلمة المرور'}
       </button>

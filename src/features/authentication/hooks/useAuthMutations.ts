@@ -1,27 +1,87 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'react-toastify';
 import { authService, extractApiError } from '../services/authService';
-import { useAuthStore } from '../store/authSlice';
 import type {
     AuthResponse,
     LoginCredentials,
-    RegisterCredentials,
     ForgotPasswordPayload,
-    OTPPayload,
+    ForgotPasswordResponse,
+    RegisterCredentials,
     ResetPasswordPayload,
+    ResendOTPPayload,
+    ResendOTPResponse,
+    StaffCreatePayload,
+    StaffCreateResponse,
     ApiError,
 } from '../types/auth.types';
 
 // ── Login ────────────────────────────────────────────────
 export function useLoginMutation() {
-    const setAuth = useAuthStore((s) => s.setAuth);
-
     return useMutation<AuthResponse, ApiError, LoginCredentials>({
         mutationFn: authService.login,
-        onSuccess: ({ user, accessToken }) => {
-            setAuth(user, accessToken);
+        onSuccess: (data) => {
+            if (data.succeeded) {
+                toast.success('تم تسجيل الدخول بنجاح');
+            }
         },
         onError: (error) => {
-            // error is already typed as ApiError via throwOnError: false (default)
+            const apiError = extractApiError(error);
+            toast.error(apiError.message || 'فشل تسجيل الدخول');
+            return apiError;
+        },
+    });
+}
+
+// ── Forgot Password ──────────────────────────────────────
+export function useForgotPasswordMutation() {
+    return useMutation<ForgotPasswordResponse, ApiError, ForgotPasswordPayload>({
+        mutationFn: authService.forgotPassword,
+        onSuccess: (data) => {
+            if (data.succeeded) {
+                toast.info('تم إرسال رمز التحقق إلى بريدك الإلكتروني');
+            }
+        },
+        onError: (error) => {
+            const apiError = extractApiError(error);
+            toast.error(apiError.message || 'حدث خطأ أثناء طلب استعادة كلمة المرور');
+            return apiError;
+        },
+    });
+}
+
+// ── Resend OTP ───────────────────────────────────────────
+export function useResendOTPMutation() {
+    return useMutation<ResendOTPResponse, ApiError, ResendOTPPayload>({
+        mutationFn: authService.resendOTP,
+        onError: (error) => {
+            return extractApiError(error);
+        },
+    });
+}
+
+// ── Reset Password ───────────────────────────────────────
+export function useResetPasswordMutation() {
+    return useMutation<{
+        succeeded: boolean;
+        message: string;
+        data: null;
+    }, ApiError, ResetPasswordPayload>({
+        mutationFn: authService.resetPassword,
+        onError: (error) => {
+            return extractApiError(error);
+        },
+    });
+}
+
+// ── Verify OTP ───────────────────────────────────────────
+export function useVerifyOTPMutation() {
+    return useMutation<{
+        succeeded: boolean;
+        message: string;
+        data: null;
+    }, ApiError, { otp: string; email: string; otpType: 'EmailVerification' | 'PasswordReset' }>({
+        mutationFn: ({ otp, email, otpType }) => authService.verifyOTP(otp, email, otpType),
+        onError: (error) => {
             return extractApiError(error);
         },
     });
@@ -29,69 +89,24 @@ export function useLoginMutation() {
 
 // ── Register ─────────────────────────────────────────────
 export function useRegisterMutation() {
-    const setAuth = useAuthStore((s) => s.setAuth);
-
-    return useMutation<AuthResponse, ApiError, RegisterCredentials>({
+    return useMutation<{
+        succeeded: boolean;
+        message: string;
+        data: null;
+    }, ApiError, RegisterCredentials>({
         mutationFn: authService.register,
-        onSuccess: ({ user, accessToken }) => {
-            setAuth(user, accessToken);
-        },
         onError: (error) => {
             return extractApiError(error);
         },
     });
 }
 
-// ── Logout ───────────────────────────────────────────────
-export function useLogoutMutation() {
-    const clearAuth = useAuthStore((s) => s.clearAuth);
-    const queryClient = useQueryClient();
-
-    return useMutation<void, ApiError, void>({
-        mutationFn: authService.logout,
-        onSettled: () => {
-            // Always clear auth state regardless of success/fail
-            clearAuth();
-            queryClient.clear();
-        },
-    });
-}
-
-// ── Forgot Password ─────────────────────────────────────
-export function useForgotPasswordMutation() {
-    return useMutation<{ message: string }, ApiError, ForgotPasswordPayload>({
-        mutationFn: authService.forgotPassword,
-    });
-}
-
-// ── Verify OTP ───────────────────────────────────────────
-export function useVerifyOTPMutation() {
-    return useMutation<
-        { message: string; resetToken?: string },
-        ApiError,
-        OTPPayload
-    >({
-        mutationFn: authService.verifyOTP,
-        onSuccess: (data) => {
-            if (data.resetToken) {
-                sessionStorage.setItem('reset_token', data.resetToken);
-            }
-        },
-    });
-}
-
-// ── Reset Password ───────────────────────────────────────
-export function useResetPasswordMutation() {
-    return useMutation<{ message: string }, ApiError, ResetPasswordPayload>({
-        mutationFn: async (data) => {
-            const resetToken = sessionStorage.getItem('reset_token');
-            if (!resetToken) {
-                throw new Error('Reset token missing');
-            }
-            return authService.resetPassword({ ...data, resetToken });
-        },
-        onSuccess: () => {
-            sessionStorage.removeItem('reset_token');
+// ── Create Staff ─────────────────────────────────────────
+export function useCreateStaffMutation() {
+    return useMutation<StaffCreateResponse, ApiError, StaffCreatePayload & { token: string }>({
+        mutationFn: ({ token, ...payload }) => authService.createStaff(payload, token),
+        onError: (error) => {
+            return extractApiError(error);
         },
     });
 }

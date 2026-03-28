@@ -198,15 +198,15 @@ export const donorService = {
         return {
             donors: paged,
             total,
-            page: pagination.page,
-            pageSize: pagination.pageSize,
         };
     },
 
-    /** Fetch single donor by ID */
-    async getDonorById(id: string): Promise<Donor | null> {
+    /** Fetch a single donor by ID */
+    async getDonorById(id: string): Promise<Donor> {
         await delay(300);
-        return donors.find((d) => d.id === id) ?? null;
+        const donor = donors.find((d) => d.id === id);
+        if (!donor) throw new Error('المتبرع غير موجود');
+        return donor;
     },
 
     /** Create a new donor */
@@ -216,12 +216,15 @@ export const donorService = {
         const newDonor: Donor = {
             id: String(Date.now()),
             name: data.name,
-            phone: data.phone,
-            sponsorshipType: data.sponsorshipType,
+            phone: data.phoneNumber,
+            email: data.email,
+            job: data.job,
+            landline: data.landline,
+            sponsorshipType: 'other', // Default since it's removed from form
             sponsorshipDuration: 'month',
             paymentStatus: 'paid',
             paymentMethod: 'branch',
-            amount: 500,
+            amount: 0,
             formDate: new Date().toISOString().split('T')[0],
             notes: data.notes,
             createdAt: new Date().toISOString(),
@@ -230,6 +233,23 @@ export const donorService = {
 
         donors = [newDonor, ...donors];
         return newDonor;
+    },
+
+    /** Request a payment for a donor */
+    async requestPayment(donorId: string, amount: number, method: 'branch' | 'vodafone_cash'): Promise<void> {
+        await delay(500);
+        const index = donors.findIndex((d) => d.id === donorId);
+        if (index === -1) throw new Error('المتبرع غير موجود');
+
+        // Logic to record payment request...
+        // For now, update the donor's status and amount
+        donors[index] = {
+            ...donors[index],
+            amount: amount,
+            paymentMethod: method === 'branch' ? 'branch' : 'vodafone_cash',
+            paymentStatus: 'paid', // Mark as paid for mock purposes
+            updatedAt: new Date().toISOString(),
+        };
     },
 
     /** Update an existing donor */

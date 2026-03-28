@@ -7,9 +7,19 @@ interface OTPFormProps {
     onSubmit: (otp: string) => void;
     isLoading?: boolean;
     otpLength?: number;
+    onResend?: () => Promise<void> | void;
+    resendLoading?: boolean;
+    isSuccess?: boolean;
 }
 
-const OTPForm: React.FC<OTPFormProps> = ({ onSubmit, isLoading = false, otpLength = 6 }) => {
+const OTPForm: React.FC<OTPFormProps> = ({
+    onSubmit,
+    isLoading = false,
+    otpLength = 6,
+    onResend,
+    resendLoading = false,
+    isSuccess = false,
+}) => {
     const [otp, setOtp] = useState<string[]>(Array(otpLength).fill(''));
     const [resendTimer, setResendTimer] = useState(0);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -55,7 +65,11 @@ const OTPForm: React.FC<OTPFormProps> = ({ onSubmit, isLoading = false, otpLengt
         }
     };
 
-    const handleResend = () => {
+    const handleResend = async () => {
+        if (onResend) {
+            await onResend();
+        }
+        // Start cooldown timer after API call
         setResendTimer(60);
         const interval = setInterval(() => {
             setResendTimer(prev => {
@@ -97,9 +111,13 @@ const OTPForm: React.FC<OTPFormProps> = ({ onSubmit, isLoading = false, otpLengt
                     type="button"
                     className={styles.resendBtn}
                     onClick={handleResend}
-                    disabled={resendTimer > 0}
+                    disabled={resendTimer > 0 || resendLoading}
                 >
-                    {resendTimer > 0 ? `إعادة الإرسال (${resendTimer})` : 'إعادة الإرسال'}
+                    {resendLoading
+                        ? 'جاري الإرسال...'
+                        : resendTimer > 0
+                            ? `إعادة الإرسال (${resendTimer})`
+                            : 'إعادة الإرسال'}
                 </button>
             </div>
 
@@ -107,7 +125,7 @@ const OTPForm: React.FC<OTPFormProps> = ({ onSubmit, isLoading = false, otpLengt
             <button
                 type="submit"
                 className={styles.submitBtn}
-                disabled={isLoading || !isComplete}
+                disabled={isLoading || !isComplete || isSuccess}
             >
                 {isLoading ? 'جاري التحقق...' : 'تأكيد'}
             </button>

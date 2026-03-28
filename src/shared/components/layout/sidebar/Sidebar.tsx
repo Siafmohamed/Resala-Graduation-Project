@@ -1,15 +1,10 @@
 import React from 'react';
-import SidebarHeader from './SidebarHeader';
 import SidebarNav from './SidebarNav';
-import SidebarFooter from './SidebarFooter';
-import styles from './sidebar.module.css';
 
 const Sidebar: React.FC = () => {
     return (
-        <aside className={styles.sidebar}>
-            <SidebarHeader />
+        <aside className="h-screen sticky top-0 border-l border-gray-100 bg-white">
             <SidebarNav />
-            <SidebarFooter />
         </aside>
     );
 };

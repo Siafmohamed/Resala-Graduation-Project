@@ -1,57 +1,68 @@
-import { LayoutDashboard, Users, UserPlus, FileText, CheckSquare, ClipboardList } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Users, 
+  UserPlus, 
+  FileText, 
+  CheckSquare, 
+  ClipboardList,
+  HandCoins,
+  Activity,
+  Bell,
+  Settings,
+  Package
+} from 'lucide-react';
 import { Role } from '@/features/authentication';
-import type { NavGroup } from './types';
+import type { NavConfig } from './types';
 
-export const receptionMenu: NavGroup[] = [
+export const receptionMenu: NavConfig = [
   {
-    id: 'reception-dashboard',
-    label: 'الاستقبال',
-    roles: [Role.RECEPTIONIST, Role.ADMIN],
+    id: 'dashboard',
+    label: 'لوحة الاستقبال',
+    path: '/reception-dashboard',
     icon: LayoutDashboard,
-    items: [
-      {
-        id: 'dashboard',
-        label: 'لوحة الاستقبال',
-        path: '/dashboard',
-        icon: LayoutDashboard,
-        roles: [Role.RECEPTIONIST, Role.ADMIN],
-      },
-      {
-        id: 'donors',
-        label: 'المتبرعين',
-        path: '/donors',
-        icon: Users,
-        roles: [Role.RECEPTIONIST, Role.ADMIN],
-      },
-      {
-        id: 'add-donor',
-        label: 'تسجيل متبرع جديد',
-        path: '/register-new-donor',
-        icon: UserPlus,
-        roles: [Role.RECEPTIONIST, Role.ADMIN],
-      },
-      {
-        id: 'donations',
-        label: 'تسجيل تبرع عيني',
-        path: '/donations',
-        icon: FileText,
-        roles: [Role.RECEPTIONIST, Role.ADMIN],
-      },
-      {
-        id: 'receipt-verification',
-        label: 'مراجعة التحويلات',
-        path: '/receipt-verification',
-        icon: CheckSquare,
-        roles: [Role.RECEPTIONIST, Role.ADMIN],
-      },
-      {
-        id: 'representative-orders',
-        label: 'طلبات المندوبين',
-        path: '/representative-orders',
-        icon: ClipboardList,
-        roles: [Role.RECEPTIONIST, Role.ADMIN],
-      },
-    ],
+    roles: [Role.RECEPTIONIST, Role.ADMIN],
+  },
+  {
+    id: 'donors',
+    label: 'المتبرعين',
+    path: '/donors',
+    icon: Users,
+    roles: [Role.RECEPTIONIST, Role.ADMIN],
+  },
+  {
+    id: 'add-donor',
+    label: 'إضافة متبرع',
+    path: '/register-new-donor',
+    icon: UserPlus,
+    roles: [Role.RECEPTIONIST, Role.ADMIN],
+  },
+  {
+    id: 'register-donation',
+    label: 'تسجيل تبرع عيني',
+    path: '/donations',
+    icon: FileText,
+    roles: [Role.RECEPTIONIST, Role.ADMIN],
+  },
+  {
+    id: 'in-kind-donations',
+    label: 'قائمة التبرعات العينية',
+    path: '/in-kind-donations',
+    icon: Package,
+    roles: [Role.RECEPTIONIST, Role.ADMIN],
+  },
+  {
+    id: 'notifications',
+    label: 'الإشعارات',
+    path: '/notifications',
+    icon: Bell,
+    roles: [Role.RECEPTIONIST, Role.ADMIN],
+  },
+  {
+    id: 'settings',
+    label: 'الإعدادات',
+    path: '/reception-settings',
+    icon: Settings,
+    roles: [Role.RECEPTIONIST, Role.ADMIN],
   },
 ];
 

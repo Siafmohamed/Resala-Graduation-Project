@@ -1,29 +1,46 @@
-import { BrowserRouter as Router } from 'react-router-dom';
-import { useInitializeAuth, useAuthLogoutListener } from './features/authentication';
+import { BrowserRouter as Router } from'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useAuthLogoutListener } from './features/authentication';
 import { ErrorBoundary } from './shared/components/feedback/ErrorBoundary';
 import AppRoutes from './routes/AppRoutes';
 import './App.css';
 
 /**
- * Runs auth initialization and session listeners once at app mount.
- * Must be inside QueryClientProvider (see main.tsx).
+ * Session logout listener for staff portal.
+ * Listens for session-expired events and clears auth state.
  */
 function AuthBootstrap({ children }: { children: React.ReactNode }) {
-  useInitializeAuth();
-  useAuthLogoutListener();
-  return <>{children}</>;
+useAuthLogoutListener();
+ return (
+   <>
+     {children}
+     <ToastContainer
+       position="top-right"
+       autoClose={3000}
+       hideProgressBar={false}
+       newestOnTop
+       closeOnClick
+       rtl={true}
+       pauseOnFocusLoss
+       draggable
+       pauseOnHover
+       theme="light"
+     />
+   </>
+ );
 }
 
 function App() {
-  return (
-    <ErrorBoundary>
-      <Router>
-        <AuthBootstrap>
-          <AppRoutes />
-        </AuthBootstrap>
-      </Router>
-    </ErrorBoundary>
-  );
+return (
+  <ErrorBoundary>
+    <Router>
+      <AuthBootstrap>
+        <AppRoutes />
+      </AuthBootstrap>
+    </Router>
+  </ErrorBoundary>
+);
 }
 
 export default App;

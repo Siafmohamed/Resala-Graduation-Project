@@ -7,8 +7,17 @@ import { Link } from 'react-router-dom';
 import styles from '../auth.module.css';
 
 const loginSchema = z.object({
-  username: z.string().min(1, { message: 'اسم المستخدم مطلوب' }),
-  password: z.string().min(6, { message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }),
+  username: z
+    .string()
+    .min(1, { message: 'اسم المستخدم مطلوب' })
+    .max(50, { message: 'اسم المستخدم يجب ألا يتجاوز 50 حرف' })
+    // Basic alphanumeric and common chars, reject HTML/Script tags
+    .refine((val) => !/<[^>]*>?/gm.test(val), { message: 'إدخال غير صالح يحتوي على رموز ممنوعة' }),
+  password: z
+    .string()
+    .min(8, { message: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' })
+    .max(128, { message: 'كلمة المرور تتجاوز الحد المسموح' })
+    .refine((val) => !/<[^>]*>?/gm.test(val), { message: 'إدخال غير صالح يحتوي على رموز ممنوعة' }),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -16,9 +25,10 @@ type LoginFormData = z.infer<typeof loginSchema>;
 interface LoginFormProps {
   onSubmit: (data: LoginFormData) => void;
   isLoading?: boolean;
+  error?: string | null;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading = false }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading = false, error }) => {
   const [showPassword, setShowPassword] = React.useState(false);
 
   const {
@@ -76,6 +86,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading = false }) =>
           <p className={styles.fieldError}>{errors.password.message}</p>
         )}
       </div>
+
+      {/* API Error Display */}
+      {error && (
+        <div className={styles.errorMessage}>
+          {error}
+        </div>
+      )}
 
       {/* Submit Button */}
       <button

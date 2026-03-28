@@ -28,6 +28,9 @@ export interface Donor {
     id: string;
     name: string;
     phone: string;
+    email?: string;
+    job?: string;
+    landline?: string;
     sponsorshipType: SponsorshipType;
     sponsorshipDuration: SponsorshipDuration;
     paymentStatus: PaymentStatus;
@@ -49,8 +52,11 @@ export interface Donor {
 
 export interface DonorFormData {
     name: string;
-    phone: string;
-    sponsorshipType: SponsorshipType;
+    phoneNumber: string;
+    email: string;
+    password?: string;
+    job: string;
+    landline: string;
     notes?: string;
 }
 

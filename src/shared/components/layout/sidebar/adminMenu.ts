@@ -1,66 +1,52 @@
-import { ShieldCheck, BarChart3, FileChartColumnIncreasing, Bell, Settings, Users } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Search,
+  HeartHandshake,
+  BarChart3, 
+  Settings, 
+  ClipboardList, 
+  UserPlus, 
+  PackagePlus, 
+  Bell,
+  Users
+} from "lucide-react";
 import { Role } from '@/features/authentication';
-import type { NavGroup } from './types';
+import type { NavConfig } from './types';
 
-export const adminMenu: NavGroup[] = [
+export const adminMenu: NavConfig = [
   {
-    id: 'admin-analytics',
-    label: 'تحليلات الإدارة',
+    id: "dashboard",
+    label: "لوحة التحكم",
+    path: "/admin-dashboard",
+    icon: LayoutDashboard,
     roles: [Role.ADMIN],
+  },
+  {
+    id: "findings",
+    label: "إدارة المكتشفات",
+    path: "/donors",
+    icon: Search,
+    roles: [Role.ADMIN],
+  },
+  {
+    id: "aids",
+    label: "إدارة المساعدات",
+    path: "/sponsorships",
+    icon: HeartHandshake,
+    roles: [Role.ADMIN],
+  },
+  {
+    id: "reports",
+    label: "التقارير والإحصائيات",
+    path: "/reports",
     icon: BarChart3,
-    items: [
-      {
-        id: 'admin-analytics-page',
-        label: 'لوحة التحليلات',
-        path: '/admin-analytics',
-        icon: BarChart3,
-        roles: [Role.ADMIN],
-      },
-      {
-        id: 'admin-reports',
-        label: 'تقارير الإدارة',
-        path: '/admin-reports',
-        icon: FileChartColumnIncreasing,
-        roles: [Role.ADMIN],
-      },
-    ],
+    roles: [Role.ADMIN],
   },
   {
-    id: 'accounts',
-    label: 'حسابات المستخدمين',
-    roles: [Role.ADMIN],
-    icon: Users,
-    items: [
-      {
-        id: 'account-management',
-        label: 'إدارة الحسابات والصلاحيات',
-        path: '/account-management',
-        icon: ShieldCheck,
-        roles: [Role.ADMIN],
-      },
-    ],
-  },
-  {
-    id: 'system',
-    label: 'النظام',
-    roles: [Role.ADMIN],
+    id: "settings",
+    label: "إعدادات النظام",
+    path: "/settings",
     icon: Settings,
-    items: [
-      {
-        id: 'notifications',
-        label: 'الإشعارات',
-        path: '/notifications',
-        icon: Bell,
-        roles: [Role.ADMIN],
-      },
-      {
-        id: 'settings',
-        label: 'إعدادات النظام',
-        path: '/settings',
-        icon: Settings,
-        roles: [Role.ADMIN],
-      },
-    ],
+    roles: [Role.ADMIN],
   },
 ];
-

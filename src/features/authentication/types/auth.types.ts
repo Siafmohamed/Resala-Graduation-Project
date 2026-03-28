@@ -2,22 +2,27 @@ import type { Role } from './role.types';
 
 export interface User {
   id: string;
-  email: string;
+  email?: string;
   username: string;
   fullName: string;
   role: Role;
-  isEmailVerified: boolean;
-  createdAt: string;
+  phoneNumber?: string;
+  createdAt?: string;
 }
 
 export interface AuthTokens {
   accessToken: string;
-  // NO refreshToken here — backend owns it via HttpOnly cookie
+  refreshToken: string;
+  role: 'Admin' | 'Reception' | 'Donor';
+  userId: number;
+  name: string;
+  phoneNumber: string;
 }
 
 export interface AuthResponse {
-  user: User;
-  accessToken: string; // ONLY access token returned in body
+  succeeded: boolean;
+  message: string;
+  data: AuthTokens;
 }
 
 export interface LoginCredentials {
@@ -25,35 +30,101 @@ export interface LoginCredentials {
   password: string;
 }
 
-export interface RegisterCredentials {
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  fullName: string;
-}
-
 export interface ForgotPasswordPayload {
   email: string;
+}
+
+export interface ForgotPasswordResponse {
+  succeeded: boolean;
+  message: string;
+  data: null;
+}
+
+export interface ResendOTPPayload {
+  email: string;
+  otpType: 'EmailVerification' | 'PasswordReset';
+}
+
+export interface ResendOTPResponse {
+  succeeded: boolean;
+  message: string;
+  data: string;
 }
 
 export interface OTPPayload {
   email: string;
   otp: string;
-  type: 'email-verification' | 'password-reset';
+  otpType: 'EmailVerification' | 'PasswordReset';
+}
+
+export interface RegisterCredentials {
+  fullName: string;
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
 }
 
 export interface ResetPasswordPayload {
+  email: string;
+  otp: string;
+  newPassword: string;
+}
+
+export interface StaffCreatePayload {
+  name: string;
+  username: string;
+  email?: string;
+  phoneNumber?: string;
   password: string;
-  confirmPassword: string;
-  // token injected from sessionStorage internally in service
+  staffType: 1 | 2; // 1 = Admin, 2 = Reception
+}
+
+export interface StaffCreateResponse {
+  succeeded: boolean;
+  message: string;
+  data: {
+    staffId: number;
+    username: string;
+  };
+  errors?: Record<string, string[]>;
 }
 
 export interface AuthState {
-  user: User | null;
-  accessToken: string | null; // MEMORY ONLY — never persisted
+  session: SessionData | null;
   isAuthenticated: boolean;
   isInitialized: boolean;
+}
+
+export interface SessionData {
+  accessToken: string;
+  refreshToken: string;
+  role: 'Admin' | 'Reception' | 'Donor';
+  userId: number;
+  name: string;
+  phoneNumber?: string;
+}
+
+export interface RefreshTokenResponse {
+  succeeded: boolean;
+  data: {
+    token: string;
+    refreshToken: string;
+  };
+}
+
+// For backwards compatibility in code that expects accessToken
+export interface RefreshedTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface LogoutResponse {
+  statusCode: number;
+  succeeded: boolean;
+  message: string;
+  errors?: string[];
+  data: string;
 }
 
 export interface ApiError {

@@ -1,8 +1,6 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  min-height: 100vh;
 }
 
 .logo {
@@ -39,4 +37,26 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Toastify Custom Styling */
+.Toastify__toast {
+  border-radius: 16px;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.Toastify__toast--success {
+  background: #E6F4EA;
+  color: #1E7E34;
+}
+
+.Toastify__toast--error {
+  background: #FDECEA;
+  color: #D32F2F;
+}
+
+.Toastify__toast-icon {
+  width: 20px;
 }

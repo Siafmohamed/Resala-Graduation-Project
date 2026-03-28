@@ -9,6 +9,21 @@ export interface Account {
   username: string;
   role: Role;
   status: AccountStatus;
-  lastLoginAt: string;
+  phoneNumber?: string;
+  createdAt?: string;
+  lastLoginAt?: string;
+}
+
+export interface CreateStaffPayload {
+  name: string;
+  username: string;
+  email?: string;
+  phoneNumber?: string;
+  password: string;
+  staffType: 1 | 2; // 1 = Admin, 2 = Reception
+}
+
+export interface UpdateStaffPayload extends Partial<Omit<CreateStaffPayload, 'password'>> {
+  status?: AccountStatus;
 }
 

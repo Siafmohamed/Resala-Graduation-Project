@@ -12,10 +12,9 @@ export interface NavItem {
 export interface NavGroup {
   id: string;
   label: string;
-  roles: Role[];
   icon?: LucideIcon;
+  roles: Role[];
   items: NavItem[];
 }
 
-export type NavConfig = NavGroup[];
-
+export type NavConfig = (NavItem | NavGroup)[];

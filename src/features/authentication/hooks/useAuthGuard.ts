@@ -3,7 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authSlice';
 import type { Role, Permission } from '../types/role.types';
 import { canAccess, hasPermission } from '../types/role.types';
-import type { User } from '../types/auth.types';
+import type { SessionData } from '../types/auth.types';
+
+// Helper to map API role to internal Role
+function mapApiRole(apiRole: string): Role | undefined {
+    switch (apiRole) {
+        case 'Admin': return 'ADMIN' as Role;
+        case 'Reception': return 'RECEPTIONIST' as Role;
+        case 'Donor': return 'DONOR' as Role;
+        default: return undefined;
+    }
+}
 
 // ── Core Guard ───────────────────────────────────────────
 interface AuthGuardOptions {
@@ -16,15 +26,15 @@ interface AuthGuardResult {
     isAuthenticated: boolean;
     isInitialized: boolean;
     isAuthorized: boolean;
-    user: User | null;
+    user: SessionData | null;
     userRole: Role | undefined;
 }
 
 export function useAuthGuard(options?: AuthGuardOptions): AuthGuardResult {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
     const isInitialized = useAuthStore((s) => s.isInitialized);
-    const user = useAuthStore((s) => s.user);
-    const userRole = user?.role;
+    const session = useAuthStore((s) => s.session);
+    const userRole = session?.role ? mapApiRole(session.role) : undefined;
 
     let isAuthorized = isAuthenticated;
 
@@ -44,14 +54,14 @@ export function useAuthGuard(options?: AuthGuardOptions): AuthGuardResult {
         isAuthenticated,
         isInitialized,
         isAuthorized,
-        user,
+        user: session,
         userRole,
     };
 }
 
 // ── Require Auth (redirect if not authenticated) ─────────
 interface RequireAuthResult {
-    user: User | null;
+    user: SessionData | null;
     isLoading: boolean;
     isAuthenticated: boolean;
 }

@@ -7,13 +7,13 @@ import { ArrowRight } from 'lucide-react';
 import styles from '../auth.module.css';
 
 const forgotPasswordSchema = z.object({
-  email: z.string().min(1, { message: 'البريد الإلكتروني أو رقم الهاتف مطلوب' }),
+  email: z.string().email('البريد الإلكتروني غير صحيح'),
 });
 
 type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
 interface ForgotPasswordFormProps {
-  onSubmit: (data: ForgotPasswordFormData) => void;
+  onSubmit: (data: { email: string }) => void;
   isLoading?: boolean;
   successMessage?: string;
 }
@@ -29,27 +29,36 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
     formState: { errors },
   } = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: '',
+    },
   });
 
+  const handleFormSubmit = (data: ForgotPasswordFormData) => {
+    onSubmit({
+      email: data.email,
+    });
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(handleFormSubmit)}>
       {successMessage && (
         <div className={styles.successMessage}>
           {successMessage}
         </div>
       )}
 
-      {/* Email / Phone Field */}
+      {/* Email Field */}
       <div className={styles.formGroup}>
         <label htmlFor="email" className={styles.formLabel}>
-          البريد الإلكتروني أو رقم الهاتف
+          البريد الإلكتروني
         </label>
         <div className={styles.inputWrapper}>
           <input
             id="email"
-            type="text"
+            type="email"
             className={`${styles.formInput} ${errors.email ? styles.hasError : ''}`}
-            placeholder="أدخل البريد الإلكتروني أو رقم الهاتف"
+            placeholder="أدخل البريد الإلكتروني"
             {...register('email')}
           />
         </div>
@@ -62,7 +71,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
       <button
         type="submit"
         className={styles.submitBtn}
-        disabled={isLoading}
+        disabled={isLoading || !!successMessage}
       >
         {isLoading ? 'جاري الإرسال...' : 'إرسال رمز التحقق'}
       </button>

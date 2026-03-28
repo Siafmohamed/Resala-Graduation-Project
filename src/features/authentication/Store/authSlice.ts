@@ -1,85 +1,111 @@
 import { create } from 'zustand';
-import { tokenManager } from '../utils/tokenManager';
-import type { User } from '../types/auth.types';
-import type { Role, Permission } from '../types/role.types';
+import type { SessionData } from '../types/auth.types';
+import { Role, type Permission } from '../types/role.types';
 import { hasPermission, canAccess } from '../types/role.types';
+import { tokenManager } from '../utils/tokenManager';
 
 interface AuthStoreState {
-    user: User | null;
-    accessToken: string | null;
-    isAuthenticated: boolean;
-    isInitialized: boolean;
+  session: SessionData | null;
+  isAuthenticated: boolean;
+  isInitialized: boolean;
 }
 
 interface AuthStoreActions {
-    setAuth: (user: User, accessToken: string) => void;
-    setAccessToken: (token: string) => void;
-    clearAuth: () => void;
-    setInitialized: (value: boolean) => void;
+  setAuth: (session: SessionData) => void;
+  clearAuth: () => void;
+  setInitialized: (value: boolean) => void;
 }
 
 type AuthStore = AuthStoreState & AuthStoreActions;
 
+/** Maps the API role string to internal Role constant */
+function mapApiRole(apiRole: string): Role | undefined {
+  switch (apiRole) {
+    case 'Admin': return Role.ADMIN;
+    case 'Reception': return Role.RECEPTIONIST;
+    case 'FormManager':
+    case 'Form_Manager':
+    case 'FORM_MANAGER': return Role.FORM_MANAGER;
+    case 'Donor': return Role.DONOR;
+    default: return undefined;
+  }
+}
+
+// ── Hydrate from localStorage on store creation ──────────
+function getInitialState(): Pick<AuthStoreState, 'session' | 'isAuthenticated'> {
+  if (tokenManager.hasStoredSession()) {
+    const stored = tokenManager.getSessionData<SessionData>();
+    if (stored) {
+      return { session: stored, isAuthenticated: true };
+    }
+  }
+  return { session: null, isAuthenticated: false };
+}
+
+const initialState = getInitialState();
+
 export const useAuthStore = create<AuthStore>((set) => ({
-    // ── State ──────────────────────────────────────────────
-    user: null,
-    accessToken: null,
-    isAuthenticated: true,
-    isInitialized: true,
+  // ── State ──────────────────────────────────────────────
+  session: initialState.session,
+  isAuthenticated: initialState.isAuthenticated,
+  isInitialized: true, // Will be set to true after session validation
 
-    // ── Actions ────────────────────────────────────────────
-    setAuth: (user: User, accessToken: string) => {
-        tokenManager.setAccessToken(accessToken);
-        set({
-            user,
-            accessToken,
-            isAuthenticated: true,
-        });
-    },
+  // ── Actions ────────────────────────────────────────────
+  setAuth: (session: SessionData) => {
+    // Persist only non-sensitive session data to localStorage
+    // Tokens are now in HTTP-only cookies
+    tokenManager.setSessionData(session);
+    set({
+      session,
+      isAuthenticated: true,
+    });
+  },
 
-    setAccessToken: (token: string) => {
-        tokenManager.setAccessToken(token);
-        set({ accessToken: token });
-    },
+  clearAuth: () => {
+    // Clear stored tokens and session
+    tokenManager.clearTokens();
+    set({
+      session: null,
+      isAuthenticated: false,
+    });
+  },
 
-    clearAuth: () => {
-        tokenManager.clearAccessToken();
-        set({
-            user: null,
-            accessToken: null,
-            isAuthenticated: false,
-        });
-    },
-
-    setInitialized: (value: boolean) => {
-        set({ isInitialized: value });
-    },
+  setInitialized: (value: boolean) => {
+    set({ isInitialized: value });
+  },
 }));
 
 // ── Selectors (standalone hooks) ───────────────────────────
-export const useCurrentUser = (): User | null =>
-    useAuthStore((state) => state.user);
+export const useCurrentUser = () =>
+  useAuthStore((state) => state.session);
 
 export const useIsAuthenticated = (): boolean =>
-    useAuthStore((state) => state.isAuthenticated);
+  useAuthStore((state) => state.isAuthenticated);
 
 export const useIsInitialized = (): boolean =>
-    useAuthStore((state) => state.isInitialized);
+  useAuthStore((state) => state.isInitialized);
 
 export const useAccessToken = (): string | null =>
-    useAuthStore((state) => state.accessToken);
+  useAuthStore((state) => state.session?.accessToken ?? null);
 
-export const useUserRole = (): Role | undefined =>
-    useAuthStore((state) => state.user?.role);
+export const useUserRole = (): Role | undefined => {
+  const roleStr = useAuthStore((state) => state.session?.role);
+  if (!roleStr) return undefined;
+  return mapApiRole(roleStr);
+};
 
 export const useHasPermission = (permission: Permission): boolean => {
-    const role = useAuthStore((state) => state.user?.role);
-    if (!role) return false;
-    return hasPermission(role, permission);
+  const roleStr = useAuthStore((state) => state.session?.role);
+  if (!roleStr) return false;
+  const typedRole = mapApiRole(roleStr);
+  if (!typedRole) return false;
+  return hasPermission(typedRole, permission);
 };
 
 export const useCanAccess = (requiredRole: Role): boolean => {
-    const role = useAuthStore((state) => state.user?.role);
-    if (!role) return false;
-    return canAccess(role, requiredRole);
+  const roleStr = useAuthStore((state) => state.session?.role);
+  if (!roleStr) return false;
+  const typedRole = mapApiRole(roleStr);
+  if (!typedRole) return false;
+  return canAccess(typedRole, requiredRole);
 };
