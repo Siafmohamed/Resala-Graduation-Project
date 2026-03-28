@@ -13,7 +13,6 @@ import { useAuthStore } from '../../index';
 export function ReceptionSettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
   const session = useAuthStore((s: any) => s.session);
-  const clearAuth = useAuthStore((s: any) => s.clearAuth);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSaveProfile = async (e: React.FormEvent) => {

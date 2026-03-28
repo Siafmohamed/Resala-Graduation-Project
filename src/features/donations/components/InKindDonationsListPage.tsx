@@ -15,8 +15,8 @@ import { Card, CardContent } from '@/shared/components/ui/Card';
 import { Button } from '@/shared/components/ui/Button';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { useUserRole } from '@/features/authentication/store/authSlice';
-import { Role } from '@/features/authentication/types/role.types';
+import { useUserRole, Role } from '@/features/authentication';
+import { type Permission } from '@/features/authentication/types/role.types';
 
 export function InKindDonationsListPage() {
   const navigate = useNavigate();

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useLoginMutation, useAuthStore, type SessionData } from '../../index';
+import { useLoginMutation, useAuthStore } from '../../index';
 import { PublicRoute } from '../PublicRoute';
 import LoginForm from '../forms/LoginForm';
 import styles from '../auth.module.css';
