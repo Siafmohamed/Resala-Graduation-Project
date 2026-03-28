@@ -3,10 +3,6 @@ import {
   Users, 
   UserPlus, 
   FileText, 
-  CheckSquare, 
-  ClipboardList,
-  HandCoins,
-  Activity,
   Bell,
   Settings,
   Package

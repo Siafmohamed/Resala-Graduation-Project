@@ -5,6 +5,11 @@ import {
   useUpdateSponsorship,
   useDeleteSponsorship,
 } from "../hooks/useSponsorships";
+import type { 
+  CreateSponsorshipPayload, 
+  UpdateSponsorshipPayload, 
+  SponsorshipProgram 
+} from "../services/sponsorship.service";
 import { Card, CardContent } from "@/shared/components/ui/Card";
 import { 
   Plus, 

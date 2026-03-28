@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Heart, X, CheckCircle, ChevronRight, Gift, User } from 'lucide-react';
+import { Heart, CheckCircle, ChevronRight, Gift } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 import { DonorSearchBar } from './DonorSearchBar';
@@ -11,7 +11,6 @@ import { ErrorMessage } from '@/shared/components/feedback/ErrorMessage';
 import { useDonors } from '../hooks/useDonors';
 import { useDonorStore } from '../store/donorSlice';
 import { Card, CardContent } from '@/shared/components/ui/Card';
-import { SPONSORSHIP_TYPE_LABELS, type SponsorshipType } from '../types/donor.types';
 
 export function DonorsPage() {
   const { data, isLoading, isError, error, refetch } = useDonors();

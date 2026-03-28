@@ -1,14 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInKindDonations, useInKindDonationsByDonor, useDeleteInKindDonation } from '../hooks/useInKindDonations';
 import { DonorSearchSelect } from './DonorSearchSelect';
 import { 
   Gift, 
-  Search, 
   Calendar, 
   User, 
-  Package, 
-  ChevronLeft,
   X,
   Eye,
   Edit2,
@@ -18,13 +15,13 @@ import { Card, CardContent } from '@/shared/components/ui/Card';
 import { Button } from '@/shared/components/ui/Button';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { useAuthStore } from '@/features/authentication/store/authSlice';
+import { useUserRole } from '@/features/authentication/store/authSlice';
 import { Role } from '@/features/authentication/types/role.types';
 
 export function InKindDonationsListPage() {
   const navigate = useNavigate();
   const [selectedDonorId, setSelectedDonorId] = useState<string | null>(null);
-  const userRole = useAuthStore((s) => s.userRole);
+  const userRole = useUserRole();
   const deleteMutation = useDeleteInKindDonation();
   
   // Conditionally use the donor filter hook or the general hook

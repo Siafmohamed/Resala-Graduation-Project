@@ -1,10 +1,8 @@
-import React from 'react';
 import { 
   Users, 
   Wallet,
   Briefcase,
   TrendingUp,
-  TrendingDown,
 } from 'lucide-react';
 import {
   LineChart,
@@ -258,7 +256,7 @@ const AdminDashboard: React.FC = () => {
                   cy="50%"
                   outerRadius={120}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} %${(percent * 100).toFixed(0)}`}
+                  label={({ name, percent }: any) => `${name} %${((percent || 0) * 100).toFixed(0)}`}
                   labelLine={true}
                 >
                   {paymentData.map((entry, index) => (

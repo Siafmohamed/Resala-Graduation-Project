@@ -1,27 +1,18 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   Users, 
   HandCoins, 
-  Clock, 
   CheckCircle2, 
   Eye, 
-  Search, 
-  Filter,
   DollarSign,
   UserCheck,
   History,
   AlertCircle,
-  ArrowRight,
-  ChevronLeft,
   XCircle,
   CheckCircle,
-  Info,
   Calendar,
   CreditCard,
   Phone,
-  MapPin,
-  Download,
-  ExternalLink
 } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/Card';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -51,14 +42,14 @@ const recentActivities = [
 
 // ── Detail View Component ───────────────────────────────────────────────────
 
-const DonationDetails: React.FC<{ id: string, onBack: () => void }> = ({ id, onBack }) => {
+const DonationDetails: React.FC<{ id: string, onBack: () => void }> = ({ id }) => {
   const navigate = useNavigate();
   const donation = pendingDonations.find(d => d.id === Number(id)) || pendingDonations[0];
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleProcess = async (action: 'approve' | 'reject') => {
+  const handleProcess = async (_action: 'approve' | 'reject') => {
     setIsProcessing(true);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -387,8 +378,8 @@ const ReceptionDashboard: React.FC = () => {
                     <span className="font-[Cairo] font-bold text-sm text-[#495565] group-hover:text-[#101727] transition-colors">{act.text}</span>
                     <span className="font-[Cairo] text-[11px] text-[#94a3b8] font-medium">{act.time}</span>
                   </div>
-                  <div className="p-2.5 mr-4 rounded-full bg-white shadow-sm text-[#00549A]">
-                    <Clock size={18} strokeWidth={2} />
+                  <div className="p-2.5 mr-4 rounded-full bg-white shadow-sm" style={{ color: act.color }}>
+                    <act.icon size={18} strokeWidth={2} />
                   </div>
                 </div>
               ))}

@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { donorService } from '../services/donorService';
 import { useDonorStore } from '../store/donorSlice';
-import type { DonorsListResponse, Donor, DonorFormData } from '../types/donor.types';
+import type { DonorsListResponse, DonorFormData } from '../types/donor.types';
 import { toast } from 'react-toastify';
 
 // ... existing donorQueryKeys ...
@@ -48,7 +48,7 @@ export function useUpdateDonorMutation() {
       return { previousDonor };
     },
     
-    onError: (err, newDonor, context) => {
+    onError: (_err, newDonor, context) => {
       // Rollback to the previous value if mutation fails
       if (context?.previousDonor) {
         queryClient.setQueryData(donorQueryKeys.detail(newDonor.id), context.previousDonor);

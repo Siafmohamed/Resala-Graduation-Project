@@ -42,7 +42,7 @@ export const PAGE_METADATA: { [key: string]: { title: string; subtitle: string }
     title: 'تعديل التبرع',
     subtitle: 'تحديث بيانات التبرع العيني المسجل',
   },
-  '/donations': {
+  '/donations/detail': {
     title: 'تفاصيل التبرع',
     subtitle: 'عرض بيانات التبرع العيني بالتفصيل',
   },

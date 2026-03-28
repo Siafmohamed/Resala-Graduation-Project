@@ -1,6 +1,5 @@
 import { axiosInstance } from '@/features/authentication/utils/axiosInstance';
 import type { 
-  InKindDonation, 
   CreateInKindDonationPayload, 
   UpdateInKindDonationPayload,
   InKindDonationResponse,

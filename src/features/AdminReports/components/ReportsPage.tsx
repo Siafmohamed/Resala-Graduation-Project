@@ -1,4 +1,3 @@
-import React from 'react';
 import { 
   Users, 
   HandCoins, 
@@ -9,10 +8,8 @@ import {
   FileSpreadsheet,
   FileDown,
   ChevronDown,
-  Calendar,
   AlertCircle,
   TrendingUp as TrendingUpIcon,
-  Info
 } from 'lucide-react';
 import {
   LineChart,

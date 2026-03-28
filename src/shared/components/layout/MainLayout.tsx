@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { useCurrentUser, ROLE_LABELS_AR } from '@/features/authentication';
-import type { Role } from '@/features/authentication/types/role.types';
 import Sidebar from './sidebar/Sidebar';
 import Header from './Header';
 import { PAGE_METADATA } from './pageMetadata';

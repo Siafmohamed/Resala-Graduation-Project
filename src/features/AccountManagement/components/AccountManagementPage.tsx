@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { 
-  Plus, 
   Search, 
   Filter, 
-  MoreVertical, 
   Edit2, 
   Trash2, 
   UserPlus,
@@ -12,9 +10,9 @@ import {
   UserCog,
   ChevronDown
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/Card';
+import { Card, CardContent } from '@/shared/components/ui/Card';
 import { ROLE_LABELS_AR, Role } from '@/features/authentication';
-import { useAccounts, useDeleteStaff } from '../hooks/useAccounts';
+import { useAccounts } from '../hooks/useAccounts';
 import { useUserRole } from '@/features/authentication/store/authSlice';
 import type { Account } from '../types/accountManagement.types';
 import { StaffFormModal } from './StaffFormModal';
@@ -85,7 +83,7 @@ export function AccountManagementPage() {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-[#697282] font-[Cairo]">إجمالي المسؤولين</span>
-              <span className="text-xl font-bold text-[#101727] font-[Cairo]">{accounts.filter(a => a.role === 'Admin').length}</span>
+              <span className="text-xl font-bold text-[#101727] font-[Cairo]">{accounts.filter(a => a.role === Role.ADMIN).length}</span>
             </div>
           </CardContent>
         </Card>
@@ -96,7 +94,7 @@ export function AccountManagementPage() {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-[#697282] font-[Cairo]">إجمالي موظفي الاستقبال</span>
-              <span className="text-xl font-bold text-[#101727] font-[Cairo]">{accounts.filter(a => a.role === 'Reception').length}</span>
+              <span className="text-xl font-bold text-[#101727] font-[Cairo]">{accounts.filter(a => a.role === Role.RECEPTIONIST).length}</span>
             </div>
           </CardContent>
         </Card>
@@ -200,9 +198,9 @@ export function AccountManagementPage() {
                         <span className="text-sm text-[#495565] font-mono">{acc.username}</span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold font-[Cairo] ${
-                          acc.role === 'Admin' ? 'bg-purple-50 text-purple-700' : 
-                          acc.role === 'Reception' ? 'bg-blue-50 text-blue-700' : 'bg-gray-50 text-gray-700'
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold font-[Cairo] ${
+                          acc.role === Role.ADMIN ? 'bg-purple-50 text-purple-700' :
+                          acc.role === Role.RECEPTIONIST ? 'bg-blue-50 text-blue-700' : 'bg-gray-50 text-gray-700'
                         }`}>
                           {ROLE_LABELS_AR[acc.role as Role] || acc.role}
                         </span>

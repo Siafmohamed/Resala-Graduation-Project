@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { accountManagementService } from '../services/accountManagementService';
-import type { Account, CreateStaffPayload, UpdateStaffPayload } from '../types/accountManagement.types';
+import type { CreateStaffPayload, UpdateStaffPayload } from '../types/accountManagement.types';
 
 export function useAccounts() {
   return useQuery({

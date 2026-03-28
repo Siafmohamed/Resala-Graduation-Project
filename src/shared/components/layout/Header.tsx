@@ -1,6 +1,6 @@
 import React from "react";
 import { Bell } from "lucide-react";
-import { useAuthStore } from "@/features/authentication/store/authSlice";
+import { useAuthStore, useUserRole } from "@/features/authentication/store/authSlice";
 import { Role } from "@/features/authentication/types/role.types";
 
 interface HeaderProps {
@@ -15,7 +15,7 @@ const Header: React.FC<HeaderProps> = ({
   pageSubtitle = "",
 }) => {
   const session = useAuthStore((s) => s.session);
-  const userRole = useAuthStore((s) => s.userRole);
+  const userRole = useUserRole();
 
   return (
     <header className="flex w-full h-[100px] items-center bg-transparent px-10" dir="rtl">

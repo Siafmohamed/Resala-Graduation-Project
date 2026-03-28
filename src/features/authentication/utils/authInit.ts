@@ -1,5 +1,6 @@
 import { useAuthStore } from "../store/authSlice";
 import { tokenManager } from "../utils/tokenManager";
+import type { SessionData } from "../types/auth.types";
 
 export async function initializeAuth() {
   const setAuth = useAuthStore.getState().setAuth;

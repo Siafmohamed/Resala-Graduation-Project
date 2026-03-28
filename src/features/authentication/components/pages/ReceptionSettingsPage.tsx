@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   User, 
   Lock, 
-  Save, 
   ShieldCheck,
-  CheckCircle2,
-  AlertCircle
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/Card';
+import { Card, CardContent } from '@/shared/components/ui/Card';
 import { Input } from '@/shared/components/ui/Input';
 import { Button } from '@/shared/components/ui/Button';
 import { toast } from 'react-toastify';

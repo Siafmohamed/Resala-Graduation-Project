@@ -11,7 +11,7 @@ interface DonorSearchSelectProps {
 
 export function DonorSearchSelect({ onSelect, selectedDonorId, error }: DonorSearchSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { setFilters, filters } = useDonorStore();
+  const { setFilters } = useDonorStore();
   const { data, isLoading } = useDonors();
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -20,7 +20,7 @@ export function DonorSearchSelect({ onSelect, selectedDonorId, error }: DonorSea
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    setFilters({ ...filters, search: value });
+    setFilters({ search: value });
   };
 
   return (

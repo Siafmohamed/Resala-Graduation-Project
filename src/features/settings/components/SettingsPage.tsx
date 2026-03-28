@@ -1,15 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   Building2, 
   CreditCard, 
   MapPin, 
   ShieldCheck, 
   Save, 
-  Plus, 
   X,
-  Phone,
-  Mail,
-  Clock,
   CheckCircle2
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/Card';

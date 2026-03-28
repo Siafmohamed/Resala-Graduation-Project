@@ -2,24 +2,16 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { donorService } from '../services/donorService';
-import type { DonorFormData, SponsorshipType } from '../types/donor.types';
-import { SPONSORSHIP_TYPE_LABELS } from '../types/donor.types';
+import type { DonorFormData } from '../types/donor.types';
 import { isValidEgyptianPhone } from '@/shared/utils/validators/phoneValidator';
 import { 
   UserPlus, 
-  ChevronDown, 
   User, 
   Phone, 
   Mail, 
-  MapPin, 
-  Heart, 
   FileText 
 } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/Card';
-
-const SPONSORSHIP_OPTIONS = Object.entries(
-  SPONSORSHIP_TYPE_LABELS
-) as [SponsorshipType, string][];
 
 export function AddDonorForm() {
   const navigate = useNavigate();
@@ -27,8 +19,11 @@ export function AddDonorForm() {
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<DonorFormData>({
     name: '',
-    phone: '',
-    sponsorshipType: 'orphan',
+    phoneNumber: '',
+    email: '',
+    password: '',
+    job: '',
+    landline: '',
     notes: '',
   });
 
@@ -42,7 +37,7 @@ export function AddDonorForm() {
       return;
     }
 
-    const phoneCheck = isValidEgyptianPhone(form.phone);
+    const phoneCheck = isValidEgyptianPhone(form.phoneNumber);
     if (!phoneCheck.isValid) {
       setError(phoneCheck.error ?? 'رقم الهاتف غير صحيح');
       toast.error(phoneCheck.error ?? 'رقم الهاتف غير صحيح');
@@ -107,15 +102,15 @@ export function AddDonorForm() {
 
             {/* Phone Input */}
             <div className="flex flex-col gap-2.5">
-              <label htmlFor="phone" className="font-[Cairo] font-bold text-sm text-[#495565] flex items-center gap-2">
+              <label htmlFor="phoneNumber" className="font-[Cairo] font-bold text-sm text-[#495565] flex items-center gap-2">
                 <Phone size={16} className="text-[#94a3b8]" />
                 رقم الهاتف *
               </label>
               <input
-                id="phone"
+                id="phoneNumber"
                 type="tel"
-                value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                value={form.phoneNumber}
+                onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))}
                 placeholder="01XXXXXXXXX"
                 dir="ltr"
                 className="w-full px-6 py-4 rounded-2xl border border-[#F1F5F9] bg-[#F8FAFC] font-[Cairo] text-sm text-right focus:outline-none focus:ring-4 focus:ring-[#00549A]/5 focus:border-[#00549A] focus:bg-white transition-all"
@@ -123,47 +118,56 @@ export function AddDonorForm() {
               />
             </div>
 
-            {/* Sponsorship Select */}
-            <div className="flex flex-col gap-2.5">
-              <label htmlFor="sponsorshipType" className="font-[Cairo] font-bold text-sm text-[#495565] flex items-center gap-2">
-                <Heart size={16} className="text-[#94a3b8]" />
-                نوع الكفالة *
-              </label>
-              <div className="relative">
-                <select
-                  id="sponsorshipType"
-                  value={form.sponsorshipType}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      sponsorshipType: e.target.value as SponsorshipType,
-                    }))
-                  }
-                  className="w-full px-6 py-4 rounded-2xl border border-[#F1F5F9] bg-[#F8FAFC] font-[Cairo] text-sm text-right focus:outline-none focus:ring-4 focus:ring-[#00549A]/5 focus:border-[#00549A] focus:bg-white transition-all appearance-none cursor-pointer"
-                >
-                  <option value="" disabled>أختر نوع الكفالة</option>
-                  {SPONSORSHIP_OPTIONS.map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute left-6 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none" size={18} />
-              </div>
-            </div>
-
-            {/* Optional Email */}
+            {/* Email Input */}
             <div className="flex flex-col gap-2.5">
               <label htmlFor="email" className="font-[Cairo] font-bold text-sm text-[#495565] flex items-center gap-2">
                 <Mail size={16} className="text-[#94a3b8]" />
-                البريد الإلكتروني (اختياري)
+                البريد الإلكتروني *
               </label>
               <input
                 id="email"
                 type="email"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                 placeholder="example@mail.com"
                 dir="ltr"
                 className="w-full px-6 py-4 rounded-2xl border border-[#F1F5F9] bg-[#F8FAFC] font-[Cairo] text-sm text-right focus:outline-none focus:ring-4 focus:ring-[#00549A]/5 focus:border-[#00549A] focus:bg-white transition-all"
+                required
+              />
+            </div>
+
+            {/* Job Input */}
+            <div className="flex flex-col gap-2.5">
+              <label htmlFor="job" className="font-[Cairo] font-bold text-sm text-[#495565] flex items-center gap-2">
+                <User size={16} className="text-[#94a3b8]" />
+                الوظيفة *
+              </label>
+              <input
+                id="job"
+                type="text"
+                value={form.job}
+                onChange={(e) => setForm((f) => ({ ...f, job: e.target.value }))}
+                placeholder="أدخل الوظيفة"
+                className="w-full px-6 py-4 rounded-2xl border border-[#F1F5F9] bg-[#F8FAFC] font-[Cairo] text-sm text-right focus:outline-none focus:ring-4 focus:ring-[#00549A]/5 focus:border-[#00549A] focus:bg-white transition-all"
+                required
+              />
+            </div>
+
+            {/* Landline Input */}
+            <div className="flex flex-col gap-2.5">
+              <label htmlFor="landline" className="font-[Cairo] font-bold text-sm text-[#495565] flex items-center gap-2">
+                <Phone size={16} className="text-[#94a3b8]" />
+                التليفون الأرضي *
+              </label>
+              <input
+                id="landline"
+                type="tel"
+                value={form.landline}
+                onChange={(e) => setForm((f) => ({ ...f, landline: e.target.value }))}
+                placeholder="02XXXXXXXX"
+                dir="ltr"
+                className="w-full px-6 py-4 rounded-2xl border border-[#F1F5F9] bg-[#F8FAFC] font-[Cairo] text-sm text-right focus:outline-none focus:ring-4 focus:ring-[#00549A]/5 focus:border-[#00549A] focus:bg-white transition-all"
+                required
               />
             </div>
 

@@ -4,11 +4,6 @@ import {
   HeartHandshake,
   BarChart3, 
   Settings, 
-  ClipboardList, 
-  UserPlus, 
-  PackagePlus, 
-  Bell,
-  Users
 } from "lucide-react";
 import { Role } from '@/features/authentication';
 import type { NavConfig } from './types';

@@ -16,6 +16,7 @@ import type {
 interface DonorStore {
     // Filters
     filters: DonorFiltersState;
+    setFilters: (filters: Partial<DonorFiltersState>) => void;
     setSearch: (search: string) => void;
     setPaymentStatus: (status: PaymentStatus | 'all') => void;
     setSponsorshipType: (type: SponsorshipType | 'all') => void;
@@ -58,6 +59,11 @@ const DEFAULT_SORT: SortState = {
 export const useDonorStore = create<DonorStore>((set) => ({
     // ── Filters ──
     filters: DEFAULT_FILTERS,
+    setFilters: (filters) =>
+        set((state) => ({
+            filters: { ...state.filters, ...filters },
+            pagination: { ...state.pagination, page: 1 },
+        })),
     setSearch: (search) =>
         set((state) => ({
             filters: { ...state.filters, search },

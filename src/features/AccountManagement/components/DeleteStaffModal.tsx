@@ -1,5 +1,4 @@
-import React from 'react';
-import { X, Trash2, AlertCircle } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useDeleteStaff } from '../hooks/useAccounts';
 import type { Account } from '../types/accountManagement.types';
 

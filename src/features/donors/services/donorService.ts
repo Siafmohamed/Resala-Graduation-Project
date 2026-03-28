@@ -198,6 +198,8 @@ export const donorService = {
         return {
             donors: paged,
             total,
+            page: pagination.page,
+            pageSize: pagination.pageSize,
         };
     },
 

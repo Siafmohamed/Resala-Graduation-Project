@@ -5,7 +5,6 @@ import { toast } from 'react-toastify';
 import type { Donor } from '../types/donor.types';
 import {
   getSponsorshipTypeLabel,
-  getDurationLabel,
 } from '../utils/donorHelpers';
 import { DonorStatusBadge } from './DonorStatusBadge';
 import { donorService } from '../services/donorService';

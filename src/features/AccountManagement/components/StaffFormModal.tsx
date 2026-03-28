@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { X, User, Mail, Phone, Lock, Shield, ShieldCheck, UserCog, AlertCircle } from 'lucide-react';
 import { useCreateStaff, useUpdateStaff } from '../hooks/useAccounts';
 import { extractApiError } from '@/features/authentication/services/authService';
 import type { Account, CreateStaffPayload } from '../types/accountManagement.types';
+import { Role } from '@/features/authentication';
 
 interface StaffFormModalProps {
   isOpen: boolean;
@@ -39,7 +40,7 @@ export function StaffFormModal({ isOpen, onClose, staff }: StaffFormModalProps) 
         username: staff.username,
         email: staff.email,
         phoneNumber: staff.phoneNumber,
-        staffType: staff.role === 'Admin' ? 1 : 2,
+        staffType: staff.role === Role.ADMIN ? 1 : 2,
       });
     } else {
       reset({

@@ -1,4 +1,3 @@
-import React from "react";
 import {
   DollarSign,
   Users,
@@ -18,7 +17,6 @@ import {
   Cell,
   BarChart,
   Bar,
-  Legend,
 } from "recharts";
 import {
   Card,
@@ -88,36 +86,29 @@ const sponsorshipData = [
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const formatK = (v) => (v >= 1000 ? `${v / 1000}k` : v);
+const formatK = (v: number) => (v >= 1000 ? `${v / 1000}k` : String(v));
 
-const CustomLineTooltip = ({ active, payload, label }) => {
+const CustomLineTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2 shadow-sm text-sm font-[Cairo]">
-      <p className="text-[#495565] mb-0.5">{label}</p>
-      <p className="text-[#00549a] font-bold">{payload[0].value.toLocaleString()} ج.م</p>
+    <div className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2 shadow-sm text-sm font-[Cairo]" dir="rtl">
+      <p className="text-[#495565] mb-0.5 text-right">{label}</p>
+      <p className="text-[#00549a] font-bold text-right">{payload[0].value.toLocaleString("ar-EG")} ج.م</p>
     </div>
   );
 };
 
-const RADIAN = Math.PI / 180;
-const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-  const r = innerRadius + (outerRadius - innerRadius) * 0.55;
-  const x = cx + r * Math.cos(-midAngle * RADIAN);
-  const y = cy + r * Math.sin(-midAngle * RADIAN);
-  return percent > 0.08 ? (
-    <text
-      x={x} y={y}
-      fill="#fff"
-      textAnchor="middle"
-      dominantBaseline="central"
-      fontSize={13}
-      fontFamily="Cairo, sans-serif"
-      fontWeight="bold"
-    >
+const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  return (
+    <text x={x} y={y} fill="#00549a" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" className="font-bold text-[10px] font-[Cairo]">
       {`${(percent * 100).toFixed(0)}%`}
     </text>
-  ) : null;
+  );
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -191,7 +182,9 @@ export const MetricsDashboardSection = () => {
                 tickLine={false}
                 width={36}
               />
-              <Tooltip content={<CustomLineTooltip />} />
+              <Tooltip 
+                content={<CustomLineTooltip />} 
+              />
               <Line
                 type="monotone"
                 dataKey="amount"
@@ -237,7 +230,7 @@ export const MetricsDashboardSection = () => {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(v) => [v.toLocaleString("ar-EG"), ""]}
+                  formatter={(v: any) => [v?.toLocaleString("ar-EG") || "0", ""]}
                   contentStyle={{ fontFamily: "Cairo, sans-serif", fontSize: 13 }}
                 />
               </PieChart>
@@ -305,8 +298,9 @@ export const MetricsDashboardSection = () => {
                   width={32}
                 />
                 <Tooltip
-                  formatter={(v) => [v, "عدد الكفالات"]}
+                  formatter={(v: any) => [v || "0", "عدد الكفالات"]}
                   contentStyle={{ fontFamily: "Cairo, sans-serif", fontSize: 13 }}
+                  cursor={{ fill: "#f8fafc" }}
                 />
                 <Bar dataKey="count" fill="#00549a" radius={[6, 6, 0, 0]} />
               </BarChart>

@@ -69,7 +69,7 @@ const onSubmit = async (data: StaffFormData) => {
       if (response.errors) {
        const firstField = Object.keys(response.errors)[0];
        const firstMessage = response.errors[firstField]?.[0] || response.message;
-       setError(firstMessage);
+       setError(firstMessage || 'خطأ غير معروف');
       } else {
       setError(response.message || 'فشل إنشاء الحساب');
       }
@@ -93,7 +93,7 @@ const onSubmit = async (data: StaffFormData) => {
       if (responseData?.errors) {
        const firstField = Object.keys(responseData.errors)[0];
        const firstMessage = responseData.errors[firstField]?.[0] || responseData.message;
-       setError(firstMessage);
+       setError(firstMessage || 'خطأ غير معروف');
       } else {
       setError(responseData?.message || 'بيانات غير صحيحة');
       }
