@@ -5,9 +5,8 @@ import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { useQueryClient } from "@tanstack/react-query";
 import { getNavConfigForRole } from "./navigationConfig";
 import { authService } from "@/features/authentication/services/authService";
-import { useAuthStore, useUserRole } from "@/features/authentication/store/authSlice";
+import { useAuthStore, useUserRole, Role } from "@/features/authentication";
 import { ROLE_LABELS_AR } from "@/features/authentication/types/role.types";
-import { Role } from "@/features/authentication";
 import type { NavItem, NavGroup } from "./types";
 
 const RisalaLogo = () => (
@@ -50,7 +49,7 @@ export const SidebarNavigationSection = (): React.ReactElement => {
   const [activeItem, setActiveItem] = useState("dashboard");
   const [openGroups, setOpenGroups] = useState<string[]>([]);
   const navigate = useNavigate();
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const clearAuth = useAuthStore((s: any) => s.clearAuth);
   const userRole = useUserRole();
   const queryClient = useQueryClient();
 

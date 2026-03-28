@@ -11,9 +11,8 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/Card';
-import { ROLE_LABELS_AR, Role } from '@/features/authentication';
+import { ROLE_LABELS_AR, Role, useUserRole } from '@/features/authentication';
 import { useAccounts } from '../hooks/useAccounts';
-import { useUserRole } from '@/features/authentication/store/authSlice';
 import type { Account } from '../types/accountManagement.types';
 import { StaffFormModal } from './StaffFormModal';
 import { DeleteStaffModal } from './DeleteStaffModal';

@@ -1,5 +1,5 @@
 import React, { type ReactNode } from 'react';
-import { useHasPermission } from '../store/authSlice';
+import { useHasPermission } from '../index';
 import type { Permission } from '../types/role.types';
 
 interface ShowIfPermissionProps {

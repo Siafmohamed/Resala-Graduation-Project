@@ -8,11 +8,12 @@ import { Card, CardContent } from '@/shared/components/ui/Card';
 import { Input } from '@/shared/components/ui/Input';
 import { Button } from '@/shared/components/ui/Button';
 import { toast } from 'react-toastify';
-import { useAuthStore } from '@/features/authentication/store/authSlice';
+import { useAuthStore } from '../../index';
 
 export function ReceptionSettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
-  const session = useAuthStore((s) => s.session);
+  const session = useAuthStore((s: any) => s.session);
+  const clearAuth = useAuthStore((s: any) => s.clearAuth);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSaveProfile = async (e: React.FormEvent) => {

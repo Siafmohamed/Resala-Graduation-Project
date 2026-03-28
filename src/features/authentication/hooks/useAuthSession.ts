@@ -1,14 +1,14 @@
 import { useEffect } from 'react';
-import { useAuthStore } from '../store/authSlice';
+import { useAuthStore } from '../index';
 import { tokenManager } from '../utils/tokenManager';
 import type { SessionData } from '../types/auth.types';
 
 // ── Initialize Auth (runs on app mount) ──────────────────
 export function useInitializeAuth(): { isInitialized: boolean } {
-    const setAuth = useAuthStore((s) => s.setAuth);
-    const clearAuth = useAuthStore((s) => s.clearAuth);
-    const setInitialized = useAuthStore((s) => s.setInitialized);
-    const isInitialized = useAuthStore((s) => s.isInitialized);
+    const setAuth = useAuthStore((s: any) => s.setAuth);
+    const clearAuth = useAuthStore((s: any) => s.clearAuth);
+    const setInitialized = useAuthStore((s: any) => s.setInitialized);
+    const isInitialized = useAuthStore((s: any) => s.isInitialized);
 
     useEffect(() => {
         const initialize = async () => {

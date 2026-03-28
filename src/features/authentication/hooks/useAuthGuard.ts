@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authSlice';
+import { useAuthStore } from '../index';
 import type { Role, Permission } from '../types/role.types';
 import { canAccess, hasPermission } from '../types/role.types';
 import type { SessionData } from '../types/auth.types';
@@ -31,9 +31,9 @@ interface AuthGuardResult {
 }
 
 export function useAuthGuard(options?: AuthGuardOptions): AuthGuardResult {
-    const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-    const isInitialized = useAuthStore((s) => s.isInitialized);
-    const session = useAuthStore((s) => s.session);
+    const isAuthenticated = useAuthStore((s: any) => s.isAuthenticated);
+    const isInitialized = useAuthStore((s: any) => s.isInitialized);
+    const session = useAuthStore((s: any) => s.session);
     const userRole = session?.role ? mapApiRole(session.role) : undefined;
 
     let isAuthorized = isAuthenticated;
@@ -110,8 +110,8 @@ export function useRedirectIfAuthenticated(
     redirectTo: string = '/dashboard',
 ): void {
     const navigate = useNavigate();
-    const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-    const isInitialized = useAuthStore((s) => s.isInitialized);
+    const isAuthenticated = useAuthStore((s: any) => s.isAuthenticated);
+    const isInitialized = useAuthStore((s: any) => s.isInitialized);
 
     useEffect(() => {
         if (isInitialized && isAuthenticated) {
