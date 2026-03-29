@@ -31,7 +31,7 @@ export {
   useUserRole,
   useHasPermission,
   useCanAccess,
-} from './store/authSlice.ts';
+} from './store/authSlice';
 
 // ── Hooks ────────────────────────────────────────────────
 export {
