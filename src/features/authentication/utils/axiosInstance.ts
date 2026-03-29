@@ -3,16 +3,30 @@ import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { tokenManager } from './tokenManager';
 import type { RefreshTokenResponse } from '../types/auth.types';
 
+// In production, we must use relative paths to avoid "Mixed Content" errors (HTTPS -> HTTP).
+// Vercel rewrites in vercel.json will handle the proxying to the backend.
+const getBaseURL = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  
+  // If we're in production and the URL is absolute HTTP, we ignore it to prevent Mixed Content errors.
+  // Instead, we return an empty string to use relative paths which Vercel will proxy.
+  if (import.meta.env.PROD && envUrl?.startsWith('http://')) {
+    return '';
+  }
+  
+  return envUrl || '';
+};
+
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  timeout: 10_000,
+  baseURL: getBaseURL(),
+  timeout: 15_000,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 });
 
 const rawAxios = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  timeout: 10_000,
+  baseURL: getBaseURL(),
+  timeout: 15_000,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 });
