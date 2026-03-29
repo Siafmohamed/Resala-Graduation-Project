@@ -4,14 +4,14 @@ import { tokenManager } from './tokenManager';
 import type { RefreshTokenResponse } from '../types/auth.types';
 
 export const axiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   timeout: 10_000,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 });
 
 const rawAxios = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   timeout: 10_000,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
