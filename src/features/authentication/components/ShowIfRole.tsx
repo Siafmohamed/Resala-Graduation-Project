@@ -1,5 +1,5 @@
 import React, { type ReactNode } from 'react';
-import { useUserRole } from '../index';
+import { useUserRole } from '../store/authSlice';
 
 interface ShowIfRoleProps {
     role: string;

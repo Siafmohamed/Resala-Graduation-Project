@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useLoginMutation, useAuthStore } from '../../index';
+import { useLoginMutation } from '../../hooks/useAuthMutations';
+import { useAuthStore } from '../../store/authSlice';
 import { PublicRoute } from '../PublicRoute';
 import LoginForm from '../forms/LoginForm';
 import styles from '../auth.module.css';
@@ -35,9 +36,20 @@ const LoginPage: React.FC = () => {
       // Store session in Zustand + localStorage (setAuth handles persistence)
       setAuth({ accessToken, refreshToken, role, userId, name, phoneNumber });
 
-    // Route based on role — use existing route structure
-      const from = location.state?.from || '/dashboard';
-      navigate(from, { replace: true });
+      // Role-based redirection
+      const from = location.state?.from;
+      if (from && from !== '/') {
+        navigate(from, { replace: true });
+      } else {
+        // Default based on role
+        if (role === 'Admin') {
+          navigate('/admin-dashboard', { replace: true });
+        } else if (role === 'Reception') {
+          navigate('/reception-dashboard', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
+      }
     } catch (err: unknown) {
       const axiosError = err as { response?: { status: number; data?: { message?: string } } };
       const status = axiosError.response?.status;

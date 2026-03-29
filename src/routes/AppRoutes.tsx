@@ -1,6 +1,6 @@
 import React from'react';
 import { Routes, Route, Navigate } from'react-router-dom';
-import { ProtectedRoute, Role } from '../features/authentication';
+import { ProtectedRoute, Role, useAuthGuard } from '../features/authentication';
 
 // Authentication pages
 import LoginPage from '../features/authentication/components/pages/LoginPage';
@@ -41,17 +41,36 @@ import { RepresentativesPage } from '../features/representatives/components/Repr
 // Layout
 import MainLayout from '../shared/components/layout/MainLayout';
 
+const RootRedirect: React.FC = () => {
+  const { isAuthenticated, userRole } = useAuthGuard();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Intelligently redirect based on role
+  if (userRole === Role.ADMIN) {
+    return <Navigate to="/admin-dashboard" replace />;
+  }
+  if (userRole === Role.RECEPTIONIST) {
+    return <Navigate to="/reception-dashboard" replace />;
+  }
+  
+  return <Navigate to="/dashboard" replace />;
+};
+
 const AppRoutes: React.FC = () => {
  return (
    <Routes>
-      {/* Public auth routes */}
-     <Route path="/" element={<Navigate to="/login"replace />} />
+      {/* Root redirect */}
+     <Route path="/" element={<RootRedirect />} />
+     
      <Route path="/login" element={<LoginPage />} />
      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
      <Route path="/verify-otp" element={<OTPPage />} />
      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-      {/* Staff dashboards within MainLayout */}
+      {/* Shared Staff routes (accessible to both Receptionist and Admin, but not public) */}
       <Route
         element={
           <ProtectedRoute redirectTo="/login">
@@ -59,7 +78,6 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="/reception-dashboard" element={<ReceptionDashboard />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/donors" element={<DonorsPage />} />
         <Route path="/donors/:id" element={<DonorDetailPage />} />
@@ -67,7 +85,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/donations" element={<RegisterDonationPage />} />
       </Route>
 
-      {/* Receptionist + Admin routes */}
+      {/* Receptionist-only routes */}
       <Route
         element={
           <ProtectedRoute redirectTo="/login" requiredRole={Role.RECEPTIONIST}>
@@ -75,6 +93,7 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       >
+        <Route path="/reception-dashboard" element={<ReceptionDashboard />} />
         <Route path="/sponsorships" element={<SponsorshipManagementAPI />} />
         <Route path="/receipt-verification" element={<ReceiptVerificationPage />} />
         <Route path="/representative-orders" element={<RepresentativeOrdersPage />} />
@@ -82,8 +101,6 @@ const AppRoutes: React.FC = () => {
         <Route path="/branch-payments" element={<BranchPaymentsPage />} />
         <Route path="/register-new-donor" element={<RegisterNewDonorPage />} />
         <Route path="/in-kind-donations" element={<InKindDonationsListPage />} />
-        <Route path="/donations/:id" element={<RegisterDonationPage />} />
-        <Route path="/donations/edit/:id" element={<RegisterDonationPage />} />
         <Route path="/reception-settings" element={<ReceptionSettingsPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/donation-details/:id" element={<ReceptionDashboard />} />
@@ -115,6 +132,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/forms-dashboard" element={<FormsDashboardPage />} />
       </Route>
 
+      {/* Admin-only routes */}
       <Route
         element={
           <ProtectedRoute redirectTo="/login" requiredRole={Role.ADMIN}>
@@ -130,6 +148,9 @@ const AppRoutes: React.FC = () => {
         <Route path="/complaints" element={<ComplaintsPage />} />
         <Route path="/representatives" element={<RepresentativesPage />} />
       </Route>
+
+      {/* Fallback for any other path: redirect to root which will intelligently redirect */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

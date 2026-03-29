@@ -1,4 +1,4 @@
-import { useAuthStore } from "../index";
+import { useAuthStore } from "../store/authSlice";
 import { tokenManager } from "../utils/tokenManager";
 import type { SessionData } from "../types/auth.types";
 

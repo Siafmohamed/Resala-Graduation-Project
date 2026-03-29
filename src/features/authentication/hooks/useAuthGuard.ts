@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../index';
+import { useAuthStore } from '../store/authSlice';
 import type { Role, Permission } from '../types/role.types';
 import { canAccess, hasPermission } from '../types/role.types';
 import type { SessionData } from '../types/auth.types';

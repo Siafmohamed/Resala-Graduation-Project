@@ -8,6 +8,7 @@ interface AuthStoreState {
   session: SessionData | null;
   isAuthenticated: boolean;
   isInitialized: boolean;
+  userRole: Role | undefined;
 }
 
 interface AuthStoreActions {
@@ -31,34 +32,55 @@ function mapApiRole(apiRole: string): Role | undefined {
   }
 }
 
-// ── Hydrate from localStorage on store creation ──────────
-function getInitialState(): Pick<AuthStoreState, 'session' | 'isAuthenticated'> {
+// ── Initial State (Synchronous Hydration) ────────────────
+function getInitialState(): Pick<AuthStoreState, 'session' | 'isAuthenticated' | 'userRole'> {
   if (tokenManager.hasStoredSession()) {
     const stored = tokenManager.getSessionData<SessionData>();
     if (stored) {
-      return { session: stored, isAuthenticated: true };
+      const tokenRole = tokenManager.getRoleFromToken();
+      const effectiveRole = tokenRole || stored.role;
+      return { 
+        session: stored, 
+        isAuthenticated: true,
+        userRole: mapApiRole(effectiveRole)
+      };
     }
   }
-  return { session: null, isAuthenticated: false };
+  return { session: null, isAuthenticated: false, userRole: undefined };
 }
 
-const initialState = getInitialState();
+const hydratedState = getInitialState();
 
 export const useAuthStore = create<AuthStore>((set) => ({
   // ── State ──────────────────────────────────────────────
-  session: initialState.session,
-  isAuthenticated: initialState.isAuthenticated,
-  isInitialized: true, // Will be set to true after session validation
+  session: hydratedState.session,
+  isAuthenticated: hydratedState.isAuthenticated,
+  userRole: hydratedState.userRole,
+  isInitialized: false, // Remains false until useInitializeAuth completes
 
   // ── Actions ────────────────────────────────────────────
   setAuth: (session: SessionData) => {
-    // Persist only non-sensitive session data to localStorage
-    // Tokens are now in HTTP-only cookies
-    tokenManager.setSessionData(session);
+    // If we already have a session, merge the new data with existing tokens
+    // This handles cases where the validation endpoint returns a profile without tokens
+    const currentSession = useAuthStore.getState().session;
+    const sessionToStore = {
+      ...currentSession,
+      ...session,
+      // Ensure we keep the tokens if the new session doesn't have them
+      accessToken: session.accessToken || currentSession?.accessToken,
+      refreshToken: session.refreshToken || currentSession?.refreshToken,
+    };
+
+    // Determine the role — prioritize token claims if available for security, fallback to response role
+    const tokenRole = tokenManager.getRoleFromToken() || sessionToStore.role;
+
+    // Persist session data to localStorage
+    tokenManager.setSessionData(sessionToStore);
     set({
-      session,
+      session: sessionToStore,
       isAuthenticated: true,
-    });
+      userRole: mapApiRole(tokenRole),
+    } as any);
   },
 
   clearAuth: () => {
@@ -67,6 +89,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({
       session: null,
       isAuthenticated: false,
+      userRole: undefined,
+      isInitialized: true,
     });
   },
 
@@ -88,11 +112,8 @@ export const useIsInitialized = (): boolean =>
 export const useAccessToken = (): string | null =>
   useAuthStore((state) => state.session?.accessToken ?? null);
 
-export const useUserRole = (): Role | undefined => {
-  const roleStr = useAuthStore((state) => state.session?.role);
-  if (!roleStr) return undefined;
-  return mapApiRole(roleStr);
-};
+export const useUserRole = (): Role | undefined =>
+  useAuthStore((state) => state.userRole);
 
 export const useHasPermission = (permission: Permission): boolean => {
   const roleStr = useAuthStore((state) => state.session?.role);

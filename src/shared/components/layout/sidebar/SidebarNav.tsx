@@ -51,6 +51,7 @@ export const SidebarNavigationSection = (): React.ReactElement => {
   const navigate = useNavigate();
   const clearAuth = useAuthStore((s: any) => s.clearAuth);
   const userRole = useUserRole();
+  const currentUser = useAuthStore((s: any) => s.session);
   const queryClient = useQueryClient();
 
   const navConfig = userRole ? getNavConfigForRole(userRole) : [];
@@ -75,7 +76,8 @@ export const SidebarNavigationSection = (): React.ReactElement => {
     }
     clearAuth();
     queryClient.clear();
-    navigate("/login", { replace: true });
+    // Force a full page reload to clear all in-memory state and caches
+    window.location.href = "/login";
   };
 
   return (
@@ -212,14 +214,14 @@ export const SidebarNavigationSection = (): React.ReactElement => {
       <div className="px-8 py-10 mt-auto border-t border-gray-100 bg-[#FBFBFC]">
         <div className="flex items-center gap-4 mb-8">
           <div className="w-11 h-11 rounded-2xl bg-[#EEF3FB] flex items-center justify-center text-[#00549A] font-bold font-[Cairo] text-lg shadow-sm">
-            {useAuthStore.getState().session?.name?.[0] || 'م'}
+            {currentUser?.name?.[0] || 'م'}
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="font-[Cairo] font-bold text-[15px] text-[#101727] leading-tight">
-              {useAuthStore.getState().session?.name || 'أحمد السيد'}
+              {currentUser?.name || 'مستخدم'}
             </span>
             <span className="font-[Cairo] text-[12px] text-[#697282] opacity-80">
-              {ROLE_LABELS_AR[userRole as Role] || 'موظف استقبال'}
+              {ROLE_LABELS_AR[userRole as Role] || '—'}
             </span>
           </div>
         </div>

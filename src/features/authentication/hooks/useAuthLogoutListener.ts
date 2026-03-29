@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '../index';
+import { useAuthStore } from '../store/authSlice';
 import { tokenManager } from '../utils/tokenManager';
 
 /**
@@ -12,16 +12,19 @@ import { tokenManager } from '../utils/tokenManager';
 export function useAuthLogoutListener(): void {
     const clearAuth = useAuthStore((s: any) => s.clearAuth);
     const queryClient = useQueryClient();
-    const navigate = useNavigate();
 
     useEffect(() => {
         const handleSessionExpired = () => {
-            // Clear all stored tokens and session
+            console.warn('[Auth] Session expired. Clearing state and redirecting...');
+            // 1. Clear stored tokens and session
             tokenManager.clearTokens();
+            // 2. Clear Zustand store
             clearAuth();
+            // 3. Invalidate/Clear React Query cache
             queryClient.clear();
-            // Redirect to login
-            navigate('/login', { replace: true });
+            // 4. Force full page reload to clear any remaining in-memory state
+            // and redirect to login
+            window.location.href = '/login';
         };
 
         window.addEventListener('auth:session-expired', handleSessionExpired);
@@ -29,5 +32,5 @@ export function useAuthLogoutListener(): void {
         return () => {
             window.removeEventListener('auth:session-expired', handleSessionExpired);
         };
-    }, [clearAuth, queryClient, navigate]);
+    }, [clearAuth, queryClient]);
 }

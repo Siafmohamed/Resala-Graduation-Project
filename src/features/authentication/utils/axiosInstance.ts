@@ -35,36 +35,46 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 async function doRefresh(): Promise<string | null> {
-  console.log('[Auth] Attempting to refresh access token...');
+  const session = tokenManager.getSessionData<any>();
+  if (!session?.refreshToken) {
+    console.warn('[Auth] No refresh token available');
+    return null;
+  }
+
   try {
-    const session = tokenManager.getSessionData<any>();
+    console.log('[Auth] Attempting to refresh access token...');
     
-    // Pass refreshToken in body if available, or {} to avoid 415
-    const body = session?.refreshToken ? { refreshToken: session.refreshToken } : {};
-    
+    // We send the refreshToken in the body as per RefreshTokenResponse interface
+    // But we ALSO attach it as a Bearer token just in case the backend requires it for the refresh endpoint
     const { data } = await rawAxios.post<RefreshTokenResponse>(
       '/v1/auth/refresh-token',
-      body
+      { refreshToken: session.refreshToken },
+      {
+        headers: {
+          Authorization: `Bearer ${session.refreshToken}`
+        }
+      }
     );
 
     if (data.succeeded && data.data) {
       console.log('[Auth] Token refreshed successfully');
-      // Update session with new tokens
-      tokenManager.setSessionData({
+      
+      const newSession = {
         ...session,
         accessToken: data.data.token,
-        refreshToken: data.data.refreshToken || session?.refreshToken
-      });
+        refreshToken: data.data.refreshToken || session.refreshToken
+      };
+      
+      // Update session in localStorage via tokenManager
+      tokenManager.setSessionData(newSession);
+      
       return data.data.token;
     }
     
     console.warn('[Auth] Refresh failed: succeeded=false');
-    return data.succeeded ? "refreshed" : null;
-  } catch (error) {
-    console.error('[Auth] Refresh token error:', error);
-    if (!navigator.onLine) {
-      console.error("[Auth] Network connection lost");
-    }
+    return null;
+  } catch (err) {
+    console.error('[Auth] Refresh error:', err);
     return null;
   }
 }
@@ -134,6 +144,10 @@ axiosInstance.interceptors.response.use(
 
     try {
       const result = await doRefresh();
+      
+      // Set refreshing to false BEFORE processing queue and retrying
+      isRefreshing = false;
+
       if (result) {
         processQueue(null, result);
         return axiosInstance(originalRequest);
@@ -144,14 +158,13 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(error);
       }
     } catch (refreshError) {
+      isRefreshing = false;
       processQueue(refreshError);
       tokenManager.clearTokens();
       window.dispatchEvent(new Event('auth:session-expired'));
       return Promise.reject(refreshError);
-    } finally {
-      isRefreshing = false;
     }
-  },
+  }
 );
 
 export default axiosInstance;

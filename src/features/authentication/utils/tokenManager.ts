@@ -35,6 +35,15 @@ export const tokenManager = {
 
     clearTokens(): void {
         localStorage.removeItem(STORAGE_KEYS.SESSION_DATA);
+        localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+        // Also clear any other potential auth-related keys
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('resala_')) {
+                localStorage.removeItem(key);
+            }
+        });
+        sessionStorage.clear();
         // Note: Logout endpoint should clear cookies on the server
     },
 
@@ -65,6 +74,28 @@ export const tokenManager = {
         } catch {
             return true; // Parse error means invalid token
         }
+    },
+
+    /**
+     * Decode JWT and extract data
+     */
+    decodeToken<T = JwtPayload>(token: string): T | null {
+        try {
+            return jwtDecode<T>(token);
+        } catch {
+            return null;
+        }
+    },
+
+    /**
+     * Get role from access token claims
+     */
+    getRoleFromToken(): string | null {
+        const token = this.getAccessToken();
+        if (!token) return null;
+        const decoded = this.decodeToken<any>(token);
+        // Common JWT claim names for roles: 'role', 'roles', 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
+        return decoded?.role || decoded?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || null;
     },
 
     hasValidAccessToken(): boolean {

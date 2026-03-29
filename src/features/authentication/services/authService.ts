@@ -74,6 +74,18 @@ export const authService = {
     return data;
   },
 
+  /**
+   * Validates the current session by calling a profile/me endpoint.
+   * This ensures the token is still valid and gets fresh user data.
+   */
+  async validateSession(): Promise<AuthResponse> {
+    // If we have a 'me' or 'profile' endpoint, use it.
+    // For now, we'll call a generic endpoint that requires authentication.
+    // If it returns 401, the interceptor will try to refresh or clear auth.
+    const { data } = await axiosInstance.get<AuthResponse>('/v1/auth/me');
+    return data;
+  },
+
   async logout(): Promise<LogoutResponse> {
     const { data } = await axiosInstance.post<LogoutResponse>(
       '/v1/auth/logout',

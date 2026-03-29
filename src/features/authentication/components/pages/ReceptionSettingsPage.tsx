@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/shared/components/ui/Card';
 import { Input } from '@/shared/components/ui/Input';
 import { Button } from '@/shared/components/ui/Button';
 import { toast } from 'react-toastify';
-import { useAuthStore } from '../../index';
+import { useAuthStore } from '../../store/authSlice';
 
 export function ReceptionSettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');

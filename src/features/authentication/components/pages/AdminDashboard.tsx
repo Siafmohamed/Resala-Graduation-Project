@@ -89,24 +89,24 @@ const userSponsorshipData = [
 
 const AdminDashboard: React.FC = () => {
   return (
-    <div className="flex flex-col gap-8 p-10 bg-[#f8fafc] min-h-screen" dir="rtl">
+    <div className="flex flex-col gap-6 md:gap-8 p-4 md:p-10 bg-[#f8fafc] min-h-screen" dir="rtl">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         {[...kpiData].reverse().map((kpi, i) => (
           <Card key={i} className="border-none shadow-[0px_10px_30px_rgba(0,0,0,0.02)] rounded-3xl overflow-hidden bg-white">
-            <CardContent className="p-8">
+            <CardContent className="p-6 md:p-8">
               <div className="flex items-start justify-between">
                 <div className="flex flex-col gap-2">
                   <span className="font-[Cairo] font-medium text-[#697282] text-[13px] mb-1">{kpi.title}</span>
-                  <span className="font-[Cairo] font-bold text-[#101727] text-3xl mb-1">{kpi.value}</span>
-                  <div className="flex items-center gap-1.5 text-[12px] font-bold text-[#00549A]">
-                    <TrendingUp size={14} />
+                  <span className="font-[Cairo] font-bold text-[#101727] text-2xl md:text-3xl mb-1">{kpi.value}</span>
+                  <div className="flex flex-wrap items-center gap-1.5 text-[12px] font-bold text-[#00549A]">
+                    <TrendingUp size={14} className="shrink-0" />
                     <span>{kpi.change}</span>
                     <span className="text-[#94a3b8] font-normal mr-1">عن الشهر الماضي</span>
                   </div>
                 </div>
                 <div 
-                  className="p-4 rounded-2xl" 
+                  className="p-3 md:p-4 rounded-2xl shrink-0" 
                   style={{ backgroundColor: kpi.bgColor, color: kpi.color }}
                 >
                   <kpi.icon size={24} strokeWidth={2} />
@@ -119,26 +119,28 @@ const AdminDashboard: React.FC = () => {
 
       {/* Charts Section 1: Line Chart */}
       <Card className="border-none shadow-[0px_10px_30px_rgba(0,0,0,0.02)] rounded-3xl bg-white">
-        <CardHeader className="pb-4 pt-8 px-8">
-          <CardTitle className="font-[Cairo] font-bold text-lg text-[#101727] text-right">اتجاه المبالغ المحصلة شهرياً</CardTitle>
+        <CardHeader className="pb-4 pt-6 px-6 md:pt-8 md:px-8">
+          <CardTitle className="font-[Cairo] font-bold text-base md:text-lg text-[#101727] text-right">اتجاه المبالغ المحصلة شهرياً</CardTitle>
         </CardHeader>
-        <CardContent className="px-8 pb-8">
-          <div className="h-[400px] min-h-[400px] w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+        <CardContent className="px-4 md:px-8 pb-6 md:pb-8">
+          <div className="h-[300px] md:h-[400px] min-h-[300px] md:min-h-[400px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart data={lineData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis 
                   dataKey="name" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fill: '#94a3b8', fontSize: 12, fontFamily: 'Cairo' }}
+                  tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'Cairo' }}
                   dy={15}
+                  minTickGap={15}
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fill: '#94a3b8', fontSize: 12, fontFamily: 'Cairo' }}
+                  tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'Cairo' }}
                   tickFormatter={(value) => `${value / 1000}k`}
+                  width={40}
                 />
                 <Tooltip 
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.05)', direction: 'rtl' }}
@@ -159,14 +161,14 @@ const AdminDashboard: React.FC = () => {
       </Card>
 
       {/* Row 3: User Status and Case Types */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
         {/* User Status Doughnut */}
         <Card className="border-none shadow-[0px_10px_30px_rgba(0,0,0,0.02)] rounded-3xl bg-white">
-          <CardHeader className="pt-8 px-8 pb-2">
-            <CardTitle className="font-[Cairo] font-bold text-lg text-[#101727] text-right">حالة مستخدمي التطبيق</CardTitle>
+          <CardHeader className="pt-6 px-6 md:pt-8 md:px-8 pb-2">
+            <CardTitle className="font-[Cairo] font-bold text-base md:text-lg text-[#101727] text-right">حالة مستخدمي التطبيق</CardTitle>
           </CardHeader>
-          <CardContent className="p-8 flex flex-col items-center">
-            <div className="h-[250px] min-h-[250px] w-full relative">
+          <CardContent className="p-6 md:p-8 flex flex-col items-center">
+            <div className="h-[200px] md:h-[250px] min-h-[200px] md:min-h-[250px] w-full relative min-w-0">
               <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
@@ -206,26 +208,28 @@ const AdminDashboard: React.FC = () => {
 
         {/* Sponsorship Types Bar Chart */}
         <Card className="border-none shadow-[0px_10px_30px_rgba(0,0,0,0.02)] rounded-3xl bg-white">
-          <CardHeader className="pt-8 px-8 pb-2">
-            <CardTitle className="font-[Cairo] font-bold text-lg text-[#101727] text-right">توزيع أنواع الكفالات</CardTitle>
+          <CardHeader className="pt-6 px-6 md:pt-8 md:px-8 pb-2">
+            <CardTitle className="font-[Cairo] font-bold text-base md:text-lg text-[#101727] text-right">توزيع أنواع الكفالات</CardTitle>
           </CardHeader>
-          <CardContent className="p-8">
-            <div className="h-[280px] min-h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+          <CardContent className="p-6 md:p-8">
+            <div className="h-[240px] md:h-[280px] min-h-[240px] md:min-h-[280px] w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis 
                     dataKey="name" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#94a3b8', fontSize: 12, fontFamily: 'Cairo' }}
+                    tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'Cairo' }}
+                    minTickGap={10}
                   />
                   <YAxis 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#94a3b8', fontSize: 12, fontFamily: 'Cairo' }}
+                    tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'Cairo' }}
                     domain={[0, 320]}
                     ticks={[0, 80, 160, 240, 320]}
+                    width={30}
                   />
                   <Tooltip cursor={{ fill: '#f8fafc' }} />
                   <Bar 
@@ -243,18 +247,18 @@ const AdminDashboard: React.FC = () => {
 
       {/* Row 4: Distribution Pie */}
       <Card className="border-none shadow-[0px_10px_30px_rgba(0,0,0,0.02)] rounded-3xl bg-white">
-        <CardHeader className="pt-8 px-8 pb-2">
-          <CardTitle className="font-[Cairo] font-bold text-lg text-[#101727] text-right">توزيع طرق الدفع</CardTitle>
+        <CardHeader className="pt-6 px-6 md:pt-8 md:px-8 pb-2">
+          <CardTitle className="font-[Cairo] font-bold text-base md:text-lg text-[#101727] text-right">توزيع طرق الدفع</CardTitle>
         </CardHeader>
-        <CardContent className="p-8 flex flex-col items-center">
-          <div className="h-[320px] min-h-[320px] w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+        <CardContent className="p-6 md:p-8 flex flex-col items-center">
+          <div className="h-[260px] md:h-[320px] min-h-[260px] md:min-h-[320px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={paymentData}
                   cx="50%"
                   cy="50%"
-                  outerRadius={120}
+                  outerRadius="80%"
                   dataKey="value"
                   label={({ name, percent }: any) => `${name} %${((percent || 0) * 100).toFixed(0)}`}
                   labelLine={true}
