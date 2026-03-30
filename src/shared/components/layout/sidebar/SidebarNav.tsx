@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { LogOut, ChevronDown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { useQueryClient } from "@tanstack/react-query";
 import { getNavConfigForRole } from "./navigationConfig";
@@ -46,18 +46,42 @@ const RisalaLogo = () => (
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export const SidebarNavigationSection = (): React.ReactElement => {
-  const [activeItem, setActiveItem] = useState("dashboard");
-  const [openGroups, setOpenGroups] = useState<string[]>([]);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [openGroups, setOpenGroups] = useState<string[]>([]);
   const clearAuth = useAuthStore((s: any) => s.clearAuth);
   const userRole = useUserRole();
   const currentUser = useAuthStore((s: any) => s.session);
   const queryClient = useQueryClient();
 
-  const navConfig = userRole ? getNavConfigForRole(userRole) : [];
+  const navConfig = useMemo(() => 
+    userRole ? getNavConfigForRole(userRole) : [], 
+    [userRole]
+  );
+
+  // Derived active state from current location
+  const activeItem = useMemo(() => {
+    const currentPath = location.pathname;
+    
+    for (const item of navConfig) {
+      if ('items' in item) {
+        const foundChild = item.items.find(child => child.path === currentPath);
+        if (foundChild) return foundChild.id;
+      } else if (item.path === currentPath) {
+        return item.id;
+      }
+    }
+    
+    // Fallback: Check for partial matches or parent paths if needed
+    // For example, if on /sponsorships/edit/1, we might still want 'sponsorships' active
+    const matchingItem = navConfig.find(item => 
+      !('items' in item) && currentPath.startsWith(item.path) && item.path !== '/'
+    );
+    
+    return (matchingItem as NavItem)?.id || "dashboard";
+  }, [location.pathname, navConfig]);
 
   const handleNavClick = (id: string, path: string) => {
-    setActiveItem(id);
     navigate(path);
   };
 

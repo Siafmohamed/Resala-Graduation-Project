@@ -3,18 +3,14 @@ import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { tokenManager } from './tokenManager';
 import type { RefreshTokenResponse } from '../types/auth.types';
 
-// In production, we must use relative paths to avoid "Mixed Content" errors (HTTPS -> HTTP).
-// Vercel rewrites in vercel.json will handle the proxying to the backend.
+// We always use /api as a base for all requests to ensure they go through our proxy.
+// This is mandatory to:
+// 1. Avoid CORS issues in local development (via vite.config.ts proxy).
+// 2. Avoid Mixed Content security blocks in production (via vercel.json rewrite).
 const getBaseURL = () => {
-  const envUrl = import.meta.env.VITE_API_BASE_URL;
-  
-  // If we're in production and the URL is absolute HTTP, we ignore it to prevent Mixed Content errors.
-  // Instead, we return an empty string to use relative paths which Vercel will proxy.
-  if (import.meta.env.PROD && envUrl?.startsWith('http://')) {
-    return '';
-  }
-  
-  return envUrl || '';
+  // We ignore VITE_API_BASE_URL if it's an absolute URL because we want to force
+  // all traffic through the local proxy/rewrite mechanism for security and CORS.
+  return '/api';
 };
 
 export const axiosInstance = axios.create({

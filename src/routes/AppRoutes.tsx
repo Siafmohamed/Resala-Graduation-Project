@@ -79,13 +79,10 @@ const AppRoutes: React.FC = () => {
         }
       >
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/donors" element={<DonorsPage />} />
-        <Route path="/donors/:id" element={<DonorDetailPage />} />
-        <Route path="/add-donor" element={<AddDonorPage />} />
         <Route path="/donations" element={<RegisterDonationPage />} />
       </Route>
 
-      {/* Receptionist-only routes */}
+      {/* Receptionist-only routes (including donors list) */}
       <Route
         element={
           <ProtectedRoute redirectTo="/login" requiredRole={Role.RECEPTIONIST}>
@@ -94,7 +91,9 @@ const AppRoutes: React.FC = () => {
         }
       >
         <Route path="/reception-dashboard" element={<ReceptionDashboard />} />
-        <Route path="/sponsorships" element={<SponsorshipManagementAPI />} />
+        <Route path="/donors" element={<DonorsPage />} />
+        <Route path="/donors/:id" element={<DonorDetailPage />} />
+        <Route path="/add-donor" element={<AddDonorPage />} />
         <Route path="/receipt-verification" element={<ReceiptVerificationPage />} />
         <Route path="/representative-orders" element={<RepresentativeOrdersPage />} />
         <Route path="/urgent-cases" element={<UrgentCasesPage />} />
@@ -141,6 +140,7 @@ const AppRoutes: React.FC = () => {
         }
       >
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/sponsorships" element={<SponsorshipManagementAPI />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/account-management" element={<AccountManagementPage />} />
         <Route path="/reports" element={<ReportsPage />} />

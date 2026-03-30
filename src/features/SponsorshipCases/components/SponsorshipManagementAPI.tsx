@@ -484,8 +484,40 @@ export default function SponsorshipManagementAPI() {
   const updateMutation = useUpdateSponsorship();
   const deleteMutation = useDeleteSponsorship();
 
-  const handleCreate = (payload: CreateSponsorshipPayload) => createMutation.mutate(payload, { onSuccess: () => setModal(null) });
-  const handleUpdate = (id: number, payload: UpdateSponsorshipPayload) => updateMutation.mutate({ id, payload }, { onSuccess: () => { setModal(null); setSelectedProgram(null); } });
+  const handleCreate = (payload: CreateSponsorshipPayload) => {
+    // Validation before submitting
+    if (!payload.name.trim()) {
+      toast.error("يرجى إدخال اسم الكفالة");
+      return;
+    }
+    if (payload.targetAmount <= 0) {
+      toast.error("يرجى إدخال مبلغ مستهدف صحيح");
+      return;
+    }
+
+    createMutation.mutate(payload, { 
+      onSuccess: () => {
+        setModal(null);
+        // Feedback is handled in the hook's toast.success
+      }
+    });
+  };
+
+  const handleUpdate = (id: number, payload: UpdateSponsorshipPayload) => {
+    // Validation before submitting
+    if (payload.name && !payload.name.trim()) {
+      toast.error("اسم الكفالة لا يمكن أن يكون فارغاً");
+      return;
+    }
+
+    updateMutation.mutate({ id, payload }, { 
+      onSuccess: () => { 
+        setModal(null); 
+        setSelectedProgram(null); 
+        // Feedback is handled in the hook's toast.success
+      } 
+    });
+  };
   const handleDelete = (id: number) => deleteMutation.mutate(id, { onSuccess: () => { setModal(null); setSelectedProgram(null); } });
 
   const filtered = sponsorships.filter((s) => {

@@ -56,6 +56,10 @@ export function AccountManagementPage() {
     setIsFormModalOpen(true);
   };
 
+  const totalAdmins = accounts.filter(a => a.role === Role.ADMIN).length;
+  const totalReceptionists = accounts.filter(a => a.role === Role.RECEPTIONIST).length;
+  const inactiveAccounts = accounts.filter(a => a.status !== 'active').length;
+
   return (
     <div className="flex flex-col gap-8 p-8 bg-[#f8fafc] min-h-screen" dir="rtl">
       {/* Header */}
@@ -73,7 +77,7 @@ export function AccountManagementPage() {
         </button>
       </div>
 
-      {/* Stats / Cards Summary (Optional based on design) */}
+      {/* Stats / Cards Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border-none shadow-[0px_4px_20px_rgba(0,0,0,0.03)] rounded-2xl">
           <CardContent className="p-6 flex items-center gap-4">
@@ -82,7 +86,7 @@ export function AccountManagementPage() {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-[#697282] font-[Cairo]">إجمالي المسؤولين</span>
-              <span className="text-xl font-bold text-[#101727] font-[Cairo]">{accounts.filter(a => a.role === Role.ADMIN).length}</span>
+              <span className="text-xl font-bold text-[#101727] font-[Cairo]">{totalAdmins}</span>
             </div>
           </CardContent>
         </Card>
@@ -93,7 +97,7 @@ export function AccountManagementPage() {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-[#697282] font-[Cairo]">إجمالي موظفي الاستقبال</span>
-              <span className="text-xl font-bold text-[#101727] font-[Cairo]">{accounts.filter(a => a.role === Role.RECEPTIONIST).length}</span>
+              <span className="text-xl font-bold text-[#101727] font-[Cairo]">{totalReceptionists}</span>
             </div>
           </CardContent>
         </Card>
@@ -104,7 +108,7 @@ export function AccountManagementPage() {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-[#697282] font-[Cairo]">حسابات غير نشطة</span>
-              <span className="text-xl font-bold text-[#101727] font-[Cairo]">{accounts.filter(a => a.status !== 'active').length}</span>
+              <span className="text-xl font-bold text-[#101727] font-[Cairo]">{inactiveAccounts}</span>
             </div>
           </CardContent>
         </Card>

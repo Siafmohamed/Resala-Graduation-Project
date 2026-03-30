@@ -5,7 +5,8 @@ import {
   FileText, 
   Bell,
   Settings,
-  Package
+  Package,
+  HeartHandshake
 } from 'lucide-react';
 import { Role } from '@/features/authentication';
 import type { NavConfig } from './types';

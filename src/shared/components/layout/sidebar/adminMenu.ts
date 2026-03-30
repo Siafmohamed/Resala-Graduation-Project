@@ -1,9 +1,9 @@
 import { 
   LayoutDashboard, 
-  Search,
   HeartHandshake,
   BarChart3, 
-  Settings, 
+  Settings,
+  Shield,
 } from "lucide-react";
 import { Role } from '@/features/authentication';
 import type { NavConfig } from './types';
@@ -17,17 +17,17 @@ export const adminMenu: NavConfig = [
     roles: [Role.ADMIN],
   },
   {
-    id: "findings",
-    label: "إدارة المكتشفات",
-    path: "/donors",
-    icon: Search,
+    id: "sponsorships",
+    label: "إدارة الكفالات",
+    path: "/sponsorships",
+    icon: HeartHandshake,
     roles: [Role.ADMIN],
   },
   {
-    id: "aids",
-    label: "إدارة المساعدات",
-    path: "/sponsorships",
-    icon: HeartHandshake,
+    id: "accounts",
+    label: "إدارة الحسابات",
+    path: "/account-management",
+    icon: Shield,
     roles: [Role.ADMIN],
   },
   {

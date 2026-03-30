@@ -4,13 +4,17 @@ export const PAGE_METADATA: { [key: string]: { title: string; subtitle: string }
     title: 'لوحة التحكم',
     subtitle: 'نظرة شاملة على أداء الجمعية',
   },
-  '/donors': {
-    title: 'إدارة المكتشفات',
-    subtitle: 'عرض وتصفية جميع المكتشفات المسجلة',
-  },
   '/sponsorships': {
-    title: 'إدارة المساعدات',
-    subtitle: 'تتبع وإدارة جميع المساعدات المقدمة',
+    title: 'إدارة الكفالات',
+    subtitle: 'تتبع وإدارة جميع الكفالات والبرامج المسجلة',
+  },
+  '/account-management': {
+    title: 'إدارة الحسابات',
+    subtitle: 'إدارة صلاحيات الموظفين ومسؤولي النظام',
+  },
+  '/donors': {
+    title: 'قائمة المتبرعين',
+    subtitle: 'عرض وتصفية جميع المتبرعين المسجلين',
   },
   '/reports': {
     title: 'التقارير والإحصائيات',

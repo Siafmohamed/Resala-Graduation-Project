@@ -18,16 +18,8 @@ server: {
       target: 'http://resala.runasp.net',
       changeOrigin: true,
       secure: false,
-    },
-    '/Account': {
-      target: 'http://resala.runasp.net',
-      changeOrigin: true,
-      secure: false,
-    },
-    '/v1': {
-      target: 'http://resala.runasp.net',
-      changeOrigin: true,
-      secure: false,
+      // We removed the rewrite line so that the /api prefix is preserved
+      // and sent to the backend as part of the full URL.
     },
   },
 },
