@@ -12,7 +12,8 @@ export interface User {
 
 export interface AuthTokens {
   accessToken: string;
-  refreshToken: string;
+  token?: string; // Some API responses might use 'token' instead of 'accessToken'
+  refreshToken?: string;
   role: 'Admin' | 'Reception' | 'Donor';
   userId: number;
   name: string;
@@ -98,7 +99,7 @@ export interface AuthState {
 
 export interface SessionData {
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string;
   role: 'Admin' | 'Reception' | 'Donor';
   userId: number;
   name: string;
@@ -109,7 +110,7 @@ export interface RefreshTokenResponse {
   succeeded: boolean;
   data: {
     token: string;
-    refreshToken: string;
+    refreshToken?: string;
   };
 }
 

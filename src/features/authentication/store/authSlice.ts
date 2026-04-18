@@ -34,19 +34,13 @@ function mapApiRole(apiRole: string): Role | undefined {
 
 // ── Initial State (Synchronous Hydration) ────────────────
 function getInitialState(): Pick<AuthStoreState, 'session' | 'isAuthenticated' | 'userRole'> {
-  if (tokenManager.hasStoredSession()) {
-    const stored = tokenManager.getSessionData<SessionData>();
-    if (stored) {
-      const tokenRole = tokenManager.getRoleFromToken();
-      const effectiveRole = tokenRole || stored.role;
-      return { 
-        session: stored, 
-        isAuthenticated: true,
-        userRole: mapApiRole(effectiveRole)
-      };
-    }
-  }
-  return { session: null, isAuthenticated: false, userRole: undefined };
+  // Always start unauthenticated on app load to prevent role-state pollution
+  // AuthProvider will handle initialization and set the correct state
+  return { 
+    session: null, 
+    isAuthenticated: false, 
+    userRole: undefined 
+  };
 }
 
 const hydratedState = getInitialState();
@@ -56,36 +50,48 @@ export const useAuthStore = create<AuthStore>((set) => ({
   session: hydratedState.session,
   isAuthenticated: hydratedState.isAuthenticated,
   userRole: hydratedState.userRole,
-  isInitialized: false, // Remains false until useInitializeAuth completes
+  isInitialized: false, // Remains false until AuthProvider initialization completes
 
   // ── Actions ────────────────────────────────────────────
   setAuth: (session: SessionData) => {
-    // If we already have a session, merge the new data with existing tokens
-    // This handles cases where the validation endpoint returns a profile without tokens
-    const currentSession = useAuthStore.getState().session;
-    const sessionToStore = {
-      ...currentSession,
+    // Validate that we have the required tokens
+    // Some backends return 'token' instead of 'accessToken'
+    const finalAccessToken = session.accessToken || (session as any).token;
+    if (!finalAccessToken) {
+      console.error('[setAuth] Missing tokens in session!', {
+        hasAccessToken: !!finalAccessToken,
+        session // Log the full session to see what's actually there
+      });
+      return;
+    }
+
+    // Ensure the session object we store has the expected 'accessToken' field
+    const normalizedSession: SessionData = {
       ...session,
-      // Ensure we keep the tokens if the new session doesn't have them
-      accessToken: session.accessToken || currentSession?.accessToken,
-      refreshToken: session.refreshToken || currentSession?.refreshToken,
+      accessToken: finalAccessToken
     };
 
-    // Determine the role — prioritize token claims if available for security, fallback to response role
-    const tokenRole = tokenManager.getRoleFromToken() || sessionToStore.role;
+    // Determine the role - prioritize token claims (more secure) if available
+    const tokenRole = tokenManager.getRoleFromToken() || normalizedSession.role;
 
-    // Persist session data to localStorage
-    tokenManager.setSessionData(sessionToStore);
+    // Persist session data to localStorage first
+    tokenManager.setSessionData(normalizedSession);
+
+    // Update Zustand state
     set({
-      session: sessionToStore,
+      session: normalizedSession,
       isAuthenticated: true,
-      userRole: mapApiRole(tokenRole),
-    } as any);
+      userRole: mapApiRole(tokenRole || normalizedSession.role),
+    });
+
+    console.log('[setAuth] Session stored successfully, role:', tokenRole || normalizedSession.role);
   },
 
   clearAuth: () => {
-    // Clear stored tokens and session
+    // Clear all tokens from localStorage and sessionStorage
     tokenManager.clearTokens();
+    // Also clear any remaining session storage keys
+    sessionStorage.clear();
     set({
       session: null,
       isAuthenticated: false,

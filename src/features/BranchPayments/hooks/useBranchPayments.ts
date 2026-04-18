@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { branchPaymentsService } from '../services/branchPaymentsService';
 import type { BranchPayment } from '../types/branchPayments.types';
+import { CACHE_DURATIONS } from '@/shared/constants/cacheDurations';
 
 export function useBranchPayments(): {
   data: BranchPayment[] | undefined;
@@ -10,7 +11,7 @@ export function useBranchPayments(): {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['branch-payments'],
     queryFn: () => branchPaymentsService.getAll(),
-    staleTime: 30_000,
+    staleTime: CACHE_DURATIONS.SHORT,
   });
 
   return { data, isLoading, isError };

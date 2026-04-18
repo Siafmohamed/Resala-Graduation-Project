@@ -4,6 +4,8 @@ import { toast } from 'react-toastify';
 import { donorService } from '../services/donorService';
 import type { DonorFormData } from '../types/donor.types';
 import { isValidEgyptianPhone } from '@/shared/utils/validators/phoneValidator';
+import { containsPotentialXss } from '@/shared/utils/security/sanitization';
+import logger from '@/shared/utils/logger';
 import { 
   UserPlus, 
   User, 
@@ -31,9 +33,18 @@ export function AddDonorForm() {
     e.preventDefault();
     setError(null);
 
+    // Basic Validation
     if (!form.name.trim()) {
       setError('الاسم مطلوب');
       toast.error('الاسم مطلوب');
+      return;
+    }
+
+    // XSS Protection
+    if (containsPotentialXss(form.name) || containsPotentialXss(form.notes || '') || containsPotentialXss(form.job || '')) {
+      const msg = 'إدخال غير صالح يحتوي على رموز ممنوعة';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -46,10 +57,12 @@ export function AddDonorForm() {
 
     setIsSubmitting(true);
     try {
+      logger.log('[AddDonorForm] Creating donor:', { ...form, password: '***' });
       await donorService.createDonor(form);
       toast.success('تم إضافة المتبرع بنجاح');
       navigate('/donors', { replace: true });
     } catch (err) {
+      logger.error('[AddDonorForm] Create donor failed:', err);
       const msg = err instanceof Error ? err.message : 'فشل إضافة المتبرع';
       setError(msg);
       toast.error(msg);

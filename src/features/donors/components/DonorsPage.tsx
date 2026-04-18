@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Heart, CheckCircle, ChevronRight, Gift } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -9,23 +9,95 @@ import { DonorsTable } from './DonorsTable';
 import { Pagination } from '@/shared/components/ui/Pagination';
 import { ErrorMessage } from '@/shared/components/feedback/ErrorMessage';
 import { useDonors } from '../hooks/useDonors';
-import { useDonorStore } from '../store/donorSlice';
+import { DEFAULT_DONOR_FILTERS, DEFAULT_DONOR_SORT, useDonorStore } from '../store/donorSlice';
 import { Card, CardContent } from '@/shared/components/ui/Card';
+import type { PaymentStatus, SponsorshipType, DonorSortField, SortDirection } from '../types/donor.types';
 
 export function DonorsPage() {
   const { data, isLoading, isError, error, refetch } = useDonors();
   const setTotal = useDonorStore((s) => s.setTotal);
+  const filters = useDonorStore((s) => s.filters);
   const pagination = useDonorStore((s) => s.pagination);
+  const sort = useDonorStore((s) => s.sort);
   const setPage = useDonorStore((s) => s.setPage);
+  const setSearch = useDonorStore((s) => s.setSearch);
+  const setPaymentStatus = useDonorStore((s) => s.setPaymentStatus);
+  const setSponsorshipType = useDonorStore((s) => s.setSponsorshipType);
+  const setSortState = useDonorStore((s) => s.setSortState);
   
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const didHydrateFromUrl = useRef(false);
   const [showSmartSponsorship, setShowSmartSponsorship] = useState(false);
   const [newDonorName, setNewDonorName] = useState('');
 
   useEffect(() => {
     if (data) setTotal(data.total);
   }, [data, setTotal]);
+
+  useEffect(() => {
+    if (didHydrateFromUrl.current) {
+      return;
+    }
+
+    const search = searchParams.get('search') ?? '';
+    const paymentStatus = (searchParams.get('paymentStatus') ?? 'all') as PaymentStatus | 'all';
+    const sponsorshipType = (searchParams.get('sponsorshipType') ?? 'all') as SponsorshipType | 'all';
+    const page = Number(searchParams.get('page') ?? 1);
+    const sortField = (searchParams.get('sortField') ?? DEFAULT_DONOR_SORT.field) as DonorSortField;
+    const sortDirection = (searchParams.get('sortDirection') ?? DEFAULT_DONOR_SORT.direction) as SortDirection;
+
+    if (search && search !== filters.search) setSearch(search);
+    if (paymentStatus !== filters.paymentStatus) setPaymentStatus(paymentStatus);
+    if (sponsorshipType !== filters.sponsorshipType) setSponsorshipType(sponsorshipType);
+    if (page > 0 && page !== pagination.page) setPage(page);
+    if (sortField !== sort.field || sortDirection !== sort.direction) {
+      setSortState({ field: sortField, direction: sortDirection });
+    }
+
+    didHydrateFromUrl.current = true;
+  }, [
+    searchParams,
+    filters.search,
+    filters.paymentStatus,
+    filters.sponsorshipType,
+    pagination.page,
+    sort.field,
+    sort.direction,
+    setSearch,
+    setPaymentStatus,
+    setSponsorshipType,
+    setPage,
+    setSortState,
+  ]);
+
+  useEffect(() => {
+    if (!didHydrateFromUrl.current) {
+      return;
+    }
+
+    const nextParams = new URLSearchParams();
+
+    if (filters.search) nextParams.set('search', filters.search);
+    if (filters.paymentStatus !== DEFAULT_DONOR_FILTERS.paymentStatus) {
+      nextParams.set('paymentStatus', filters.paymentStatus);
+    }
+    if (filters.sponsorshipType !== DEFAULT_DONOR_FILTERS.sponsorshipType) {
+      nextParams.set('sponsorshipType', filters.sponsorshipType);
+    }
+    if (pagination.page > 1) nextParams.set('page', String(pagination.page));
+    if (sort.field !== DEFAULT_DONOR_SORT.field) nextParams.set('sortField', sort.field);
+    if (sort.direction !== DEFAULT_DONOR_SORT.direction) {
+      nextParams.set('sortDirection', sort.direction);
+    }
+
+    const nextQuery = nextParams.toString();
+    const currentQuery = searchParams.toString();
+    if (nextQuery !== currentQuery) {
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [filters, pagination.page, sort, searchParams, setSearchParams]);
 
   useEffect(() => {
     // Check if we just came from registration with smart sponsorship intent

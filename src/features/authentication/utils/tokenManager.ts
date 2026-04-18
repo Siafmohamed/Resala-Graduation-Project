@@ -5,54 +5,61 @@ interface JwtPayload {
     [key: string]: unknown;
 }
 
+interface SessionData {
+    accessToken?: string;
+    refreshToken?: string;
+    role?: string;
+    userId?: string;
+    name?: string;
+    phoneNumber?: string;
+    [key: string]: unknown;
+}
+
 // ── Storage Keys ─────────────────────────────────────────
 const STORAGE_KEYS = {
-    ACCESS_TOKEN: 'resala_access_token',
-    REFRESH_TOKEN: 'resala_refresh_token',
     SESSION_DATA: 'resala_session',
 } as const;
 
-// ── Token Manager (Cookie-based, production grade) ────────────────────────
-export const tokenManager = {
-    // NOTE: Tokens are now stored in HTTP-only secure cookies by the server.
-    // Frontend does not directly access access_token or refresh_token.
-    // We rely on 'withCredentials: true' for all requests.
+type AccessTokenAdapter = {
+    get: () => string | null;
+    set: (token: string | null) => void;
+    clear: () => void;
+};
 
-    // For backwards compatibility and session UI state:
-    setTokens(_accessToken: string, _refreshToken: string): void {
-        // No-op: handled by server cookies
-    },
-
-    getAccessToken(): string | null {
-        const session = this.getSessionData<any>();
+// Access token storage adapter.
+// Keeping this isolated makes it easy to swap localStorage with in-memory later.
+const localStorageAccessTokenAdapter: AccessTokenAdapter = {
+    get: () => {
+        const session = tokenManager.getSessionData();
         return session?.accessToken || null;
     },
-
-    getRefreshToken(): string | null {
-        const session = this.getSessionData<any>();
-        return session?.refreshToken || null;
+    set: (token) => {
+        const session = tokenManager.getSessionData() || {};
+        if (token) {
+            session.accessToken = token;
+        } else {
+            delete session.accessToken;
+        }
+        tokenManager.setSessionData(session);
     },
-
-    clearTokens(): void {
-        localStorage.removeItem(STORAGE_KEYS.SESSION_DATA);
-        localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
-        localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-        // Also clear any other potential auth-related keys
-        Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('resala_')) {
-                localStorage.removeItem(key);
-            }
-        });
-        sessionStorage.clear();
-        // Note: Logout endpoint should clear cookies on the server
+    clear: () => {
+        const session = tokenManager.getSessionData();
+        if (!session) return;
+        delete session.accessToken;
+        tokenManager.setSessionData(session);
     },
+};
 
-    // ── Session data persistence (Non-sensitive info only) ─────────────
-    setSessionData(data: any): void {
+// ── Token Manager (localStorage with full session data) ──
+export const tokenManager = {
+    accessTokenAdapter: localStorageAccessTokenAdapter,
+
+    // Store complete session data including tokens
+    setSessionData(data: SessionData): void {
         localStorage.setItem(STORAGE_KEYS.SESSION_DATA, JSON.stringify(data));
     },
 
-    getSessionData<T>(): T | null {
+    getSessionData<T = SessionData>(): T | null {
         const raw = localStorage.getItem(STORAGE_KEYS.SESSION_DATA);
         if (!raw) return null;
         try {
@@ -60,6 +67,35 @@ export const tokenManager = {
         } catch {
             return null;
         }
+    },
+
+    getAccessToken(): string | null {
+        return this.accessTokenAdapter.get();
+    },
+
+    setAccessToken(accessToken: string): void {
+        this.accessTokenAdapter.set(accessToken);
+    },
+
+    getRefreshToken(): string | null {
+        const session = this.getSessionData();
+        return session?.refreshToken || null;
+    },
+
+    clearTokens(): void {
+        this.accessTokenAdapter.clear();
+        localStorage.removeItem(STORAGE_KEYS.SESSION_DATA);
+        sessionStorage.clear();
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('resala_')) {
+                localStorage.removeItem(key);
+            }
+        });
+        Object.keys(sessionStorage).forEach(key => {
+            if (key.startsWith('resala_')) {
+                sessionStorage.removeItem(key);
+            }
+        });
     },
 
     // ── Token validation ─────────────────────────────────
@@ -93,7 +129,7 @@ export const tokenManager = {
     getRoleFromToken(): string | null {
         const token = this.getAccessToken();
         if (!token) return null;
-        const decoded = this.decodeToken<any>(token);
+        const decoded = this.decodeToken(token);
         // Common JWT claim names for roles: 'role', 'roles', 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
         return decoded?.role || decoded?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || null;
     },
@@ -107,7 +143,7 @@ export const tokenManager = {
     },
 
     // ── Update only the access token (after refresh) ─────
-    updateAccessToken(_accessToken: string): void {
-        // Handled by server cookies
+    updateAccessToken(accessToken: string): void {
+        this.accessTokenAdapter.set(accessToken || null);
     },
 };

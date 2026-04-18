@@ -7,9 +7,12 @@ import {
   Package,
   FileText,
   Plus,
-  Save
+  Save,
+  ArrowLeft,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/Card';
+import { Button } from '@/shared/components/ui/Button';
 import { DonorSearchSelect } from './DonorSearchSelect';
 import { useCreateInKindDonation, useInKindDonation, useUpdateInKindDonation } from '../hooks/useInKindDonations';
 
@@ -76,18 +79,44 @@ export function RegisterDonationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8" dir="rtl">
+    <div className="flex flex-col gap-8 p-8 bg-[#f8fafc] min-h-screen" dir="rtl">
+      {/* Header Section */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline"
+            onClick={() => navigate('/in-kind-donations')}
+            className="flex items-center gap-2 px-4 py-2 border-gray-200 text-[#697282] hover:text-[#00549A] hover:border-[#00549A] rounded-xl font-[Cairo] font-bold transition-all"
+          >
+            <ArrowLeft size={18} />
+            رجوع
+          </Button>
+          <div className="flex flex-col gap-1">
+            <h1 className="font-[Cairo] font-bold text-2xl text-[#101727]">
+              {id ? 'تعديل التبرع العيني' : 'تسجيل تبرع عيني'}
+            </h1>
+            <p className="font-[Cairo] font-medium text-[#697282] text-sm">
+              {id ? 'تعديل بيانات التبرع العيني المسجل' : 'إضافة تبرع عيني جديد إلى النظام'}
+            </p>
+          </div>
+        </div>
+      </div>
       {/* Form Card */}
-      <Card className="w-full max-w-4xl border-none shadow-[0px_10px_40px_rgba(0,0,0,0.04)] rounded-[32px] overflow-hidden bg-white mb-8">
-        <CardContent className="p-8 sm:p-12 md:p-16">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-10">
-            {/* Form Title & Icon */}
-            <div className="flex items-center gap-4 self-end">
-              <span className="font-[Cairo] font-bold text-2xl text-[#00549A]">
-                {id ? 'تعديل بيانات التبرع' : 'تفاصيل التبرع العيني'}
-              </span>
-              <div className="p-3.5 rounded-2xl bg-[#EEF3FB] text-[#00549A]">
-                <Gift size={28} strokeWidth={2.5} />
+      <Card className="border-none shadow-[0px_4px_20px_rgba(0,0,0,0.03)] rounded-2xl overflow-hidden bg-white">
+        <CardContent className="p-8">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+            {/* Form Header */}
+            <div className="flex items-center gap-4 pb-6 border-b border-gray-100">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-[#e6eff7] to-[#f0f7ff] text-[#00549A]">
+                <Gift size={24} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h2 className="font-[Cairo] font-bold text-lg text-[#101727]">
+                  {id ? 'بيانات التبرع' : 'بيانات التبرع الجديد'}
+                </h2>
+                <p className="font-[Cairo] text-sm text-[#697282]">
+                  {id ? 'قم بتعديل البيانات المطلوبة' : 'قم بملء جميع الحقول المطلوبة'}
+                </p>
               </div>
             </div>
 
@@ -190,45 +219,64 @@ export function RegisterDonationPage() {
             </div>
 
             {/* Form Actions */}
-            <div className="flex flex-col sm:flex-row-reverse gap-4 pt-6">
-              <button
+            <div className="flex flex-col sm:flex-row-reverse gap-4 pt-6 border-t border-gray-100">
+              <Button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="flex-[2] py-5 rounded-2xl bg-[#00549A] text-white font-bold font-[Cairo] text-lg hover:bg-[#004077] transition-all shadow-xl shadow-[#00549A]/20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2"
+                className="flex-[2] py-6 rounded-xl bg-[#00549A] text-white font-bold font-[Cairo] text-base hover:bg-[#004077] transition-all shadow-lg shadow-[#00549A]/20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2"
               >
                 {createMutation.isPending || updateMutation.isPending ? (
-                  <>جاري {id ? 'التحديث' : 'التسجيل'}...</>
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    جاري {id ? 'التحديث' : 'التسجيل'}...
+                  </>
                 ) : (
                   <>
                     {id ? <Save size={20} /> : <Plus size={20} />}
                     {id ? 'حفظ التغييرات' : 'تسجيل التبرع'}
                   </>
                 )}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                onClick={() => navigate(-1)}
-                className="flex-1 py-5 rounded-2xl border-none bg-[#F8FAFC] text-[#697282] font-bold font-[Cairo] text-lg hover:bg-gray-100 transition-all active:scale-[0.98]"
+                onClick={() => navigate('/in-kind-donations')}
+                variant="outline"
+                className="flex-1 py-6 rounded-xl border-gray-200 text-[#697282] font-bold font-[Cairo] text-base hover:bg-gray-50 transition-all active:scale-[0.98]"
               >
                 إلغاء
-              </button>
+              </Button>
             </div>
           </form>
         </CardContent>
       </Card>
 
       {/* Important Notes Section */}
-      <div className="w-full max-w-4xl bg-[#EEF3FB] rounded-[32px] p-8 sm:p-10 text-right">
-        <h3 className="font-[Cairo] font-bold text-lg text-[#00549A] mb-4 flex items-center justify-end gap-2">
-          ملاحظات هامة
-          <AlertCircle size={20} />
-        </h3>
-        <ul className="space-y-3 font-[Cairo] text-[#495565] text-sm list-none pr-0">
-          <li>• تأكد من فحص التبرع جيداً قبل تسجيله في النظام</li>
-          <li>• يرجى كتابة وصف دقيق للكمية وحالة العناصر المستلمة</li>
-          <li>• سيتم إرسال إشعار آلي لإدارة المخازن فور إتمام التسجيل</li>
-        </ul>
-      </div>
+      <Card className="border-none shadow-[0px_4px_20px_rgba(0,0,0,0.03)] rounded-2xl">
+        <CardContent className="p-6">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-[#e6eff7] text-[#00549A] flex-shrink-0 mt-1">
+              <AlertCircle size={20} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-[Cairo] font-bold text-base text-[#101727] mb-3">ملاحظات هامة</h3>
+              <ul className="space-y-2 font-[Cairo] text-[#697282] text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#00549A] mt-1">•</span>
+                  <span>تأكد من فحص التبرع جيداً قبل تسجيله في النظام</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#00549A] mt-1">•</span>
+                  <span>يرجى كتابة وصف دقيق للكمية وحالة العناصر المستلمة</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#00549A] mt-1">•</span>
+                  <span>سيتم إرسال إشعار آلي لإدارة المخازن فور إتمام التسجيل</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

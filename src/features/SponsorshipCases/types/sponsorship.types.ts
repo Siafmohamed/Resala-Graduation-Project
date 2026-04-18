@@ -1,29 +1,34 @@
 export type Duration = "شهري" | "سنوي" | "حسب الحالة";
-export type SponsorshipCategory = "أسرة" | "طالب" | "يتيم" | "مريض" | "موسمي" | "عاجل";
+export type SponsorshipCategory = "أسرة" | "طالب" | "يتيم" | "مريض" | "موسمي" | "عاجل" | "emergency";
 
 export interface Sponsorship {
   id: number;
-  title: string;
+  name: string; // Sponsorship title
   description: string;
-  value: number;
-  duration: Duration;
-  total: number;
+  imageUrl?: string; // Web page reference like https://example.com/image.jpg
+  icon?: string; // SVG format icon
+  targetAmount: number;
+  collectedAmount?: number;
   active: boolean;
-  seasonal?: string;
-  urgent?: boolean;
-  category?: SponsorshipCategory;
-  image?: string;
-  icon?: string;
+  category: SponsorshipCategory;
+  duration?: Duration;
 }
 
-export interface SponsorshipFormData {
-  title: string;
+export interface EmergencyCase extends Sponsorship {
+  category: "emergency";
+  patientName?: string;
+  medicalCondition?: string;
+}
+
+export interface CreateSponsorshipPayload {
+  name: string;
   description: string;
-  value: number;
-  duration: Duration;
-  category?: SponsorshipCategory;
-  seasonal?: string;
-  urgent?: boolean;
-  image?: string;
+  targetAmount: number;
+  imageUrl?: string;
   icon?: string;
+  category?: SponsorshipCategory;
+}
+
+export interface UpdateSponsorshipPayload extends Partial<CreateSponsorshipPayload> {
+  active?: boolean;
 }

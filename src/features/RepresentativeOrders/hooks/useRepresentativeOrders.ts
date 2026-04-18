@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { representativeOrdersService } from '../services/representativeOrdersService';
 import type { RepresentativeOrder } from '../types/representativeOrders.types';
+import { CACHE_DURATIONS } from '@/shared/constants/cacheDurations';
 
 export function useRepresentativeOrders(): {
   data: RepresentativeOrder[] | undefined;
@@ -10,7 +11,7 @@ export function useRepresentativeOrders(): {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['representative-orders'],
     queryFn: () => representativeOrdersService.getAll(),
-    staleTime: 30_000,
+    staleTime: CACHE_DURATIONS.SHORT,
   });
 
   return { data, isLoading, isError };

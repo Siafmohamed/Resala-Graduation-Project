@@ -7,7 +7,7 @@ This file serves as a basic test to ensure the unified authentication module wor
 1. ✅ **Types** - User, AuthResponse, Role, Permission, etc.
 2. ✅ **Store** - Zustand store with proper actions and selectors
 3. ✅ **Services** - AuthService with all required API methods
-4. ✅ **Hooks** - Mutations, session, and auth guard hooks
+4. ✅ **Hooks** - Mutations, provider-driven session lifecycle, and auth guard hooks
 5. ✅ **Utils** - TokenManager and axios instance with refresh logic
 6. ✅ **Components** - Route guards and conditional rendering components
 7. ✅ **Exports** - Proper index.ts exports for easy importing
@@ -40,7 +40,6 @@ src/features/resala/authentication/
 │   └── ShowIfRole.tsx
 ├── hooks/               # Custom React hooks
 │   ├── useAuthMutations.ts
-│   ├── useAuthSession.ts
 │   ├── useAuthGuard.ts
 │   └── useAuthLogoutListener.ts
 ├── services/            # API services

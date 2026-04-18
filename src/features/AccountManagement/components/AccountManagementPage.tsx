@@ -20,18 +20,16 @@ import { Navigate } from 'react-router-dom';
 
 export function AccountManagementPage() {
   const userRole = useUserRole();
-
-  if (userRole !== Role.ADMIN) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<Account | null>(null);
-
   const { data: accounts = [], isLoading, isError } = useAccounts();
+
+  if (userRole !== Role.ADMIN) {
+    return <Navigate to="/unauthorized" replace />;
+  }
 
   const filteredAccounts = accounts.filter(acc => {
     const matchesSearch = acc.fullName.toLowerCase().includes(search.toLowerCase()) || 
@@ -135,9 +133,9 @@ export function AccountManagementPage() {
               onChange={(e) => setFilterRole(e.target.value)}
             >
               <option value="all">جميع الأدوار</option>
-              <option value="Admin">مدير نظام</option>
-              <option value="Reception">موظف استقبال</option>
-              <option value="FormManager">مسؤول نماذج</option>
+              <option value={Role.ADMIN}>مدير نظام</option>
+              <option value={Role.RECEPTIONIST}>موظف استقبال</option>
+              <option value={Role.FORM_MANAGER}>مسؤول نماذج</option>
             </select>
             <ChevronDown className="absolute left-4 top-1/2 -translate-y-1/2 text-[#697282] pointer-events-none" size={16} />
           </div>

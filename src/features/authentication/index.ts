@@ -43,7 +43,6 @@ export {
   useResendOTPMutation,
   useCreateStaffMutation,
 } from './hooks/useAuthMutations';
-export { useInitializeAuth, useRefreshSession } from './hooks/useAuthSession';
 export {
   useAuthGuard,
   useRequireAuth,
@@ -51,6 +50,7 @@ export {
   useRedirectIfAuthenticated,
 } from './hooks/useAuthGuard';
 export { useAuthLogoutListener } from './hooks/useAuthLogoutListener';
+export { AuthProvider, useAuth } from './context/AuthProvider';
 
 // ── Route Guards ─────────────────────────────────────────
 export { ProtectedRoute } from './components/ProtectedRoute';

@@ -3,6 +3,7 @@
 // ============================================
 
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import type {
     DonorFiltersState,
     PaginationState,
@@ -31,6 +32,7 @@ interface DonorStore {
     // Sort
     sort: SortState;
     setSort: (field: DonorSortField) => void;
+    setSortState: (sort: SortState) => void;
 
     // Selection (bulk ops)
     selectedIds: string[];
@@ -39,7 +41,7 @@ interface DonorStore {
     clearSelection: () => void;
 }
 
-const DEFAULT_FILTERS: DonorFiltersState = {
+export const DEFAULT_DONOR_FILTERS: DonorFiltersState = {
     search: '',
     paymentStatus: 'all',
     sponsorshipType: 'all',
@@ -51,14 +53,16 @@ const DEFAULT_PAGINATION: PaginationState = {
     total: 0,
 };
 
-const DEFAULT_SORT: SortState = {
+export const DEFAULT_DONOR_SORT: SortState = {
     field: 'formDate',
     direction: 'desc',
 };
 
-export const useDonorStore = create<DonorStore>((set) => ({
+export const useDonorStore = create<DonorStore>()(
+  persist(
+    (set) => ({
     // ── Filters ──
-    filters: DEFAULT_FILTERS,
+    filters: DEFAULT_DONOR_FILTERS,
     setFilters: (filters) =>
         set((state) => ({
             filters: { ...state.filters, ...filters },
@@ -81,7 +85,7 @@ export const useDonorStore = create<DonorStore>((set) => ({
         })),
     clearFilters: () =>
         set((state) => ({
-            filters: DEFAULT_FILTERS,
+            filters: DEFAULT_DONOR_FILTERS,
             pagination: { ...state.pagination, page: 1 },
         })),
 
@@ -97,7 +101,7 @@ export const useDonorStore = create<DonorStore>((set) => ({
         set((state) => ({ pagination: { ...state.pagination, total } })),
 
     // ── Sort ──
-    sort: DEFAULT_SORT,
+    sort: DEFAULT_DONOR_SORT,
     setSort: (field) =>
         set((state) => ({
             sort: {
@@ -110,6 +114,7 @@ export const useDonorStore = create<DonorStore>((set) => ({
                         : ('asc' as SortDirection),
             },
         })),
+    setSortState: (sort) => set({ sort }),
 
     // ── Selection ──
     selectedIds: [],
@@ -121,4 +126,14 @@ export const useDonorStore = create<DonorStore>((set) => ({
         })),
     selectAll: (ids) => set({ selectedIds: ids }),
     clearSelection: () => set({ selectedIds: [] }),
-}));
+    }),
+    {
+      name: 'donor-store',
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({
+        filters: state.filters,
+        sort: state.sort,
+      }),
+    }
+  )
+);

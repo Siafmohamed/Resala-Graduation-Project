@@ -1,9 +1,10 @@
 import { BrowserRouter as Router } from'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useAuthLogoutListener, useInitializeAuth, useIsInitialized } from './features/authentication';
+import { useAuthLogoutListener } from './features/authentication';
 import { ErrorBoundary } from './shared/components/feedback/ErrorBoundary';
 import { FullPageSpinner } from './features/authentication/components/FullPageSpinner';
+import { AuthProvider, useAuth } from './features/authentication/context/AuthProvider';
 import AppRoutes from './routes/AppRoutes';
 import './App.css';
 
@@ -13,9 +14,9 @@ import './App.css';
  */
 function AuthBootstrap({ children }: { children: React.ReactNode }) {
   useAuthLogoutListener();
-  const { isInitialized } = useInitializeAuth();
+  const { isLoading } = useAuth();
   
-  if (!isInitialized) {
+  if (isLoading) {
     return <FullPageSpinner />;
   }
 
@@ -41,11 +42,13 @@ function AuthBootstrap({ children }: { children: React.ReactNode }) {
 function App() {
 return (
   <ErrorBoundary>
-    <Router>
-      <AuthBootstrap>
-        <AppRoutes />
-      </AuthBootstrap>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <AuthBootstrap>
+          <AppRoutes />
+        </AuthBootstrap>
+      </Router>
+    </AuthProvider>
   </ErrorBoundary>
 );
 }

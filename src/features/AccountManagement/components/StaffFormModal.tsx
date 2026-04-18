@@ -5,6 +5,8 @@ import { useCreateStaff, useUpdateStaff } from '../hooks/useAccounts';
 import { extractApiError } from '@/features/authentication/services/authService';
 import type { Account, CreateStaffPayload } from '../types/accountManagement.types';
 import { Role } from '@/features/authentication';
+import { containsPotentialXss } from '@/shared/utils/security/sanitization';
+import logger from '@/shared/utils/logger';
 
 interface StaffFormModalProps {
   isOpen: boolean;
@@ -56,6 +58,18 @@ export function StaffFormModal({ isOpen, onClose, staff }: StaffFormModalProps) 
 
   const onSubmit = async (formData: CreateStaffPayload) => {
     setServerError(null);
+
+    // XSS Protection
+    if (
+      containsPotentialXss(formData.name) || 
+      containsPotentialXss(formData.username) || 
+      containsPotentialXss(formData.email || '') || 
+      containsPotentialXss(formData.phoneNumber || '')
+    ) {
+      setServerError('إدخال غير صالح يحتوي على رموز ممنوعة');
+      return;
+    }
+
     // Ensure staffType is a number
     const payload = {
       ...formData,
@@ -63,6 +77,7 @@ export function StaffFormModal({ isOpen, onClose, staff }: StaffFormModalProps) 
     };
 
     try {
+      logger.log('[StaffFormModal] Submitting:', { ...payload, password: '***' });
       if (isEdit) {
         await updateMutation.mutateAsync({ 
           id: staff!.id, 

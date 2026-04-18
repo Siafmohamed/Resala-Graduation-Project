@@ -49,9 +49,9 @@ export const SidebarNavigationSection = (): React.ReactElement => {
   const navigate = useNavigate();
   const location = useLocation();
   const [openGroups, setOpenGroups] = useState<string[]>([]);
-  const clearAuth = useAuthStore((s: any) => s.clearAuth);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
   const userRole = useUserRole();
-  const currentUser = useAuthStore((s: any) => s.session);
+  const currentUser = useAuthStore((s) => s.session);
   const queryClient = useQueryClient();
 
   const navConfig = useMemo(() => 
@@ -96,12 +96,14 @@ export const SidebarNavigationSection = (): React.ReactElement => {
   const handleLogout = async () => {
     try {
       await authService.logout();
-    } catch {
+    } catch (error) {
+      console.error('[SidebarNav] Logout API failed:', error);
+    } finally {
+      // Always clear client-side state even if the API call fails
+      clearAuth();
+      queryClient.clear();
+      navigate("/login", { replace: true });
     }
-    clearAuth();
-    queryClient.clear();
-    // Force a full page reload to clear all in-memory state and caches
-    window.location.href = "/login";
   };
 
   return (

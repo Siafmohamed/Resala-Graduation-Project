@@ -2,6 +2,7 @@
 // Donor Service — Mock API Layer
 // ============================================
 
+import api from '@/api/axiosInstance';
 import type {
     Donor,
     DonorFormData,
@@ -106,7 +107,6 @@ let donors = [...MOCK_DONORS];
 // ──────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────
-
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function applyFilters(list: Donor[], filters: DonorFiltersState): Donor[] {
@@ -180,6 +180,21 @@ function applySort(list: Donor[], sort: SortState): Donor[] {
 // ──────────────────────────────────────────────
 
 export const donorService = {
+    /** 
+     * Register a new donor directly from the dashboard (Staff/Admin)
+     * POST /api/v1/auth/register-donor
+     */
+    async registerDonor(payload: DonorFormData): Promise<{ succeeded: boolean; message: string; data: { userId: number; message: string } }> {
+        return await api.post('/v1/auth/register-donor', {
+            name: payload.name,
+            email: payload.email,
+            phoneNumber: payload.phoneNumber,
+            password: payload.password,
+            job: payload.job,
+            landline: payload.landline,
+        });
+    },
+
     /** Fetch donors with filters, sort, and pagination */
     async getDonors(
         filters: DonorFiltersState,

@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authSlice';
 import type { Role, Permission } from '../types/role.types';
 import { canAccess, hasPermission } from '../types/role.types';
 import type { SessionData } from '../types/auth.types';
+import { useAuth } from '../context/AuthProvider';
 
 // Helper to map API role to internal Role
 function mapApiRole(apiRole: string): Role | undefined {
@@ -31,8 +32,8 @@ interface AuthGuardResult {
 }
 
 export function useAuthGuard(options?: AuthGuardOptions): AuthGuardResult {
-    const isAuthenticated = useAuthStore((s: any) => s.isAuthenticated);
-    const isInitialized = useAuthStore((s: any) => s.isInitialized);
+    const { isAuthenticated, isLoading } = useAuth();
+    const isInitialized = !isLoading;
     const session = useAuthStore((s: any) => s.session);
     const userRole = session?.role ? mapApiRole(session.role) : undefined;
 

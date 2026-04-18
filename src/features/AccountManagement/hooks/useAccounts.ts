@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { accountManagementService } from '../services/accountManagementService';
 import type { CreateStaffPayload, UpdateStaffPayload } from '../types/accountManagement.types';
+import { CACHE_DURATIONS } from '@/shared/constants/cacheDurations';
 
 export function useAccounts() {
   return useQuery({
     queryKey: ['accounts'],
     queryFn: () => accountManagementService.getAll(),
-    staleTime: 30_000,
+    staleTime: CACHE_DURATIONS.SHORT,
   });
 }
 

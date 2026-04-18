@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useLoginMutation } from '../../hooks/useAuthMutations';
-import { useAuthStore } from '../../store/authSlice';
+import { authService } from '../../services/authService';
+import { useAuth } from '../../context/AuthProvider';
 import { PublicRoute } from '../PublicRoute';
 import LoginForm from '../forms/LoginForm';
 import styles from '../auth.module.css';
@@ -9,14 +9,15 @@ import styles from '../auth.module.css';
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const loginMutation = useLoginMutation();
-  const setAuth = useAuthStore((s: any) => s.setAuth);
+  const { login, isLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleLogin = async (formData: { username: string; password: string }) => {
     try {
+      setIsSubmitting(true);
       setError(null);
-      const response = await loginMutation.mutateAsync(formData);
+      const response = await authService.login(formData);
 
       // Check if login succeeded
       if (!response.succeeded) {
@@ -33,8 +34,7 @@ const LoginPage: React.FC = () => {
         return;
       }
 
-      // Store session in Zustand + localStorage (setAuth handles persistence)
-      setAuth({ accessToken, refreshToken, role, userId, name, phoneNumber });
+      await login(formData);
 
       // Role-based redirection
       const from = location.state?.from;
@@ -62,6 +62,8 @@ const LoginPage: React.FC = () => {
         const errorMessage = axiosError.response?.data?.message || 'فشل تسجيل الدخول. حاول مرة أخرى.';
         setError(errorMessage);
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -103,7 +105,7 @@ const LoginPage: React.FC = () => {
           <h2 className={styles.formTitle}>تسجيل الدخول</h2>
           <p className={styles.formSubtitle}>أدخل بيانات الدخول الخاصة بك</p>
 
-          <LoginForm onSubmit={handleLogin} isLoading={loginMutation.isPending} error={error} />
+          <LoginForm onSubmit={handleLogin} isLoading={isSubmitting || isLoading} error={error} />
         </div>
       </div>
     </PublicRoute>

@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { donorService } from '../services/donorService';
 import { useDonorStore } from '../store/donorSlice';
@@ -85,7 +85,10 @@ export function useDonors() {
   const sort = useDonorStore((s) => s.sort);
   
   const debouncedSearch = useDebounce(filters.search, 400);
-  const effectiveFilters = { ...filters, search: debouncedSearch };
+  const effectiveFilters = useMemo(
+    () => ({ ...filters, search: debouncedSearch }),
+    [filters, debouncedSearch]
+  );
 
   const query = useQuery({
     queryKey: donorQueryKeys.list(effectiveFilters, pagination, sort),

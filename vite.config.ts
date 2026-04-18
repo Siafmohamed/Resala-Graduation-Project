@@ -15,11 +15,9 @@ export default defineConfig({
 server: {
   proxy: {
     '/api': {
-      target: 'http://resala.runasp.net',
+      target: process.env.VITE_PROXY_TARGET || 'http://resala.runasp.net',
       changeOrigin: true,
       secure: false,
-      // We removed the rewrite line so that the /api prefix is preserved
-      // and sent to the backend as part of the full URL.
     },
   },
 },

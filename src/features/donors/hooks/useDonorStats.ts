@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { donorService } from '../services/donorService';
 import type { DonorStatsData } from '../types/donor.types';
+import { CACHE_DURATIONS } from '@/shared/constants/cacheDurations';
 
 export function useDonorStats(): {
   stats: DonorStatsData | undefined;
@@ -9,7 +10,7 @@ export function useDonorStats(): {
   const { data, isLoading } = useQuery({
     queryKey: ['donor-stats'],
     queryFn: donorService.getStats,
-    staleTime: 60_000,
+    staleTime: CACHE_DURATIONS.MEDIUM,
   });
 
   return { stats: data, isLoading };

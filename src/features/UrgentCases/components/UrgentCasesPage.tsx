@@ -31,16 +31,22 @@ export function UrgentCasesPage() {
             </div>
           )}
 
-          {data && !isLoading && (
+          {data && !isLoading && data.length === 0 && (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              لا توجد حالات عاجلة حالياً
+            </div>
+          )}
+
+          {data && !isLoading && data.length > 0 && (
             <div className="overflow-x-auto">
               <table className="min-w-full border-separate border-spacing-y-1">
                 <thead>
                   <tr className="text-right text-xs font-semibold text-slate-500">
                     <th className="px-3 py-2">عنوان الحالة</th>
-                    <th className="px-3 py-2">التصنيف</th>
-                    <th className="px-3 py-2">الأولوية</th>
-                    <th className="px-3 py-2">المطلوب</th>
-                    <th className="px-3 py-2">المحصّل</th>
+                    <th className="px-3 py-2">الوصف</th>
+                    <th className="px-3 py-2">المبلغ المستهدف</th>
+                    <th className="px-3 py-2">المبلغ المحصّل</th>
+                    <th className="px-3 py-2">الحالة</th>
                     <th className="px-3 py-2">تاريخ الإنشاء</th>
                   </tr>
                 </thead>
@@ -48,34 +54,26 @@ export function UrgentCasesPage() {
                   {data.map((c) => (
                     <tr key={c.id} className="rounded-md bg-white text-sm shadow-sm">
                       <td className="px-3 py-2 font-medium text-slate-900">{c.title}</td>
-                      <td className="whitespace-nowrap px-3 py-2 text-slate-700">
-                        {c.category === 'medical' && 'حالة طبية'}
-                        {c.category === 'housing' && 'سكن'}
-                        {c.category === 'food' && 'غذاء'}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2">
-                        <span
-                          className={
-                            c.priority === 'high'
-                              ? 'inline-flex rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700'
-                              : c.priority === 'medium'
-                              ? 'inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700'
-                              : 'inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700'
-                          }
-                        >
-                          {c.priority === 'high' && 'مرتفعة'}
-                          {c.priority === 'medium' && 'متوسطة'}
-                          {c.priority === 'low' && 'منخفضة'}
-                        </span>
-                      </td>
+                      <td className="px-3 py-2 text-slate-700 max-w-xs truncate">{c.description}</td>
                       <td className="whitespace-nowrap px-3 py-2 text-slate-900">
-                        {formatNumber(c.requestedAmount)} جنيه
+                        {formatNumber(c.targetAmount)} جنيه
                       </td>
                       <td className="whitespace-nowrap px-3 py-2 text-slate-900">
                         {formatNumber(c.collectedAmount)} جنيه
                       </td>
+                      <td className="whitespace-nowrap px-3 py-2">
+                        <span
+                          className={
+                            c.isActive
+                              ? 'inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700'
+                              : 'inline-flex rounded-full bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-700'
+                          }
+                        >
+                          {c.isActive ? 'نشطة' : 'غير نشطة'}
+                        </span>
+                      </td>
                       <td className="whitespace-nowrap px-3 py-2 text-slate-600">
-                        {c.createdAt}
+                        {new Date(c.createdOn).toLocaleDateString('ar-EG')}
                       </td>
                     </tr>
                   ))}
@@ -88,4 +86,3 @@ export function UrgentCasesPage() {
     </div>
   );
 }
-
