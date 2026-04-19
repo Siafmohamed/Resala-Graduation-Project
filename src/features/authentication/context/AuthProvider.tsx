@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/features/authentication/services/authService';
 import type { LoginCredentials, SessionData, User } from '@/features/authentication/types/auth.types';
 import { tokenManager } from '@/features/authentication/utils/tokenManager';
+import { completeAuthCleanup, initializeNewSession } from '@/features/authentication/utils/authCleanup';
 import { useAuthStore } from '@/features/authentication/store/authSlice';
 import { Role } from '@/features/authentication/types/role.types';
 
@@ -122,25 +123,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
+      // 1. Perform complete cleanup to remove any stale state from previous session
+      // This includes clearing axios interceptor state which is critical for role switches
+      completeAuthCleanup();
+      queryClient.clear();
+
+      // 2. Perform login
       const response = await authService.login(credentials);
       if (!response.succeeded) {
         throw new Error(response.message || 'Login failed');
       }
+
+      // 3. Initialize fresh session with new data
+      initializeNewSession(response.data);
+      
+      // 4. Update auth store with new session
       setAuth(response.data);
-      queryClient.invalidateQueries();
+      
+      // 5. Mark initialization as complete so route guards and components 
+      // that depend on isInitialized flag know auth state is ready
+      // This is critical for logout/login cycles without page reload (role switches)
+      setInitialized(true);
+      
+      console.log('[AuthProvider] Login successful:', { role: response.data.role, userId: response.data.userId });
     },
-    [setAuth, queryClient],
+    [setAuth, setInitialized, queryClient],
   );
 
   const logout = useCallback(async () => {
     try {
       await authService.logout();
-    } catch {
-      // Cleanup still must proceed even if logout endpoint fails.
+    } catch (error) {
+      // Cleanup still must proceed even if logout endpoint fails
+      if (import.meta.env.DEV) {
+        console.warn('[AuthProvider] Logout API call failed, proceeding with cleanup:', error);
+      }
     } finally {
+      // Perform comprehensive cleanup
+      // This clears axios interceptor state which is critical when role changes
+      completeAuthCleanup();
       clearAuth();
       clearRefreshTimer();
       queryClient.clear();
+      
+      console.log('[AuthProvider] Logout complete - all state cleared');
     }
   }, [clearAuth, clearRefreshTimer, queryClient]);
 

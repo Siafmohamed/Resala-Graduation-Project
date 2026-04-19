@@ -59,3 +59,10 @@ export { PublicRoute } from './components/PublicRoute';
 // ── Role UI Helpers ──────────────────────────────────────
 export { ShowIfRole } from './components/ShowIfRole';
 export { ShowIfPermission } from './components/ShowIfPermission';
+
+// ── Utils ────────────────────────────────────────────────
+export {
+  completeAuthCleanup,
+  initializeNewSession,
+  validateCurrentSession,
+} from './utils/authCleanup';

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../store/authSlice';
 import { tokenManager } from '../utils/tokenManager';
+import { completeAuthCleanup } from '../utils/authCleanup';
 
 /**
  * Listens for auth:session-expired and clears auth + React Query cache.
@@ -16,8 +17,8 @@ export function useAuthLogoutListener(): void {
     useEffect(() => {
         const handleSessionExpired = () => {
             console.warn('[Auth] Session expired. Clearing state and redirecting...');
-            // 1. Clear stored tokens and session
-            tokenManager.clearTokens();
+            // 1. Perform comprehensive cleanup
+            completeAuthCleanup();
             // 2. Clear Zustand store
             clearAuth();
             // 3. Invalidate/Clear React Query cache

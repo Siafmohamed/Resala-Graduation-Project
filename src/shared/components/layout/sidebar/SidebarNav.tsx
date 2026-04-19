@@ -2,10 +2,8 @@ import React, { useState, useMemo } from "react";
 import { LogOut, ChevronDown } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
-import { useQueryClient } from "@tanstack/react-query";
 import { getNavConfigForRole } from "./navigationConfig";
-import { authService } from "@/features/authentication/services/authService";
-import { useAuthStore, useUserRole, Role } from "@/features/authentication";
+import { useAuth, useAuthStore, useUserRole, Role } from "@/features/authentication";
 import { ROLE_LABELS_AR } from "@/features/authentication/types/role.types";
 import type { NavItem, NavGroup } from "./types";
 
@@ -49,10 +47,9 @@ export const SidebarNavigationSection = (): React.ReactElement => {
   const navigate = useNavigate();
   const location = useLocation();
   const [openGroups, setOpenGroups] = useState<string[]>([]);
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const { logout } = useAuth();
   const userRole = useUserRole();
   const currentUser = useAuthStore((s) => s.session);
-  const queryClient = useQueryClient();
 
   const navConfig = useMemo(() => 
     userRole ? getNavConfigForRole(userRole) : [], 
@@ -95,13 +92,16 @@ export const SidebarNavigationSection = (): React.ReactElement => {
 
   const handleLogout = async () => {
     try {
-      await authService.logout();
+      // Use the logout from AuthProvider which handles:
+      // - completeAuthCleanup() to clear axios interceptor state
+      // - clearAuth() to clear Zustand store
+      // - clearRefreshTimer() to stop token refresh
+      // - queryClient.clear() to clear React Query cache
+      await logout();
     } catch (error) {
-      console.error('[SidebarNav] Logout API failed:', error);
+      console.error('[SidebarNav] Logout failed:', error);
     } finally {
-      // Always clear client-side state even if the API call fails
-      clearAuth();
-      queryClient.clear();
+      // Navigate to login as final step
       navigate("/login", { replace: true });
     }
   };

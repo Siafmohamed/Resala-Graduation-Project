@@ -87,20 +87,6 @@ const getAuthorizedHeaders = (): Record<string, string> => {
 
 
 // ---------------------------------------------------------------------------
-// Urgency helpers
-// ---------------------------------------------------------------------------
-
-
-const toUrgencyLabel = (raw: number | string | undefined): string => {
-  const val = String(raw ?? '').trim();
-  if (val === '1') return 'High';
-  if (val === '2') return 'Medium';
-  if (val.toLowerCase() === 'high') return 'High';
-  if (val.toLowerCase() === 'medium') return 'Medium';
-  return 'Low';
-};
-
-// ---------------------------------------------------------------------------
 // Sponsorship types & normaliser
 // ---------------------------------------------------------------------------
 
@@ -177,13 +163,14 @@ export interface EmergencyCase {
   title: string;
   description: string;
   imageUrl?: string;
-  urgencyLevel: string;
+  /** ✅ ALWAYS numeric: 1 (Normal) | 2 (Urgent) | 3 (Critical) */
+  urgencyLevel: number;
   requiredAmount: number;
   targetAmount: number;
   collectedAmount: number;
   isActive: boolean;
   isCompleted: boolean;
-  /** Derived: true when urgencyLevel === 'High'. Not sent to the backend. */
+  /** Derived: true when urgencyLevel === 3 (Critical). Not sent to the backend. */
   isCritical: boolean;
   createdAt?: string;
   createdOn?: string;
@@ -194,7 +181,8 @@ export interface CreateEmergencyCasePayload {
   description: string;
   imageUrl?: string;
   imageFile?: File;
-  urgencyLevel?: string | number;
+  /** ✅ ALWAYS numeric: 1 (Normal) | 2 (Urgent) | 3 (Critical) */
+  urgencyLevel?: number;
   requiredAmount?: number;
   targetAmount: number;
   collectedAmount?: number;
@@ -209,8 +197,9 @@ export interface CreateEmergencyCasePayload {
 export type UpdateEmergencyCasePayload = Omit<
   Partial<EmergencyCase>,
   'id' | 'isCritical' | 'createdAt' | 'createdOn'
->;
-
+> & {
+  urgencyLevel?: number;
+};
 /**
  * Raw shape returned by the emergency-case endpoints.
  * `requiredAmount` is what the backend calls the target; `urgencyLevel` can
@@ -218,20 +207,8 @@ export type UpdateEmergencyCasePayload = Omit<
  */
 interface RawEmergencyCase {
   id: number;
-  Title?: string;
-  Description?: string;
-  Image?: string;
-  UrgencyLevel?: number | string;
-  RequiredAmount?: number | string;
-  TargetAmount?: number | string;
-  ReceivedAmount?: number | string;
-  IsActive?: boolean;
-  IsCompleted?: boolean;
-  CreatedAt?: string;
-  CreatedOn?: string;
-  // Fallbacks for older snake_case/camelCase
-  title?: string;
-  description?: string;
+  title: string;
+  description: string;
   imageUrl?: string;
   urgencyLevel?: number | string;
   requiredAmount?: number | string;
@@ -244,31 +221,26 @@ interface RawEmergencyCase {
 }
 
 const toUiEmergencyCase = (item: RawEmergencyCase): EmergencyCase => {
-  const title = item.Title ?? item.title ?? '';
-  const description = item.Description ?? item.description ?? '';
-  const imageUrl = item.Image ?? item.imageUrl;
-  const rawRequiredAmount = item.RequiredAmount ?? item.TargetAmount ?? item.requiredAmount ?? item.targetAmount ?? 0;
-  const rawCollectedAmount = item.ReceivedAmount ?? item.collectedAmount ?? 0;
-  const rawUrgency = item.UrgencyLevel ?? item.urgencyLevel;
-  
-  const requiredAmount = Number(rawRequiredAmount);
-  const urgencyLevel = toUrgencyLabel(rawUrgency);
+  const requiredAmount = Number(item.requiredAmount ?? item.targetAmount ?? 0);
+  // ✅ Keep urgencyLevel as numeric (no string conversion)
+  const urgencyLevel = Number(item.urgencyLevel ?? 1) as number;
+  // ✅ isCritical is a DERIVED field - computed from urgencyLevel
+  const isCritical = urgencyLevel === 3; // 3 = Critical
 
   return {
     id: item.id,
-    title,
-    description,
-    imageUrl: resolveMediaUrl(imageUrl),
-    urgencyLevel,
+    title: item.title,
+    description: item.description,
+    imageUrl: resolveMediaUrl(item.imageUrl),
+    urgencyLevel, // ✅ numeric, not string
     requiredAmount,
     targetAmount: requiredAmount,
-    collectedAmount: Number(rawCollectedAmount),
-    isActive: Boolean(item.IsActive ?? item.isActive),
-    isCompleted: Boolean(item.IsCompleted ?? item.isCompleted),
-    // 1 = High, 2 = Medium
-    isCritical: String(rawUrgency) === '1' || urgencyLevel.toLowerCase() === 'high',
-    createdAt: item.CreatedAt ?? item.createdAt,
-    createdOn: item.CreatedOn ?? item.createdOn,
+    collectedAmount: Number(item.collectedAmount ?? 0),
+    isActive: Boolean(item.isActive),
+    isCompleted: Boolean(item.isCompleted),
+    isCritical, // ✅ Derived: computed on-the-fly, not stored
+    createdAt: item.createdAt,
+    createdOn: item.createdOn,
   };
 };
 
@@ -278,13 +250,15 @@ const toUiEmergencyCase = (item: RawEmergencyCase): EmergencyCase => {
 
 export const sponsorshipApi = {
   create: async (payload: CreateSponsorshipPayload): Promise<SponsorshipProgram> => {
-    // Send JSON payload matching the required schema: name, description, imageUrl, icon, targetAmount
+    // Send JSON payload - axios will automatically set Content-Type
     const apiPayload = {
       name: payload.name,
       description: payload.description,
-      imageUrl: payload.imageUrl && payload.imageUrl.trim() ? payload.imageUrl : "",
-      icon: payload.icon && payload.icon.trim() ? payload.icon : "",
-      targetAmount: Math.trunc(payload.targetAmount),
+      imageUrl: payload.imageUrl && payload.imageUrl.trim() ? payload.imageUrl : null,
+      icon: payload.icon && payload.icon.trim() ? payload.icon : null,
+      targetAmount: payload.targetAmount,
+      isActive: payload.isActive ?? true,
+      collectedAmount: payload.collectedAmount ?? 0,
     };
 
     const raw = unwrapData<RawSponsorshipProgram>(
@@ -294,15 +268,42 @@ export const sponsorshipApi = {
   },
 
   update: async (id: number, payload: UpdateSponsorshipPayload): Promise<SponsorshipProgram> => {
-    // ✅ Flattened payload: id, name, description, targetAmount
-    const apiPayload: any = {
-      id: id,
-    };
+    // ✅ PUT endpoints only accept JSON, not FormData
+    // If files are provided, they must be uploaded separately first (2-step process)
+    // For now, we send JSON with URLs only
     
-    // Only include fields specified in the user's prompt: name, description, targetAmount
-    if (payload.name !== undefined && payload.name !== null) apiPayload.name = payload.name;
-    if (payload.description !== undefined && payload.description !== null) apiPayload.description = payload.description;
-    if (payload.targetAmount !== undefined && payload.targetAmount !== null) apiPayload.targetAmount = Math.trunc(payload.targetAmount);
+    const apiPayload: {
+      name?: string;
+      description?: string;
+      targetAmount?: number;
+      isActive?: boolean;
+      collectedAmount?: number;
+      imageUrl?: string;
+      icon?: string;
+    } = {};
+    
+    // Only include fields that are provided
+    if (payload.name !== undefined) apiPayload.name = payload.name;
+    if (payload.description !== undefined) apiPayload.description = payload.description;
+    if (payload.targetAmount !== undefined) apiPayload.targetAmount = Math.trunc(payload.targetAmount);
+    if (payload.isActive !== undefined) apiPayload.isActive = payload.isActive;
+    if (payload.collectedAmount !== undefined) apiPayload.collectedAmount = payload.collectedAmount;
+    
+    // Handle image URL: prefer existing URL, ignore file uploads for now
+    if (payload.imageUrl !== undefined) apiPayload.imageUrl = payload.imageUrl;
+    else if (payload.imageFile) {
+      console.warn('Image file upload on update not supported yet. Please upload file separately first.');
+    }
+    
+    // Handle icon URL: prefer existing icon, ignore file uploads for now
+    if (payload.icon !== undefined) apiPayload.icon = payload.icon;
+    else if (payload.iconFile) {
+      console.warn('Icon file upload on update not supported yet. Please upload file separately first.');
+    }
+    
+    if (Object.keys(apiPayload).length === 0) {
+      throw new Error('No valid fields provided for sponsorship update.');
+    }
     
     const raw = unwrapData<RawSponsorshipProgram>(
       await api.put(`/v1/sponsorships/${id}`, apiPayload, {
@@ -337,15 +338,13 @@ export const sponsorshipApi = {
 
 export const emergencyApi = {
   create: async (payload: CreateEmergencyCasePayload): Promise<EmergencyCase> => {
-    // Build JSON payload matching backend PascalCase properties, without DTO wrapper
-    // UrgencyLevel 1 (High/Critical) and UrgencyLevel 2 (Medium/Moderate)
+    // Build JSON payload - urgencyLevel is ALWAYS numeric (1, 2, or 3)
     const apiPayload = {
-      "Title": payload.title,
-      "Description": payload.description,
-      "RequiredAmount": payload.requiredAmount ?? payload.targetAmount ?? 0,
-      "ReceivedAmount": payload.collectedAmount ?? 0,
-      "Image": payload.imageUrl || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStFlDR2Ki3J3gtY-D1jSj42Crkii5du5NTlQ&s',
-      "UrgencyLevel": (payload.urgencyLevel === 'High' || payload.urgencyLevel === 'high' || payload.urgencyLevel === 1) ? 1 : 2,
+      title: payload.title,
+      description: payload.description,
+      requiredAmount: payload.requiredAmount ?? payload.targetAmount ?? 0,
+      // ✅ urgencyLevel is always numeric - no string conversion
+      urgencyLevel: Math.trunc(Number(payload.urgencyLevel ?? 1)),
     };
 
     const raw = unwrapData<RawEmergencyCase>(
@@ -355,45 +354,48 @@ export const emergencyApi = {
   },
 
   update: async (id: number, payload: UpdateEmergencyCasePayload): Promise<EmergencyCase> => {
-    // ✅ PUT payload matching backend exactly: id, title, description, urgencyLevel, requiredAmount, imageUrl, isActive
-    const apiPayload: any = {
-      id: id,
-    };
-
-    // Only include fields specified in the user's prompt
-    if (payload.title !== undefined && payload.title !== null) {
-      apiPayload.title = payload.title;
-    }
-
-    if (payload.description !== undefined && payload.description !== null) {
-      apiPayload.description = payload.description;
-    }
-
-    if (payload.urgencyLevel !== undefined && payload.urgencyLevel !== null) {
-      let level: number;
-      if (typeof payload.urgencyLevel === 'string') {
-        const lower = payload.urgencyLevel.toLowerCase();
-        level = (lower === 'high' || lower === 'critical') ? 1 : 2;
-      } else {
-        level = (payload.urgencyLevel === 1) ? 1 : 2;
-      }
-      apiPayload.urgencyLevel = level;
-    }
-
-    if ((payload.requiredAmount !== undefined && payload.requiredAmount !== null) || (payload.targetAmount !== undefined && payload.targetAmount !== null)) {
+    // ✅ PUT endpoints only accept JSON, not FormData
+    // If files are provided, they must be uploaded separately first (2-step process)
+    // For now, we send JSON with URLs only
+    
+    const apiPayload: {
+      title?: string;
+      description?: string;
+      requiredAmount?: number;
+      urgencyLevel?: number; // ✅ NUMBER: 1 for High, 0 or 2 for Low
+      isActive?: boolean;
+      imageUrl?: string;
+    } = {};
+    
+    // Only include fields that are provided
+    if (payload.title !== undefined) apiPayload.title = payload.title;
+    if (payload.description !== undefined) apiPayload.description = payload.description;
+    
+    // Handle requiredAmount (map from targetAmount if needed)
+    if (payload.requiredAmount !== undefined || payload.targetAmount !== undefined) {
       apiPayload.requiredAmount = Math.trunc(
         Number(payload.requiredAmount ?? payload.targetAmount ?? 0)
       );
     }
-
-    if (payload.imageUrl !== undefined && payload.imageUrl !== null) {
-      apiPayload.imageUrl = payload.imageUrl;
+    
+    // ✅ urgencyLevel is ALWAYS numeric (1, 2, or 3)
+    // No string conversion - payload must already be numeric from upstream
+    if (payload.urgencyLevel !== undefined) {
+      apiPayload.urgencyLevel = Math.trunc(Number(payload.urgencyLevel));
     }
-
-    if (payload.isActive !== undefined && payload.isActive !== null) {
-      apiPayload.isActive = payload.isActive;
+    
+    if (payload.isActive !== undefined) apiPayload.isActive = payload.isActive;
+    
+    // Handle image URL: prefer existing URL, ignore file uploads for now
+    if (payload.imageUrl !== undefined) apiPayload.imageUrl = payload.imageUrl;
+    else if ('imageFile' in payload && payload.imageFile) {
+      console.warn('Image file upload on update not supported yet. Please upload file separately first.');
     }
-
+    
+    if (Object.keys(apiPayload).length === 0) {
+      throw new Error('No valid fields provided for emergency case update.');
+    }
+    
     const raw = unwrapData<RawEmergencyCase>(
       await api.put(`/v1/emergency-cases/${id}`, apiPayload, {
         headers: getAuthorizedHeaders(),

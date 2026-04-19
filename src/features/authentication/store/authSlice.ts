@@ -96,7 +96,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
       session: null,
       isAuthenticated: false,
       userRole: undefined,
-      isInitialized: true,
+      isInitialized: false, // Reset to false so next login triggers re-initialization
     });
   },
 

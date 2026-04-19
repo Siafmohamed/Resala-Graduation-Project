@@ -187,7 +187,22 @@ api.interceptors.response.use(
         if (originalRequest?.data) {
           console.error('[API ERROR] Request Payload:', originalRequest.data);
         }
+        // Log token info for debugging auth issues
+        const currentToken = tokenManager.getAccessToken();
+        if (currentToken) {
+          const decoded = tokenManager.decodeToken<{ role?: string; exp?: number }>(currentToken);
+          console.log('[API ERROR] Current token role:', decoded?.role, 'exp:', new Date(decoded?.exp ? decoded.exp * 1000 : 0));
+        }
       }
+    }
+
+    // Handle 403 Forbidden - might indicate role/permission issue after session switch
+    if (error.response?.status === 403) {
+      if (import.meta.env.DEV) {
+        console.warn('[API] 403 Forbidden - possible role/permission mismatch after session switch');
+      }
+      // Don't retry 403 - it's a permanent permission issue
+      throw buildUnifiedError(error);
     }
 
     if (error.response?.status === 401 && originalRequest && !isRefreshUrl(originalRequest.url)) {
@@ -239,5 +254,35 @@ api.interceptors.response.use(
     throw buildUnifiedError(error);
   },
 );
+
+/**
+ * Clears all pending request state and cancels in-flight requests.
+ * Called on logout/role switch to prevent stale tokens from being used.
+ * This ensures the old session's request queue doesn't interfere with the new session.
+ */
+export const clearAxiosInterceptorState = (): void => {
+  // Cancel all pending requests
+  pendingControllers.forEach(controller => {
+    try {
+      controller.abort();
+    } catch {
+      // Ignore abort errors if controller already aborted
+    }
+  });
+  pendingControllers.clear();
+  
+  // Reset the request controller WeakMap by clearing references
+  // (WeakMap cleanup happens automatically with GC, but we document this here)
+  
+  // Clear the failed request queue to prevent stale requests from being retried
+  failedQueue = [];
+  
+  // Reset the refresh mutex flag
+  isRefreshing = false;
+
+  if (import.meta.env.DEV) {
+    console.log('[Axios] Interceptor state cleared - all pending requests cancelled');
+  }
+};
 
 export default api;

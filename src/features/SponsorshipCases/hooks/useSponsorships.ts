@@ -9,6 +9,7 @@ import {
   type UpdateEmergencyCasePayload,
   type EmergencyCase
 } from '../services/sponsorship.service';
+import { UrgencyLevel } from '@/features/UrgentCases/types/urgency-level.types';
 import { toast } from 'react-toastify';
 import { getApiErrorMessage, getApiErrorStatus } from '@/api/errorUtils';
 
@@ -325,18 +326,18 @@ export function useUpdateEmergencyCase() {
           return old.map(item => {
             if (item.id === id) {
               const updated = { ...item };
-              // Only update fields specified in the user's prompt
+              // Only update fields specified in the payload
               if (payload.title !== undefined) updated.title = payload.title;
               if (payload.description !== undefined) updated.description = payload.description;
               if (payload.requiredAmount !== undefined) {
                 updated.requiredAmount = payload.requiredAmount;
                 updated.targetAmount = payload.requiredAmount;
               }
+              // ✅ Keep urgencyLevel as numeric (no string conversion)
               if (payload.urgencyLevel !== undefined) {
-                updated.urgencyLevel = typeof payload.urgencyLevel === 'number' 
-                  ? (payload.urgencyLevel === 1 ? 'High' : 'Medium')
-                  : payload.urgencyLevel;
-                updated.isCritical = updated.urgencyLevel === 'High';
+                updated.urgencyLevel = Number(payload.urgencyLevel) as UrgencyLevel;
+                // ⚠️ NOTE: isCritical is a DERIVED field - computed on-the-fly based on urgencyLevel
+                // Do NOT set it here; let the consuming component calculate it
               }
               if (payload.imageUrl !== undefined) updated.imageUrl = payload.imageUrl;
               if (payload.isActive !== undefined) updated.isActive = payload.isActive;
@@ -357,11 +358,11 @@ export function useUpdateEmergencyCase() {
           updated.requiredAmount = payload.requiredAmount;
           updated.targetAmount = payload.requiredAmount;
         }
+        // ✅ Keep urgencyLevel as numeric (no string conversion)
         if (payload.urgencyLevel !== undefined) {
-          updated.urgencyLevel = typeof payload.urgencyLevel === 'number' 
-            ? (payload.urgencyLevel === 1 ? 'High' : 'Medium')
-            : payload.urgencyLevel;
-          updated.isCritical = updated.urgencyLevel === 'High';
+          updated.urgencyLevel = Number(payload.urgencyLevel) as UrgencyLevel;
+          // ⚠️ NOTE: isCritical is a DERIVED field - computed on-the-fly based on urgencyLevel
+          // Do NOT set it here; let the consuming component calculate it
         }
         if (payload.imageUrl !== undefined) updated.imageUrl = payload.imageUrl;
         if (payload.isActive !== undefined) updated.isActive = payload.isActive;

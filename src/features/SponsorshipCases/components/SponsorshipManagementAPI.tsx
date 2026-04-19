@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import {
   useSponsorships,
   useSponsorship,
@@ -41,7 +41,14 @@ import type {
   UpdateSponsorshipPayload,
   UpdateEmergencyCasePayload
 } from "../services/sponsorship.service";
+// Urgency Level enum: 1 = Normal, 2 = Urgent, 3 = Critical
+const URGENCY_LEVELS = {
+  NORMAL: 1,
+  URGENT: 2,
+  CRITICAL: 3,
+} as const;
 
+type UrgencyLevel = typeof URGENCY_LEVELS[keyof typeof URGENCY_LEVELS];
 type ModalStep = null | "choose-type" | "add-regular" | "add-urgent" | "edit-regular" | "edit-urgent" | "delete-regular" | "delete-urgent";
 
 /* ─── CHOOSE TYPE MODAL ─── */
@@ -113,14 +120,12 @@ function CaseFormModal({
   const initialDesc = initialData?.description || "";
   const initialTarget = initialData?.targetAmount || initialData?.requiredAmount || 0;
   const initialCollected = initialData?.collectedAmount || 0;
-  const initialUrgencyLevel = initialData?.urgencyLevel === 1 || initialData?.urgencyLevel === 'High' || initialData?.isCritical ? 1 : 2;
 
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDesc);
   const [targetAmount, setTargetAmount] = useState(initialTarget);
   const [collectedAmount, setCollectedAmount] = useState(initialCollected);
-  const [urgencyLevel, setUrgencyLevel] = useState<1 | 2>(initialUrgencyLevel);
-  const [isCritical, setIsCritical] = useState(initialData?.isCritical || urgencyLevel === 1);
+  const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel>(urgent ? URGENCY_LEVELS.URGENT : URGENCY_LEVELS.NORMAL);
   const [isActive, setIsActive] = useState(initialData?.isActive ?? true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(initialData?.imageUrl || null);
@@ -133,16 +138,24 @@ function CaseFormModal({
   const imgRef = useRef<HTMLInputElement>(null);
   const iconRef = useRef<HTMLInputElement>(null);
 
-  // Update state when initialData changes (useful if fetching data by ID)
-  useMemo(() => {
+  // Initialize form when initialData changes (for edit mode)
+  useEffect(() => {
     if (initialData) {
       setTitle(initialData.title || initialData.name || "");
       setDescription(initialData.description || "");
       setTargetAmount(initialData.targetAmount || initialData.requiredAmount || 0);
       setCollectedAmount(initialData.collectedAmount || 0);
-      const level = initialData?.urgencyLevel === 1 || initialData?.urgencyLevel === 'High' || initialData?.isCritical ? 1 : 2;
+      
+      // Normalize urgency level from various data formats
+      let level: UrgencyLevel = urgent ? URGENCY_LEVELS.URGENT : URGENCY_LEVELS.NORMAL;
+      if (initialData.urgencyLevel) {
+        const numLevel = Number(initialData.urgencyLevel);
+        if (numLevel === 1 || numLevel === 2 || numLevel === 3) {
+          level = numLevel as UrgencyLevel;
+        }
+      }
       setUrgencyLevel(level);
-      setIsCritical(level === 1);
+      
       setIsActive(initialData.isActive ?? true);
       setImagePreview(initialData.imageUrl || null);
       if (!urgent) setIconPreview(initialData.icon || null);
@@ -303,7 +316,7 @@ function CaseFormModal({
         targetAmount,
         requiredAmount: targetAmount,
         urgencyLevel: urgencyLevel,
-        isCritical: urgencyLevel === 1,
+        isCritical: urgencyLevel === URGENCY_LEVELS.CRITICAL,
         isActive,
       };
 
@@ -404,7 +417,6 @@ function CaseFormModal({
                     value={title} 
                     onChange={(e) => handleTitleChange(e.target.value)}
                     maxLength={200}
-                    style={{ focusRing: `2px solid ${urgent ? '#F04930' : '#00549A'}` }}
                   />
                   <p className="text-[11px] text-[#697282] font-[Cairo]">أقصى 200 حرف - اسم واضح وموجز</p>
                 </div>
@@ -452,7 +464,7 @@ function CaseFormModal({
                   </div>
                 )}
 
-                {/* Urgent Case Urgency Level */}
+                {/* Urgent Case Urgency Level - 3-State Selector */}
                 {urgent && (
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-[#495565] font-[Cairo] flex items-center gap-2">
@@ -460,71 +472,56 @@ function CaseFormModal({
                       <Flame size={16} className="text-[#F04930]" />
                       <span>مستوى الأولوية / الحرجة</span>
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
+                      {/* Normal Priority */}
                       <button
                         type="button"
-                        onClick={() => {
-                          setUrgencyLevel(1);
-                          setIsCritical(true);
-                        }}
+                        onClick={() => setUrgencyLevel(URGENCY_LEVELS.NORMAL)}
                         className={`p-4 rounded-xl border-2 transition-all font-[Cairo] font-bold text-sm ${
-                          urgencyLevel === 1
+                          urgencyLevel === URGENCY_LEVELS.NORMAL
+                            ? 'border-[#00549A] bg-[#e6eff7] text-[#00549A]'
+                            : 'border-gray-200 bg-white text-[#697282] hover:border-[#00549A]'
+                        }`}
+                      >
+                        <AlertCircle size={18} className="mx-auto mb-1" />
+                        <span className="block">عادي</span>
+                        <span className="text-xs text-gray-500">الأولوية 1</span>
+                      </button>
+
+                      {/* Urgent Priority */}
+                      <button
+                        type="button"
+                        onClick={() => setUrgencyLevel(URGENCY_LEVELS.URGENT)}
+                        className={`p-4 rounded-xl border-2 transition-all font-[Cairo] font-bold text-sm ${
+                          urgencyLevel === URGENCY_LEVELS.URGENT
+                            ? 'border-[#FF9800] bg-[#fff3e0] text-[#FF9800]'
+                            : 'border-gray-200 bg-white text-[#697282] hover:border-[#FF9800]'
+                        }`}
+                      >
+                        <Clock size={18} className="mx-auto mb-1" />
+                        <span className="block">عاجل</span>
+                        <span className="text-xs text-gray-500">الأولوية 2</span>
+                      </button>
+
+                      {/* Critical Priority */}
+                      <button
+                        type="button"
+                        onClick={() => setUrgencyLevel(URGENCY_LEVELS.CRITICAL)}
+                        className={`p-4 rounded-xl border-2 transition-all font-[Cairo] font-bold text-sm ${
+                          urgencyLevel === URGENCY_LEVELS.CRITICAL
                             ? 'border-[#F04930] bg-[#fff5f3] text-[#F04930]'
                             : 'border-gray-200 bg-white text-[#697282] hover:border-[#F04930]'
                         }`}
                       >
                         <Flame size={18} className="mx-auto mb-1" />
-                        <span className="block">حرجة جداً (عالية)</span>
-                        <span className="text-xs text-gray-500">الأولوية 1</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUrgencyLevel(2);
-                          setIsCritical(false);
-                        }}
-                        className={`p-4 rounded-xl border-2 transition-all font-[Cairo] font-bold text-sm ${
-                          urgencyLevel === 2
-                            ? 'border-[#F04930] bg-[#fff5f3] text-[#F04930]'
-                            : 'border-gray-200 bg-white text-[#697282] hover:border-[#F04930]'
-                        }`}
-                      >
-                        <AlertCircle size={18} className="mx-auto mb-1" />
-                        <span className="block">عاجلة (متوسطة)</span>
-                        <span className="text-xs text-gray-500">الأولوية 2</span>
+                        <span className="block">حرج جداً</span>
+                        <span className="text-xs text-gray-500">الأولوية 3</span>
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Urgent Case Toggle */}
-                {urgent && (
-                  <div className="p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border border-red-100">
-                    <label className="flex items-center justify-between cursor-pointer">
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="p-2 rounded-lg bg-red-100 text-red-600">
-                          <Flame size={18} />
-                        </div>
-                        <div>
-                          <span className="text-sm font-bold text-[#495565] font-[Cairo] block">حالة حرجة جداً</span>
-                          <p className="text-[11px] text-[#697282] font-[Cairo]">ستظهر في قسم الحالات الحرجة ذات الأولوية العالية</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsCritical(!isCritical);
-                          setUrgencyLevel(isCritical ? 2 : 1);
-                        }}
-                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all flex-shrink-0 ${isCritical ? 'bg-red-600' : 'bg-gray-300'}`}
-                      >
-                        <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${isCritical ? 'translate-x-1' : '-translate-x-1'}`} />
-                      </button>
-                    </label>
-                  </div>
-                )}
-
-                {/* Active Status Toggle */}
+                {/* Active Status Toggle - Only for non-urgent cases OR after urgency selector */}
                 <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
                   <label className="flex items-center justify-between cursor-pointer">
                     <div className="flex items-center gap-3 flex-1">
@@ -685,27 +682,40 @@ function CaseFormModal({
 }
 
 /* ─── EDIT MODAL WRAPPER (FETCHES DATA BY ID) ─── */
-function EditModalWrapper({ 
-  id, 
-  urgent, 
-  onClose, 
-  onSave, 
-  isSubmitting 
-}: { 
-  id: number; 
-  urgent: boolean; 
-  onClose: () => void; 
+function EditModalWrapper({
+  id,
+  urgent,
+  onClose,
+  onSave,
+  isSubmitting
+}: {
+  id: number;
+  urgent: boolean;
+  onClose: () => void;
   onSave: (id: number, payload: any) => void;
   isSubmitting: boolean;
 }) {
-  const { data: sponsorship, isLoading: loadingSponsorship } = useSponsorship(urgent ? 0 : id);
-  const { data: emergency, isLoading: loadingEmergency } = useEmergencyCase(urgent ? id : 0);
 
-  const initialData = urgent ? emergency : sponsorship;
-  const isLoadingData = urgent ? loadingEmergency : loadingSponsorship;
+  // 👇 استدعاء ثابت بدون شروط
+  const sponsorshipQuery = useSponsorship(id);
+  const emergencyQuery = useEmergencyCase(id);
+
+  // 👇 اختيار الداتا حسب النوع
+  const initialData = urgent
+    ? emergencyQuery.data
+    : sponsorshipQuery.data;
+
+  const isLoadingData = urgent
+    ? emergencyQuery.isLoading
+    : sponsorshipQuery.isLoading;
+
+  // 👇 منع فتح الفورم قبل وصول الداتا
+  if (isLoadingData || !initialData) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <CaseFormModal 
+    <CaseFormModal
       urgent={urgent}
       mode="edit"
       initialData={initialData}
@@ -716,7 +726,6 @@ function EditModalWrapper({
     />
   );
 }
-
 /* ─── DELETE MODAL ─── */
 function DeleteConfirmModal({ 
   data, 
@@ -799,6 +808,7 @@ export default function SponsorshipsAPIManagement() {
       title: s.name,
       targetAmount: Number(s.targetAmount) || 0,
       collectedAmount: Number(s.collectedAmount) || 0,
+      urgencyLevel: (Number(s.urgencyLevel) || URGENCY_LEVELS.NORMAL) as UrgencyLevel,
       createdAt: s.createdAt || new Date().toISOString()
     }));
     const normEmergency = emergencyCases.map(e => ({ 
@@ -807,6 +817,7 @@ export default function SponsorshipsAPIManagement() {
       title: e.title,
       targetAmount: Number(e.targetAmount) || 0,
       collectedAmount: Number(e.collectedAmount) || 0,
+      urgencyLevel: (Number(e.urgencyLevel) || URGENCY_LEVELS.URGENT) as UrgencyLevel,
       createdAt: e.createdOn || new Date().toISOString()
     }));
     return [...normSponsorships, ...normEmergency].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -964,12 +975,14 @@ export default function SponsorshipsAPIManagement() {
                   {/* Critical/Urgent Indicator */}
                   {item.caseType === 'urgent' && (
                     <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white backdrop-blur-md shadow-lg border animate-pulse
-                      ${item.isCritical 
+                      ${item.urgencyLevel === URGENCY_LEVELS.CRITICAL 
                         ? 'bg-gradient-to-r from-red-600 to-red-500 border-red-400/50' 
-                        : 'bg-gradient-to-r from-orange-500 to-orange-400 border-orange-300/50'}`}>
-                      {item.isCritical ? <Flame size={14} className="fill-current" /> : <Clock size={14} />}
+                        : item.urgencyLevel === URGENCY_LEVELS.URGENT
+                        ? 'bg-gradient-to-r from-orange-500 to-orange-400 border-orange-300/50'
+                        : 'bg-gradient-to-r from-blue-500 to-blue-400 border-blue-300/50'}`}>
+                      {item.urgencyLevel === URGENCY_LEVELS.CRITICAL ? <Flame size={14} className="fill-current" /> : <Clock size={14} />}
                       <span className="text-[10px] font-bold font-[Cairo]">
-                        {item.urgencyLevel === 'High' ? 'حرجة جداً' : item.urgencyLevel === 'Medium' ? 'عاجلة متوسطة' : item.urgencyLevel}
+                        {item.urgencyLevel === URGENCY_LEVELS.CRITICAL ? 'حرج جداً' : item.urgencyLevel === URGENCY_LEVELS.URGENT ? 'عاجل' : 'عادي'}
                       </span>
                     </div>
                   )}
@@ -983,7 +996,7 @@ export default function SponsorshipsAPIManagement() {
                   <div className="flex items-center gap-2.5 flex-1 min-w-0">
                     {/* Icon */}
                     {item.caseType === 'urgent' ? (
-                      <div className={`p-2 rounded-lg flex-shrink-0 ${item.isCritical ? "bg-red-100 text-red-600" : "bg-orange-100 text-orange-500"}`}>
+                      <div className={`p-2 rounded-lg flex-shrink-0 ${item.urgencyLevel === URGENCY_LEVELS.CRITICAL ? "bg-red-100 text-red-600" : item.urgencyLevel === URGENCY_LEVELS.URGENT ? "bg-orange-100 text-orange-500" : "bg-blue-100 text-blue-600"}`}>
                         <AlertCircle size={18} />
                       </div>
                     ) : (
@@ -1049,7 +1062,11 @@ export default function SponsorshipsAPIManagement() {
                       <div 
                         className={`h-full rounded-full transition-all duration-700 ease-out shadow-lg
                           ${item.caseType === 'urgent' 
-                            ? (item.isCritical ? 'bg-gradient-to-r from-red-600 to-red-500' : 'bg-gradient-to-r from-orange-500 to-orange-400') 
+                            ? (item.urgencyLevel === URGENCY_LEVELS.CRITICAL 
+                              ? 'bg-gradient-to-r from-red-600 to-red-500' 
+                              : item.urgencyLevel === URGENCY_LEVELS.URGENT
+                              ? 'bg-gradient-to-r from-orange-500 to-orange-400'
+                              : 'bg-gradient-to-r from-blue-500 to-blue-400')
                             : 'bg-gradient-to-r from-[#00549A] to-[#0070c0]'}`} 
                         style={{ width: `${Math.min(((item.collectedAmount ?? 0) / (item.targetAmount || 1)) * 100, 100)}%` }} 
                       />
@@ -1125,9 +1142,9 @@ export default function SponsorshipsAPIManagement() {
                         <span className={`px-3 py-1 rounded-full text-[10px] font-bold font-[Cairo] ${item.caseType === 'urgent' ? 'bg-red-50 text-[#F04930]' : 'bg-blue-50 text-[#00549A]'}`}>
                           {item.caseType === 'urgent' ? 'حالة حرجة' : 'كفالة عادية'}
                         </span>
-                        {item.caseType === 'urgent' && (
-                          <span className={`text-[9px] font-bold font-[Cairo] ${item.isCritical ? 'text-red-600' : 'text-orange-500'}`}>
-                            ({item.urgencyLevel === 'High' ? 'حرجة جداً' : 'عاجلة متوسطة'})
+                        {item.caseType === 'urgent' && item.urgencyLevel !== undefined && (
+                          <span className={`text-[9px] font-bold font-[Cairo] ${item.urgencyLevel === URGENCY_LEVELS.CRITICAL ? 'text-red-600' : item.urgencyLevel === URGENCY_LEVELS.URGENT ? 'text-orange-500' : 'text-blue-600'}`}>
+                            ({item.urgencyLevel === URGENCY_LEVELS.CRITICAL ? 'حرج جداً' : item.urgencyLevel === URGENCY_LEVELS.URGENT ? 'عاجل' : 'عادي'})
                           </span>
                         )}
                       </div>

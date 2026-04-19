@@ -6,6 +6,7 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+/** Normalized model — urgencyLevel is 1 = Normal, 2 = Urgent, 3 = Critical */
 export interface UrgentCase {
   id: number;
   title: string;
@@ -13,9 +14,8 @@ export interface UrgentCase {
   imageUrl?: string | null;
   targetAmount: number;
   collectedAmount: number;
-  isCritical: boolean;
+  urgencyLevel: number;
   isActive: boolean;
-  urgencyLevel?: string | number;
   createdOn?: string;
   createdAt?: string;
 }
@@ -26,6 +26,9 @@ export interface CreateUrgentCasePayload {
   description: string;
   targetAmount: number;
   collectedAmount?: number;
+  /** 1 = Normal, 2 = Urgent, 3 = Critical */
+  urgencyLevel?: number;
+  /** Fallback when urgencyLevel omitted — maps to Critical vs Normal */
   isCritical?: boolean;
   isActive?: boolean;
 }
@@ -36,8 +39,22 @@ export interface UpdateUrgentCasePayload {
   description?: string;
   targetAmount?: number;
   collectedAmount?: number;
-  isCritical?: boolean;
+  urgencyLevel?: number;
   isActive?: boolean;
+}
+
+interface RawEmergencyCaseResponse {
+  id: number;
+  title?: string;
+  description?: string;
+  imageUrl?: string | null;
+  urgencyLevel?: number | string;
+  requiredAmount?: number | string;
+  targetAmount?: number | string;
+  collectedAmount?: number | string;
+  isActive?: boolean;
+  createdOn?: string;
+  createdAt?: string;
 }
 
 const unwrapData = <T>(response: ApiResponse<T> | T): T => {
@@ -47,79 +64,159 @@ const unwrapData = <T>(response: ApiResponse<T> | T): T => {
   return response as T;
 };
 
-const toUiUrgentCase = (item: any): UrgentCase => {
-  const title = item.Title ?? item.title ?? '';
-  const description = item.Description ?? item.description ?? '';
-  const imageUrl = item.Image ?? item.imageUrl;
-  const rawRequiredAmount = item.RequiredAmount ?? item.TargetAmount ?? item.requiredAmount ?? item.targetAmount ?? 0;
-  const rawCollectedAmount = item.ReceivedAmount ?? item.collectedAmount ?? 0;
-  const rawUrgency = item.UrgencyLevel ?? item.urgencyLevel;
+/**
+ * Maps API urgency to UI levels (1–3). Supports native 1–3, legacy 0–2 tiers,
+ * booleans, and common string labels.
+ */
+function normalizeUrgencyLevelFromApi(raw: unknown): number {
+  if (raw === undefined || raw === null) return 1;
+  if (typeof raw === 'boolean') return raw ? 3 : 1;
+  if (typeof raw === 'string') {
+    const lower = raw.trim().toLowerCase();
+    if (lower === 'high' || lower === 'critical') return 3;
+    if (lower === 'medium' || lower === 'urgent') return 2;
+    if (lower === 'low' || lower === 'normal') return 1;
+    const parsed = parseInt(lower, 10);
+    if (!Number.isFinite(parsed)) return 1;
+    raw = parsed;
+  }
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return 1;
+  if (n >= 1 && n <= 3) return Math.trunc(n);
+  if (n >= 0 && n <= 2) return Math.trunc(n) + 1;
+  return 1;
+}
 
-  const requiredAmount = Number(rawRequiredAmount);
+function clampApiUrgencyLevel(level: number): number {
+  return Math.min(3, Math.max(1, Math.trunc(level)));
+}
 
+function mapRawToUrgentCase(raw: RawEmergencyCaseResponse): UrgentCase {
+  const targetAmount = Number(raw.requiredAmount ?? raw.targetAmount ?? 0);
   return {
-    id: item.id,
-    title,
-    description,
-    imageUrl,
-    targetAmount: requiredAmount,
-    collectedAmount: Number(rawCollectedAmount),
-    isActive: Boolean(item.IsActive ?? item.isActive),
-    // 1 = High, 2 = Medium
-    isCritical: String(rawUrgency) === '1',
-    urgencyLevel: rawUrgency,
-    createdOn: item.CreatedOn ?? item.createdOn,
-    createdAt: item.CreatedAt ?? item.createdAt,
+    id: Number(raw.id),
+    title: String(raw.title ?? ''),
+    description: String(raw.description ?? ''),
+    imageUrl: raw.imageUrl ?? undefined,
+    targetAmount,
+    collectedAmount: Number(raw.collectedAmount ?? 0),
+    urgencyLevel: normalizeUrgencyLevelFromApi(raw.urgencyLevel),
+    isActive: Boolean(raw.isActive),
+    createdOn: raw.createdOn,
+    createdAt: raw.createdAt,
   };
-};
+}
 
 export const urgentCasesService = {
   getAll: async (): Promise<UrgentCase[]> => {
-    const response = await api.get<ApiResponse<UrgentCase[]> | UrgentCase[]>('/v1/emergency-cases');
-    const data = unwrapData(response.data) as any[];
-    return Array.isArray(data) ? data.map(toUiUrgentCase) : [];
+    const response = await api.get<
+      ApiResponse<RawEmergencyCaseResponse[]> | RawEmergencyCaseResponse[]
+    >('/v1/emergency-cases');
+    const data = response.data;
+    const list = Array.isArray(data)
+      ? data
+      : unwrapData<RawEmergencyCaseResponse[]>(data as ApiResponse<RawEmergencyCaseResponse[]>);
+    return (list ?? []).map(mapRawToUrgentCase);
   },
 
   getById: async (id: number): Promise<UrgentCase> => {
-    const response = await api.get<ApiResponse<UrgentCase>>(`/v1/emergency-cases/${id}`);
-    return toUiUrgentCase(unwrapData(response.data));
+    const response = await api.get<ApiResponse<RawEmergencyCaseResponse>>(`/v1/emergency-cases/${id}`);
+    const raw = unwrapData(response.data);
+    return mapRawToUrgentCase(raw);
   },
 
   create: async (payload: CreateUrgentCasePayload): Promise<UrgentCase> => {
-    // Build JSON payload matching backend PascalCase properties, without DTO wrapper
-    // UrgencyLevel 1 (High/Critical) and UrgencyLevel 2 (Medium/Moderate)
-    const apiPayload = {
-      "Title": payload.title,
-      "Description": payload.description,
-      "RequiredAmount": payload.targetAmount,
-      "ReceivedAmount": payload.collectedAmount ?? 0,
-      "Image": (typeof payload.image === 'string' ? payload.image : null) || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStFlDR2Ki3J3gtY-D1jSj42Crkii5du5NTlQ&s',
-      "UrgencyLevel": payload.isCritical ? 1 : 2,
+    const level =
+      payload.urgencyLevel !== undefined
+        ? clampApiUrgencyLevel(Number(payload.urgencyLevel))
+        : payload.isCritical
+          ? 3
+          : 1;
+
+    // The backend stores strings: "Normal", "Urgent", "Critical"
+    const levelString = level === 3 ? "Critical" : level === 2 ? "Urgent" : "Normal";
+
+    const apiPayload: Record<string, unknown> = {
+      title: payload.title,
+      description: payload.description,
+      requiredAmount: Math.trunc(Number(payload.targetAmount)),
+      urgencyLevel: levelString,
     };
 
-    const response = await api.post<ApiResponse<UrgentCase> | UrgentCase>('/v1/emergency-cases', apiPayload);
-    return toUiUrgentCase(unwrapData(response.data));
+    // ✅ Handle image: File for upload, string for imageUrl
+    if (payload.image !== undefined) {
+      if (typeof payload.image === 'string') {
+        apiPayload.imageUrl = payload.image;
+      } else if (payload.image instanceof File) {
+        apiPayload.image = payload.image;
+      }
+    }
+
+    let requestBody: any = apiPayload;
+    if (apiPayload.image instanceof File) {
+      requestBody = new FormData();
+      Object.entries(apiPayload).forEach(([key, val]) => {
+        if (val !== undefined) {
+          requestBody.append(key, val instanceof File ? val : String(val));
+        }
+      });
+    }
+
+    const response = await api.post<
+      ApiResponse<RawEmergencyCaseResponse> | RawEmergencyCaseResponse
+    >('/v1/emergency-cases', requestBody);
+    const raw = unwrapData(response.data);
+    return mapRawToUrgentCase(raw as RawEmergencyCaseResponse);
   },
 
   update: async (id: number, payload: UpdateUrgentCasePayload): Promise<UrgentCase> => {
-    // ✅ Payload matching backend exactly: id, title, description, urgencyLevel, requiredAmount, imageUrl, isActive
-    const apiPayload: any = {
-      id: id
-    };
+    const body: Record<string, unknown> = {};
 
-    if (payload.title !== undefined && payload.title !== null) apiPayload.title = payload.title;
-    if (payload.description !== undefined && payload.description !== null) apiPayload.description = payload.description;
-    if (payload.targetAmount !== undefined && payload.targetAmount !== null) apiPayload.requiredAmount = payload.targetAmount;
-    if (payload.isCritical !== undefined && payload.isCritical !== null) apiPayload.urgencyLevel = payload.isCritical ? 1 : 2;
-    if (payload.isActive !== undefined && payload.isActive !== null) apiPayload.isActive = payload.isActive;
-    
-    // Use imageUrl if provided (this should match the backend's expected 'imageUrl' field name)
-    if (payload.image !== undefined && payload.image !== null) {
-      apiPayload.imageUrl = typeof payload.image === 'string' ? payload.image : "";
+    if (payload.title !== undefined) body.title = payload.title;
+    if (payload.description !== undefined) body.description = payload.description;
+
+    if (payload.targetAmount !== undefined) {
+      body.requiredAmount = Math.trunc(Number(payload.targetAmount));
+    }
+    if (payload.collectedAmount !== undefined) {
+      body.collectedAmount = Math.trunc(Number(payload.collectedAmount));
+    }
+    if (payload.urgencyLevel !== undefined) {
+      const level = clampApiUrgencyLevel(Number(payload.urgencyLevel));
+      body.urgencyLevel = level === 3 ? "Critical" : level === 2 ? "Urgent" : "Normal";
+    }
+    if (payload.isActive !== undefined) body.isActive = payload.isActive;
+
+    // ✅ Fixed: Handle both File and string image types
+    if (payload.image !== undefined) {
+      if (typeof payload.image === 'string') {
+        body.imageUrl = payload.image;  // Keep existing image URL
+      } else if (payload.image instanceof File) {
+        body.image = payload.image;  // Send new File for upload
+      }
     }
 
-    const response = await api.put<ApiResponse<UrgentCase>>(`/v1/emergency-cases/${id}`, apiPayload);
-    return toUiUrgentCase(unwrapData(response.data));
+    if (Object.keys(body).length === 0) {
+      throw new Error('No valid fields provided for urgent case update.');
+    }
+
+    // Convert to FormData if there's a file, so Axios interceptor triggers multipart/form-data
+    let requestBody: any = body;
+    if (body.image instanceof File) {
+      requestBody = new FormData();
+      Object.entries(body).forEach(([key, val]) => {
+        if (val !== undefined) {
+          requestBody.append(key, val instanceof File ? val : String(val));
+        }
+      });
+    }
+
+    const response = await api.put<ApiResponse<RawEmergencyCaseResponse>>(
+      `/v1/emergency-cases/${id}`,
+      requestBody,
+    );
+    const raw = unwrapData(response.data);
+    return mapRawToUrgentCase(raw);
   },
 
   delete: async (id: number): Promise<void> => {
