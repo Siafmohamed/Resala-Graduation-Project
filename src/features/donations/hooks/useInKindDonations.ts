@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useIsInitialized } from '@/features/authentication';
 import { inKindDonationService } from '../services/donationService';
 import type { 
   CreateInKindDonationPayload, 
@@ -17,29 +18,38 @@ export const inKindDonationQueryKeys = {
 
 /** Hook to fetch all in-kind donations */
 export function useInKindDonations() {
+  const isInitialized = useIsInitialized();
+  
   return useQuery({
     queryKey: inKindDonationQueryKeys.lists(),
     queryFn: () => inKindDonationService.getAll(),
     select: (data) => data.data,
+    // Critical: Prevent API request before auth initialization completes
+    // On production (Vercel cold start), race condition causes 401 without this guard
+    enabled: isInitialized === true,
   });
 }
 
 /** Hook to fetch a single in-kind donation by ID */
 export function useInKindDonation(id: string) {
+  const isInitialized = useIsInitialized();
+  
   return useQuery({
     queryKey: inKindDonationQueryKeys.detail(id),
     queryFn: () => inKindDonationService.getById(id),
-    enabled: !!id,
+    enabled: !!id && isInitialized === true,
     select: (data) => data.data,
   });
 }
 
 /** Hook to fetch in-kind donations by donor ID */
 export function useInKindDonationsByDonor(donorId: string) {
+  const isInitialized = useIsInitialized();
+  
   return useQuery({
     queryKey: inKindDonationQueryKeys.byDonor(donorId),
     queryFn: () => inKindDonationService.getByDonorId(donorId),
-    enabled: !!donorId,
+    enabled: !!donorId && isInitialized === true,
     select: (data) => data.data,
   });
 }

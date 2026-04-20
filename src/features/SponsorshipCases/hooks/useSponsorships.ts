@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useIsInitialized } from '@/features/authentication';
 import { 
   sponsorshipApi, 
   emergencyApi,
@@ -59,6 +60,8 @@ export const emergencyQueryKeys = {
  * Hook to fetch all sponsorship programs
  */
 export const useSponsorships = () => {
+  const isInitialized = useIsInitialized();
+  
   return useQuery({
     queryKey: sponsorshipQueryKeys.lists(),
     queryFn: async () => {
@@ -68,6 +71,9 @@ export const useSponsorships = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    // Critical: Prevent API request before auth initialization completes
+    // On production (Vercel cold start), race condition causes 401 without this guard
+    enabled: isInitialized === true,
   });
 };
 
@@ -75,6 +81,8 @@ export const useSponsorships = () => {
  * Hook to fetch all emergency cases
  */
 export const useEmergencyCases = () => {
+  const isInitialized = useIsInitialized();
+  
   return useQuery({
     queryKey: emergencyQueryKeys.lists(),
     queryFn: async () => {
@@ -84,6 +92,9 @@ export const useEmergencyCases = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    // Critical: Prevent API request before auth initialization completes
+    // On production (Vercel cold start), race condition causes 401 without this guard
+    enabled: isInitialized === true,
   });
 }
 /**

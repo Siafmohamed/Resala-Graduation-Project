@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useEffect, useMemo } from 'react';
 import { useDebounce } from '@/shared/hooks/useDebounce';
+import { useIsInitialized } from '@/features/authentication';
 import { donorService } from '../services/donorService';
 import { useDonorStore } from '../store/donorSlice';
 import type { DonorsListResponse, DonorFormData } from '../types/donor.types';
@@ -80,6 +81,7 @@ export const donorQueryKeys = {
 
 export function useDonors() {
   const queryClient = useQueryClient();
+  const isInitialized = useIsInitialized();
   const filters = useDonorStore((s) => s.filters);
   const pagination = useDonorStore((s) => s.pagination);
   const sort = useDonorStore((s) => s.sort);
@@ -94,6 +96,9 @@ export function useDonors() {
     queryKey: donorQueryKeys.list(effectiveFilters, pagination, sort),
     queryFn: () => donorService.getDonors(effectiveFilters, pagination, sort),
     placeholderData: (previousData) => previousData, // Keep previous data while fetching new (smoother transitions)
+    // Critical: Prevent API request before auth initialization completes
+    // On production (Vercel cold start), race condition causes 401 without this guard
+    enabled: isInitialized === true,
   });
 
   // Pre-fetch next page
@@ -113,11 +118,13 @@ export function useDonors() {
 
 export function useDonor(id: string) {
   const queryClient = useQueryClient();
+  const isInitialized = useIsInitialized();
   
   return useQuery({
     queryKey: donorQueryKeys.detail(id),
     queryFn: () => donorService.getDonorById(id),
-    enabled: !!id,
+    // Require both ID AND auth initialization before fetching
+    enabled: !!id && isInitialized === true,
     initialData: () => {
       // Try to find the donor in any of the cached lists (which include filters/pagination in their keys)
       const cachedLists = queryClient.getQueriesData<DonorsListResponse>({ queryKey: donorQueryKeys.lists() });

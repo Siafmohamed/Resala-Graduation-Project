@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useIsInitialized } from '@/features/authentication';
 import { urgentCasesService } from '../services/urgentCasesService';
 import type { CreateUrgentCasePayload, UpdateUrgentCasePayload, UrgentCase } from '../services/urgentCasesService';
 import { toast } from 'react-toastify';
@@ -16,6 +17,8 @@ export const urgentCaseQueryKeys = {
  * Hook to fetch all urgent cases
  */
 export function useUrgentCases() {
+  const isInitialized = useIsInitialized();
+  
   return useQuery({
     queryKey: urgentCaseQueryKeys.lists(),
     queryFn: async () => {
@@ -24,6 +27,9 @@ export function useUrgentCases() {
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: QUERY_GC_TIME,
+    // Critical: Prevent API request before auth initialization completes
+    // On production (Vercel cold start), race condition causes 401 without this guard
+    enabled: isInitialized === true,
   });
 }
 

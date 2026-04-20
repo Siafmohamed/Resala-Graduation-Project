@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useIsInitialized } from '@/features/authentication';
 import { emergencyCasesApi } from '../services/emergencyCases.service';
 import { CreateSponsorshipPayload, UpdateSponsorshipPayload, EmergencyCase } from '../types/sponsorship.types';
 import { toast } from 'react-toastify';
@@ -16,10 +17,15 @@ export const emergencyCaseQueryKeys = {
  * Hook to fetch all emergency cases
  */
 export function useEmergencyCases(filters?: any) {
+  const isInitialized = useIsInitialized();
+  
   return useQuery({
     queryKey: emergencyCaseQueryKeys.list(filters),
     queryFn: () => emergencyCasesApi.getAll(),
     placeholderData: (previousData) => previousData,
+    // Critical: Prevent API request before auth initialization completes
+    // On production (Vercel cold start), race condition causes 401 without this guard
+    enabled: isInitialized === true,
   });
 }
 
