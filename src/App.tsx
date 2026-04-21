@@ -1,10 +1,10 @@
 import { BrowserRouter as Router } from'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useAuthLogoutListener } from './features/authentication';
+import { useAuthLogoutListener, useAuthStore } from './features/authentication';
 import { ErrorBoundary } from './shared/components/feedback/ErrorBoundary';
 import { FullPageSpinner } from './features/authentication/components/FullPageSpinner';
-import { AuthProvider, useAuth } from './features/authentication/context/AuthProvider';
+import { AuthProvider } from './features/authentication/context/AuthProvider';
 import AppRoutes from './routes/AppRoutes';
 import './App.css';
 
@@ -14,7 +14,7 @@ import './App.css';
  */
 function AuthBootstrap({ children }: { children: React.ReactNode }) {
   useAuthLogoutListener();
-  const { isLoading } = useAuth();
+  const isLoading = useAuthStore((s: any) => s.isLoading);
   
   if (isLoading) {
     return <FullPageSpinner />;

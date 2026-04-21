@@ -128,7 +128,7 @@ const api = axios.create({
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   activeRequests += 1;
   emitLoading();
-  const token = tokenManager.getAccessToken() || localStorage.getItem('token');
+  const token = tokenManager.getAccessToken() 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

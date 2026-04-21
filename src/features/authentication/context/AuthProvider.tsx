@@ -5,12 +5,9 @@ import type { LoginCredentials, SessionData, User } from '@/features/authenticat
 import { tokenManager } from '@/features/authentication/utils/tokenManager';
 import { completeAuthCleanup, initializeNewSession } from '@/features/authentication/utils/authCleanup';
 import { useAuthStore } from '@/features/authentication/store/authSlice';
-import { Role } from '@/features/authentication/types/role.types';
+import { mapApiRole, Role } from '@/features/authentication/types/role.types';
 
 interface AuthContextValue {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<string | null>;
@@ -20,18 +17,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const ONE_MINUTE_MS = 60_000;
 
-const mapApiRole = (role: SessionData['role']): Role => {
-  switch (role) {
-    case 'Admin':
-      return Role.ADMIN;
-    case 'Reception':
-      return Role.RECEPTIONIST;
-    case 'Donor':
-      return Role.DONOR;
-    default:
-      return Role.RECEPTIONIST;
-  }
-};
+
 
 const mapSessionToUser = (session: SessionData | null): User | null => {
   if (!session) return null;
@@ -51,8 +37,7 @@ const getTokenExpiryMs = (accessToken: string): number | null => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { session, isAuthenticated, setAuth, clearAuth, setInitialized } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(true);
+  const { session, setAuth, clearAuth, setInitialized, setLoading } = useAuthStore();
   const refreshTimerRef = useRef<number | null>(null);
   const queryClient = useQueryClient();
 
@@ -172,7 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const initialize = async () => {
-      setIsLoading(true);
+      setLoading(true);
       try {
         const storedSession = tokenManager.getSessionData<SessionData>();
         if (storedSession?.accessToken) {
@@ -184,12 +169,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         clearAuth();
       } finally {
         setInitialized(true);
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
     initialize();
-  }, [clearAuth, refresh, setAuth, setInitialized]);
+  }, [clearAuth, refresh, setAuth, setInitialized, setLoading]);
 
   useEffect(() => {
     scheduleSilentRefresh(session?.accessToken ?? null);
@@ -215,7 +200,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handleSessionExpired = () => {
       clearAuth();
       clearRefreshTimer();
-      setIsLoading(false);
+      setLoading(false);
     };
 
     window.addEventListener('auth:session-expired', handleSessionExpired);
@@ -230,14 +215,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      user: mapSessionToUser(session),
-      isAuthenticated,
-      isLoading,
       login,
       logout,
       refresh,
     }),
-    [session, isAuthenticated, isLoading, login, logout, refresh],
+    [login, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

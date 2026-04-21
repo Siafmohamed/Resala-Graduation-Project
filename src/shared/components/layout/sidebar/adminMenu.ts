@@ -4,6 +4,12 @@ import {
   BarChart3, 
   Settings,
   Shield,
+  Users,
+  FileText,
+  Package,
+  Bell,
+  MessageSquare,
+  PieChart
 } from "lucide-react";
 import { Role } from '@/features/authentication';
 import type { NavConfig } from './types';
@@ -32,9 +38,16 @@ export const adminMenu: NavConfig = [
   },
   {
     id: "reports",
-    label: "التقارير والإحصائيات",
+    label: "التقارير",
     path: "/reports",
     icon: BarChart3,
+    roles: [Role.ADMIN],
+  },
+  {
+    id: "complaints",
+    label: "الشكاوى",
+    path: "/complaints",
+    icon: MessageSquare,
     roles: [Role.ADMIN],
   },
   {

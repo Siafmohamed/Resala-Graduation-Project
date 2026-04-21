@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ProtectedRoute, Role, useAuthGuard } from '../features/authentication';
+import { ProtectedRoute, PublicRoute, Role, useAuthGuard } from '../features/authentication';
 import { LoadingSpinner } from '@/shared/components/feedback/LoadingSpinner';
 
 // Authentication pages
@@ -79,11 +79,29 @@ const AppRoutes: React.FC = () => {
      <Routes>
         {/* Root redirect */}
        <Route path="/" element={<RootRedirect />} />
-       
-       <Route path="/login" element={<LoginPage />} />
-       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-       <Route path="/verify-otp" element={<OTPPage />} />
-       <Route path="/reset-password" element={<ResetPasswordPage />} />
+       <Route path="/login" element={
+  <PublicRoute>
+    <LoginPage />
+  </PublicRoute>
+} />
+
+<Route path="/forgot-password" element={
+  <PublicRoute>
+    <ForgotPasswordPage />
+  </PublicRoute>
+} />
+
+<Route path="/verify-otp" element={
+  <PublicRoute>
+    <OTPPage />
+  </PublicRoute>
+} />
+
+<Route path="/reset-password" element={
+  <PublicRoute>
+    <ResetPasswordPage />
+  </PublicRoute>
+} />
 
         {/* Shared Staff routes (accessible to both Receptionist and Admin, but not public) */}
         <Route
@@ -111,7 +129,6 @@ const AppRoutes: React.FC = () => {
           <Route path="/add-donor" element={<AddDonorPage />} />
           <Route path="/receipt-verification" element={<ReceiptVerificationPage />} />
           <Route path="/representative-orders" element={<RepresentativeOrdersPage />} />
-          <Route path="/urgent-cases" element={<UrgentCasesPage />} />
           <Route path="/branch-payments" element={<BranchPaymentsPage />} />
           <Route path="/register-new-donor" element={<RegisterNewDonorPage />} />
           <Route path="/in-kind-donations" element={<InKindDonationsListPage />} />

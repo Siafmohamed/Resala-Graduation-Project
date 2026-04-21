@@ -4,7 +4,7 @@ import { urgentCasesService } from '../services/urgentCasesService';
 import type { CreateUrgentCasePayload, UpdateUrgentCasePayload, UrgentCase } from '../services/urgentCasesService';
 import { toast } from 'react-toastify';
 import { getApiErrorMessage } from '@/api/errorUtils';
-import { QUERY_GC_TIME } from '@/shared/constants/cacheDurations';
+import { CACHE_DURATIONS, QUERY_GC_TIME } from '@/shared/constants/cacheDurations';
 
 export const urgentCaseQueryKeys = {
   all: ['urgent-cases'] as const,
@@ -19,34 +19,49 @@ export const urgentCaseQueryKeys = {
 export function useUrgentCases() {
   const isInitialized = useIsInitialized();
   
-  return useQuery({
+  const query = useQuery({
     queryKey: urgentCaseQueryKeys.lists(),
     queryFn: async () => {
       const data = await urgentCasesService.getAll();
       return Array.isArray(data) ? data : [];
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: CACHE_DURATIONS.MEDIUM, // 1 minute
     gcTime: QUERY_GC_TIME,
     // Critical: Prevent API request before auth initialization completes
-    // On production (Vercel cold start), race condition causes 401 without this guard
     enabled: isInitialized === true,
   });
+
+  // Return enhanced loading state that includes auth initialization
+  return {
+    ...query,
+    isLoading: query.isLoading || isInitialized === false,
+  };
 }
 
 /**
  * Hook to fetch a single urgent case by ID
  */
-export function useUrgentCase(id: number) {  const queryClient = useQueryClient();
-  return useQuery({
+export function useUrgentCase(id: number) {
+  const queryClient = useQueryClient();
+  const isInitialized = useIsInitialized();
+
+  const query = useQuery({
     queryKey: urgentCaseQueryKeys.detail(id),
     queryFn: () => urgentCasesService.getById(id),
-    enabled: !!id,
+    enabled: !!id && isInitialized === true,
+    staleTime: CACHE_DURATIONS.SHORT, // 30 seconds
+    gcTime: QUERY_GC_TIME,
     initialData: () => {                          
       return queryClient
         .getQueryData<UrgentCase[]>(urgentCaseQueryKeys.lists())
         ?.find((c) => c.id === id);
     },
   });
+
+  return {
+    ...query,
+    isLoading: query.isLoading || isInitialized === false,
+  };
 }
 /**
  * Hook to create a new urgent case

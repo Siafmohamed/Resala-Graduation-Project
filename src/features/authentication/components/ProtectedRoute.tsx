@@ -1,40 +1,48 @@
-import React from 'react';
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthGuard } from '../hooks/useAuthGuard';
-import type { Role, Permission } from '../types/role.types';
+import type { Permission, Role } from '../types/role.types';
 import { FullPageSpinner } from './FullPageSpinner';
 
 interface ProtectedRouteProps {
-    requiredRole?: Role;
     requiredPermission?: Permission;
+    requiredRole?: Role;
     redirectTo?: string;
     children: ReactNode;
     fallback?: ReactNode;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-    requiredRole,
     requiredPermission,
+    requiredRole,
     redirectTo,
     children,
     fallback,
 }) => {
     const location = useLocation();
-    const { isInitialized, isAuthenticated, isAuthorized, userRole } = useAuthGuard({
-        requiredRole,
+
+    const {
+        isInitialized,
+        isAuthenticated,
+        isAuthorized,
+        userRole,
+    } = useAuthGuard({
         requiredPermission,
+        requiredRole,
         redirectTo,
     });
 
-    // 1. Loading state (blocks rendering)
+    // 1. Loading state
     if (!isInitialized) {
         return <>{fallback ?? <FullPageSpinner />}</>;
     }
 
-    // 2. Auth check
+    // 2. Not authenticated
     if (!isAuthenticated) {
-        console.warn(`[ProtectedRoute] Unauthenticated access to ${location.pathname}. Redirecting to ${redirectTo ?? '/login'}...`);
+        console.warn(
+            `[ProtectedRoute] Unauthenticated access to ${location.pathname}`
+        );
+
         return (
             <Navigate
                 to={redirectTo ?? '/login'}
@@ -44,16 +52,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         );
     }
 
-    // 3. Authorization check (Role/Permission)
+    // 3. Not authorized (permission denied)
     if (!isAuthorized) {
-        console.warn(`[ProtectedRoute] Forbidden access to ${location.pathname} for role ${userRole}. Redirecting to /unauthorized...`);
-        return <Navigate to="/unauthorized" replace />;
-    }
+        console.warn(
+            `[ProtectedRoute] Forbidden access to ${location.pathname} for role ${userRole}`
+        );
 
-    // 4. Double-check for role mix-up in case of stale state
-    if (requiredRole && userRole !== requiredRole) {
-        // Fallback check: if user is logged in as something else, ensure they can't cross-render
-        console.error(`[ProtectedRoute] Role mismatch! Required: ${requiredRole}, Current: ${userRole}`);
         return <Navigate to="/unauthorized" replace />;
     }
 

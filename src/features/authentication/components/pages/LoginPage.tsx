@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '../../services/authService';
 import { useAuth } from '../../context/AuthProvider';
+import { useAuthStore } from '../../store/authSlice';
 import { PublicRoute } from '../PublicRoute';
 import LoginForm from '../forms/LoginForm';
 import styles from '../auth.module.css';
@@ -9,7 +10,8 @@ import styles from '../auth.module.css';
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isLoading } = useAuth();
+  const { login } = useAuth();
+  const isLoading = useAuthStore((state) => state.isLoading);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

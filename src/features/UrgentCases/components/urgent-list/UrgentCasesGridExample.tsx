@@ -80,10 +80,6 @@ export function UrgentCasesGrid() {
           <UrgentCaseCard
             key={caseItem.id}
             caseId={caseItem.id}
-            onSuccess={() => {
-              // Refetch the entire list when a card is updated
-              refetch();
-            }}
           />
         ))}
       </div>
@@ -99,7 +95,7 @@ export function UrgentCasesPaginatedGrid() {
   const [pageSize] = React.useState(9); // 9 cards per page
   const [pageIndex, setPageIndex] = React.useState(0);
 
-  const { data: allCases, isLoading, isError, refetch } = useUrgentCases();
+  const { data: allCases, isLoading, isError } = useUrgentCases();
 
   if (isLoading) {
     return (
@@ -132,7 +128,6 @@ export function UrgentCasesPaginatedGrid() {
           <UrgentCaseCard
             key={caseItem.id}
             caseId={caseItem.id}
-            onSuccess={() => refetch()}
           />
         ))}
       </div>
@@ -182,7 +177,7 @@ export function UrgentCasesPaginatedGrid() {
  */
 export function UrgentCasesByUrgencyLevel() {
   const [selectedLevel, setSelectedLevel] = React.useState<1 | 2 | 3 | 'all'>('all');
-  const { data: allCases, isLoading, refetch } = useUrgentCases();
+  const { data: allCases, isLoading } = useUrgentCases();
 
   const filteredCases = allCases?.filter((c) =>
     selectedLevel === 'all' ? true : c.urgencyLevel === selectedLevel
@@ -229,7 +224,6 @@ export function UrgentCasesByUrgencyLevel() {
             <UrgentCaseCard
               key={caseItem.id}
               caseId={caseItem.id}
-              onSuccess={() => refetch()}
             />
           ))}
         </div>

@@ -45,9 +45,6 @@ export {
 } from './hooks/useAuthMutations';
 export {
   useAuthGuard,
-  useRequireAuth,
-  useRequireRole,
-  useRedirectIfAuthenticated,
 } from './hooks/useAuthGuard';
 export { useAuthLogoutListener } from './hooks/useAuthLogoutListener';
 export { AuthProvider, useAuth } from './context/AuthProvider';

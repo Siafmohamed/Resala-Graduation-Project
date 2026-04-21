@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/Card';
+import React, { useState, useCallback } from 'react';
+import { Card, CardContent } from '@/shared/components/ui/Card';
 import { formatNumber } from '@/shared/utils/formatters';
 import { useUrgentCases } from '../hooks/useUrgentCases';
 import { AddUrgentCaseModal } from './urgent-forms/AddUrgentCaseModal';
@@ -10,7 +10,7 @@ import { UrgentCase } from '../types/urgent-case.types';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 
 export function UrgentCasesPage() {
-  const { data, isLoading, isError, refetch } = useUrgentCases();
+  const { data, isLoading, isError } = useUrgentCases();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -26,9 +26,14 @@ export function UrgentCasesPage() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleSuccess = () => {
-    refetch();
-  };
+  const handleSuccess = useCallback(() => {
+    // Mutations already invalidate queries, so no manual refetch is needed here.
+    // We just close the modals.
+    setIsAddModalOpen(false);
+    setIsEditModalOpen(false);
+    setIsDeleteModalOpen(false);
+    setSelectedCase(null);
+  }, []);
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -82,9 +87,9 @@ export function UrgentCasesPage() {
       {data && !isLoading && data.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {data.map((caseItem) => {
-            const progressPercentage = caseItem.targetAmount
-              ? Math.min((caseItem.collectedAmount / caseItem.targetAmount) * 100, 100)
-              : 0;
+           const progressPercentage = caseItem.targetAmount && caseItem.collectedAmount != null
+  ? Math.min((caseItem.collectedAmount / caseItem.targetAmount) * 100, 100)
+  : 0;
 
             return (
               <Card
@@ -163,7 +168,12 @@ export function UrgentCasesPage() {
                       {caseItem.isActive ? '🟢 نشطة' : '⭕ غير نشطة'}
                     </span>
                     <span className="text-[10px] text-[#697282] font-[Cairo] whitespace-nowrap px-2 py-1 rounded-lg bg-gray-50">
-                      📅 {new Date(caseItem.createdOn).toLocaleDateString('ar-EG')}
+                      📅 {(() => {
+  const dateStr = caseItem.createdOn ?? caseItem.createdAt;
+  return dateStr
+    ? new Date(dateStr).toLocaleDateString('ar-EG')
+    : '—';
+})()}
                     </span>
                   </div>
 

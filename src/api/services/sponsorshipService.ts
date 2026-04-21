@@ -23,6 +23,29 @@ const unwrapData = <T>(response: unknown): T => {
   return response as T;
 };
 
+export const URGENCY_LEVELS = {
+  NORMAL: 1,
+  URGENT: 2,
+  CRITICAL: 3,
+} as const;
+
+export type UrgencyLevel = typeof URGENCY_LEVELS[keyof typeof URGENCY_LEVELS];
+
+export const normalizeUrgencyLevel = (level: any): UrgencyLevel => {
+  if (typeof level === 'number') {
+    if (level === 3) return URGENCY_LEVELS.CRITICAL;
+    if (level === 2) return URGENCY_LEVELS.URGENT;
+    if (level === 1) return URGENCY_LEVELS.NORMAL;
+  }
+  if (typeof level === 'string') {
+    const lower = level.toLowerCase();
+    if (lower === 'critical' || lower === '3') return URGENCY_LEVELS.CRITICAL;
+    if (lower === 'urgent' || lower === '2') return URGENCY_LEVELS.URGENT;
+    if (lower === 'high' || lower === '1') return URGENCY_LEVELS.CRITICAL;
+    if (lower === 'normal' || lower === 'low' || lower === '0') return URGENCY_LEVELS.NORMAL;
+  }
+  return URGENCY_LEVELS.NORMAL;
+};
 // ---------------------------------------------------------------------------
 // URL helpers (memoised — only computed once at module load time)
 // ---------------------------------------------------------------------------
@@ -82,9 +105,10 @@ const getAuthorizedHeaders = (): Record<string, string> => {
 
 
 // ---------------------------------------------------------------------------
-// Emergency payload normaliser  ← NEW: mirrors normalizeSponsorshipPayload
+// Emergency payload normaliser
 // ---------------------------------------------------------------------------
 
+// toUrgencyLabel removed - UI now only uses numeric `UrgencyLevel`
 
 // ---------------------------------------------------------------------------
 // Sponsorship types & normaliser
@@ -163,14 +187,13 @@ export interface EmergencyCase {
   title: string;
   description: string;
   imageUrl?: string;
-  /** ✅ ALWAYS numeric: 1 (Normal) | 2 (Urgent) | 3 (Critical) */
-  urgencyLevel: number;
+  urgencyLevel: UrgencyLevel;
   requiredAmount: number;
   targetAmount: number;
   collectedAmount: number;
   isActive: boolean;
   isCompleted: boolean;
-  /** Derived: true when urgencyLevel === 3 (Critical). Not sent to the backend. */
+  /** Derived: true when urgencyLevel === URGENCY_LEVELS.CRITICAL. Not sent to the backend. */
   isCritical: boolean;
   createdAt?: string;
   createdOn?: string;
@@ -181,8 +204,7 @@ export interface CreateEmergencyCasePayload {
   description: string;
   imageUrl?: string;
   imageFile?: File;
-  /** ✅ ALWAYS numeric: 1 (Normal) | 2 (Urgent) | 3 (Critical) */
-  urgencyLevel?: number;
+  urgencyLevel?: UrgencyLevel;
   requiredAmount?: number;
   targetAmount: number;
   collectedAmount?: number;
@@ -197,9 +219,8 @@ export interface CreateEmergencyCasePayload {
 export type UpdateEmergencyCasePayload = Omit<
   Partial<EmergencyCase>,
   'id' | 'isCritical' | 'createdAt' | 'createdOn'
-> & {
-  urgencyLevel?: number;
-};
+>;
+
 /**
  * Raw shape returned by the emergency-case endpoints.
  * `requiredAmount` is what the backend calls the target; `urgencyLevel` can
@@ -222,23 +243,21 @@ interface RawEmergencyCase {
 
 const toUiEmergencyCase = (item: RawEmergencyCase): EmergencyCase => {
   const requiredAmount = Number(item.requiredAmount ?? item.targetAmount ?? 0);
-  // ✅ Keep urgencyLevel as numeric (no string conversion)
-  const urgencyLevel = Number(item.urgencyLevel ?? 1) as number;
-  // ✅ isCritical is a DERIVED field - computed from urgencyLevel
-  const isCritical = urgencyLevel === 3; // 3 = Critical
+  const urgencyLevel = normalizeUrgencyLevel(item.urgencyLevel);
 
   return {
     id: item.id,
     title: item.title,
     description: item.description,
     imageUrl: resolveMediaUrl(item.imageUrl),
-    urgencyLevel, // ✅ numeric, not string
+    urgencyLevel,
     requiredAmount,
     targetAmount: requiredAmount,
     collectedAmount: Number(item.collectedAmount ?? 0),
     isActive: Boolean(item.isActive),
     isCompleted: Boolean(item.isCompleted),
-    isCritical, // ✅ Derived: computed on-the-fly, not stored
+    // isCritical is a pure derived field — never read from or sent to the backend.
+    isCritical: urgencyLevel === URGENCY_LEVELS.CRITICAL,
     createdAt: item.createdAt,
     createdOn: item.createdOn,
   };
@@ -338,13 +357,14 @@ export const sponsorshipApi = {
 
 export const emergencyApi = {
   create: async (payload: CreateEmergencyCasePayload): Promise<EmergencyCase> => {
-    // Build JSON payload - urgencyLevel is ALWAYS numeric (1, 2, or 3)
+    // Build JSON payload wrapped in dto object
     const apiPayload = {
-      title: payload.title,
-      description: payload.description,
-      requiredAmount: payload.requiredAmount ?? payload.targetAmount ?? 0,
-      // ✅ urgencyLevel is always numeric - no string conversion
-      urgencyLevel: Math.trunc(Number(payload.urgencyLevel ?? 1)),
+      dto: {
+        title: payload.title,
+        description: payload.description,
+        requiredAmount: payload.requiredAmount ?? payload.targetAmount ?? 0,
+        urgencyLevel: payload.urgencyLevel ?? URGENCY_LEVELS.NORMAL,
+      }
     };
 
     const raw = unwrapData<RawEmergencyCase>(
@@ -378,10 +398,9 @@ export const emergencyApi = {
       );
     }
     
-    // ✅ urgencyLevel is ALWAYS numeric (1, 2, or 3)
-    // No string conversion - payload must already be numeric from upstream
+    // ✅ urgencyLevel must be numeric Enum: 1, 2, 3
     if (payload.urgencyLevel !== undefined) {
-      apiPayload.urgencyLevel = Math.trunc(Number(payload.urgencyLevel));
+      apiPayload.urgencyLevel = payload.urgencyLevel;
     }
     
     if (payload.isActive !== undefined) apiPayload.isActive = payload.isActive;
@@ -404,12 +423,12 @@ export const emergencyApi = {
     return toUiEmergencyCase(raw);
   },
 
-  getAll: async (): Promise<EmergencyCase[]> => {
-    const raw = unwrapData<RawEmergencyCase[]>(
-      await api.get('/v1/emergency-cases'),
-    );
-    return raw.map(toUiEmergencyCase);
-  },
+getAll: async (params?: { isActive?: boolean }): Promise<EmergencyCase[]> => {
+  const raw = unwrapData<RawEmergencyCase[]>(
+    await api.get('/v1/emergency-cases', { params }),
+  );
+  return raw.map(toUiEmergencyCase);
+},
 
   getById: async (id: number): Promise<EmergencyCase> => {
     const raw = unwrapData<RawEmergencyCase>(

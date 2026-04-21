@@ -76,3 +76,18 @@ export function canAccess(userRole: Role, requiredRole: Role): boolean {
     const hierarchy = [Role.DONOR, Role.RECEPTIONIST, Role.FORM_MANAGER, Role.ADMIN];
     return hierarchy.indexOf(userRole) >= hierarchy.indexOf(requiredRole);
 }
+export function mapApiRole(apiRole: string): Role | undefined {
+    if (!apiRole) return undefined;
+    
+    const normalizedRole = apiRole.toUpperCase();
+    
+    const roleMap: Record<string, Role> = {
+        FORM_MANAGER: Role.FORM_MANAGER,
+        RECEPTIONIST: Role.RECEPTIONIST,
+        RECEPTION: Role.RECEPTIONIST,
+        ADMIN: Role.ADMIN,
+        DONOR: Role.DONOR,
+    };
+
+    return roleMap[normalizedRole];
+}

@@ -39,16 +39,17 @@ import type {
   CreateSponsorshipPayload, 
   CreateEmergencyCasePayload,
   UpdateSponsorshipPayload,
-  UpdateEmergencyCasePayload
+  UpdateEmergencyCasePayload,
+  UrgencyLevel
 } from "../services/sponsorship.service";
-// Urgency Level enum: 1 = Normal, 2 = Urgent, 3 = Critical
-const URGENCY_LEVELS = {
-  NORMAL: 1,
-  URGENT: 2,
-  CRITICAL: 3,
-} as const;
+import { URGENCY_LEVELS } from "../services/sponsorship.service";
 
-type UrgencyLevel = typeof URGENCY_LEVELS[keyof typeof URGENCY_LEVELS];
+const urgencyConfig: Record<number, { label: string; icon: any; className: string }> = {
+  [URGENCY_LEVELS.NORMAL]: { label: 'عادي', icon: AlertCircle, className: 'bg-gradient-to-r from-blue-500 to-blue-400 border-blue-400/50' },
+  [URGENCY_LEVELS.URGENT]: { label: 'عاجل', icon: Clock, className: 'bg-gradient-to-r from-orange-500 to-orange-400 border-orange-400/50' },
+  [URGENCY_LEVELS.CRITICAL]: { label: 'حرج جداً', icon: Flame, className: 'bg-gradient-to-r from-[#F04930] to-red-500 border-red-400/50' },
+};
+
 type ModalStep = null | "choose-type" | "add-regular" | "add-urgent" | "edit-regular" | "edit-urgent" | "delete-regular" | "delete-urgent";
 
 /* ─── CHOOSE TYPE MODAL ─── */
@@ -972,20 +973,18 @@ export default function SponsorshipsAPIManagement() {
                     {item.isActive ? "✓ نشط" : "× غير نشط"}
                   </span>
                   
-                  {/* Critical/Urgent Indicator */}
-                  {item.caseType === 'urgent' && (
-                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white backdrop-blur-md shadow-lg border animate-pulse
-                      ${item.urgencyLevel === URGENCY_LEVELS.CRITICAL 
-                        ? 'bg-gradient-to-r from-red-600 to-red-500 border-red-400/50' 
-                        : item.urgencyLevel === URGENCY_LEVELS.URGENT
-                        ? 'bg-gradient-to-r from-orange-500 to-orange-400 border-orange-300/50'
-                        : 'bg-gradient-to-r from-blue-500 to-blue-400 border-blue-300/50'}`}>
-                      {item.urgencyLevel === URGENCY_LEVELS.CRITICAL ? <Flame size={14} className="fill-current" /> : <Clock size={14} />}
-                      <span className="text-[10px] font-bold font-[Cairo]">
-                        {item.urgencyLevel === URGENCY_LEVELS.CRITICAL ? 'حرج جداً' : item.urgencyLevel === URGENCY_LEVELS.URGENT ? 'عاجل' : 'عادي'}
-                      </span>
-                    </div>
-                  )}
+                 ={item.caseType === 'urgent' && (() => {
+  const config = urgencyConfig[item.urgencyLevel ?? URGENCY_LEVELS.NORMAL];
+  const Icon = config.icon;
+  return (
+    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white backdrop-blur-md shadow-lg border animate-pulse ${config.className}`}>
+      <Icon size={14} className="fill-current" />
+      <span className="text-[10px] font-bold font-[Cairo]">
+        {config.label}
+      </span>
+    </div>
+  );
+})()}
                 </div>
               </div>
 

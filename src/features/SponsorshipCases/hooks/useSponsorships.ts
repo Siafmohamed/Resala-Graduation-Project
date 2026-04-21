@@ -250,14 +250,6 @@ export function useUpdateSponsorship() {
       toast.error(message);
     },
 
-    onSettled: async (_data, _error, variables) => {
-      // Refetch both list and detail to ensure sync with server
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: sponsorshipQueryKeys.lists(), exact: false }),
-        queryClient.invalidateQueries({ queryKey: sponsorshipQueryKeys.detail(variables.id) }),
-      ]);
-    },
-
     onSuccess: async (data, variables) => {
       const isFreshServerData = hasUpdatedSponsorshipValues(data, variables.payload);
 
@@ -402,14 +394,6 @@ export function useUpdateEmergencyCase() {
       }
       const message = getApiErrorMessage(error, 'حدث خطأ أثناء تحديث الحالة الحرجة');
       toast.error(message);
-    },
-
-    onSettled: async (_data, _error, variables) => {
-      // Refetch both list and detail to ensure sync with server
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: emergencyQueryKeys.lists(), exact: false }),
-        queryClient.invalidateQueries({ queryKey: emergencyQueryKeys.detail(variables.id) }),
-      ]);
     },
 
     onSuccess: async (data, variables) => {

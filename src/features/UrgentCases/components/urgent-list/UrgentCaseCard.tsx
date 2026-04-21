@@ -35,7 +35,8 @@ export function UrgentCaseCard({ caseId, onSuccess }: UrgentCaseCardProps) {
 
   const handleDeleteSuccess = () => {
     setIsDeleteModalOpen(false);
-    refetch();
+    // Success is handled by the mutation invalidating the list, 
+    // and calling the parent's onSuccess to notify the grid.
     onSuccess?.();
   };
 
