@@ -7,34 +7,24 @@ import type { SessionData } from '../types/auth.types';
  * Called on logout to ensure no stale state remains
  */
 export const completeAuthCleanup = (): void => {
-  // Clear axios interceptor state to cancel pending requests and clear request queue
+  // 1. Clear axios interceptor state to cancel pending requests and abort in-flight refresh
   clearAxiosInterceptorState();
   
-  // Clear tokens and session data
+  // 2. Clear tokens and session data from storage
   tokenManager.clearTokens();
   
-  // Clear any window-level auth state
-  if ('auth' in window) {
-    delete (window as any).auth;
-  }
-  
-  // Clear any cached user/role data in window
-  if ('currentUser' in window) {
-    delete (window as any).currentUser;
-  }
-  if ('userRole' in window) {
-    delete (window as any).userRole;
-  }
-
-  // Double-check localStorage is clean
-  const keysToRemove: string[] = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && (key.includes('auth') || key.includes('session') || key.includes('token') || key.includes('resala_'))) {
-      keysToRemove.push(key);
+  // 3. Clear any window-level auth state
+  const windowObj = window as any;
+  const globalKeys = ['auth', 'currentUser', 'userRole', 'resala_auth'];
+  globalKeys.forEach(key => {
+    if (key in windowObj) {
+      delete windowObj[key];
     }
+  });
+
+  if (import.meta.env.DEV) {
+    console.log('[AuthCleanup] Complete authentication state cleared');
   }
-  keysToRemove.forEach(key => localStorage.removeItem(key));
 };
 
 /**

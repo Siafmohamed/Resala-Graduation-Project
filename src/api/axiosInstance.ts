@@ -43,6 +43,8 @@ let isRefreshing = false;
 // `failedQueue` stores requests that got 401 while refresh is in progress.
 // Once refresh succeeds, every queued request is replayed with the new token.
 let failedQueue: QueueItem[] = [];
+// `refreshController` tracks the in-flight refresh request so it can be aborted on logout.
+let refreshController: AbortController | null = null;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const isRefreshUrl = (url?: string) => !!url && url.includes('/v1/auth/refresh-token');
@@ -67,13 +69,24 @@ const setAuthorizationHeader = (request: RetriableConfig, token: string) => {
 };
 
 const refreshAccessToken = async (): Promise<string> => {
-  const response = await refreshClient.post('/v1/auth/refresh-token', {});
-  const refreshedToken = response?.data?.data?.token as string | undefined;
-  if (!refreshedToken) {
-    throw new Error('Refresh endpoint did not return a token');
+  if (refreshController) {
+    refreshController.abort();
   }
-  tokenManager.setAccessToken(refreshedToken);
-  return refreshedToken;
+  refreshController = new AbortController();
+
+  try {
+    const response = await refreshClient.post('/v1/auth/refresh-token', {}, {
+      signal: refreshController.signal,
+    });
+    const refreshedToken = response?.data?.data?.token as string | undefined;
+    if (!refreshedToken) {
+      throw new Error('Refresh endpoint did not return a token');
+    }
+    tokenManager.setAccessToken(refreshedToken);
+    return refreshedToken;
+  } finally {
+    refreshController = null;
+  }
 };
 const emitLoading = () => {
   const isLoading = activeRequests > 0;
@@ -270,6 +283,16 @@ export const clearAxiosInterceptorState = (): void => {
     }
   });
   pendingControllers.clear();
+
+  // Abort any in-flight refresh request to prevent race conditions during logout
+  if (refreshController) {
+    try {
+      refreshController.abort();
+    } catch {
+      // Ignore abort errors
+    }
+    refreshController = null;
+  }
   
   // Reset the request controller WeakMap by clearing references
   // (WeakMap cleanup happens automatically with GC, but we document this here)

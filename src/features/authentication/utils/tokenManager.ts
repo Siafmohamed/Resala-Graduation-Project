@@ -85,17 +85,29 @@ export const tokenManager = {
     clearTokens(): void {
         this.accessTokenAdapter.clear();
         localStorage.removeItem(STORAGE_KEYS.SESSION_DATA);
+        
+        // Clear all app-specific keys from localStorage and sessionStorage
+        const clearPrefixed = (storage: Storage) => {
+            const keysToRemove: string[] = [];
+            for (let i = 0; i < storage.length; i++) {
+                const key = storage.key(i);
+                if (key && (key.startsWith('resala_') || key.includes('auth') || key.includes('session'))) {
+                    // Be careful not to remove generic "token" from other apps on same domain
+                    // if it doesn't look like it belongs to us.
+                    // But in this project's context, most auth keys should be cleared.
+                    if (key.startsWith('resala_') || (key.includes('auth') && !key.includes('firebase'))) {
+                        keysToRemove.push(key);
+                    }
+                }
+            }
+            keysToRemove.forEach(key => storage.removeItem(key));
+        };
+
+        clearPrefixed(localStorage);
+        clearPrefixed(sessionStorage);
+        
+        // Ensure sessionStorage is completely cleared as it's tab-specific
         sessionStorage.clear();
-        Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('resala_')) {
-                localStorage.removeItem(key);
-            }
-        });
-        Object.keys(sessionStorage).forEach(key => {
-            if (key.startsWith('resala_')) {
-                sessionStorage.removeItem(key);
-            }
-        });
     },
 
     // ── Token validation ─────────────────────────────────

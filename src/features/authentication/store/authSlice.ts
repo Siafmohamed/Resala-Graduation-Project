@@ -90,7 +90,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       session: null,
       isAuthenticated: false,
       userRole: undefined,
-      isInitialized: false,
+      isInitialized: true,
       isLoading: false,
     });
   },

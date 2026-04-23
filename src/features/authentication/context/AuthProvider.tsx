@@ -136,6 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const logout = useCallback(async () => {
+    setLoading(true);
     try {
       await authService.logout();
     } catch (error) {
@@ -150,10 +151,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       clearAuth();
       clearRefreshTimer();
       queryClient.clear();
+      setLoading(false);
       
       console.log('[AuthProvider] Logout complete - all state cleared');
     }
-  }, [clearAuth, clearRefreshTimer, queryClient]);
+  }, [clearAuth, clearRefreshTimer, queryClient, setLoading]);
 
   useEffect(() => {
     const initialize = async () => {
