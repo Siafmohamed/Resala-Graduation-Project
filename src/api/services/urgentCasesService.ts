@@ -1,5 +1,6 @@
 import api from '@/api/axiosInstance';
-import { UrgencyLevel } from './sponsorshipService';
+import { tokenManager } from '@/features/authentication/utils/tokenManager';
+import type { UrgencyLevel } from './sponsorshipService';
 
 export interface ApiResponse<T> {
   succeeded: boolean;
@@ -40,16 +41,21 @@ export interface UpdateUrgentCasePayload {
   isActive?: boolean;
 }
 
-const unwrapData = <T>(response: any): T => {
+const unwrapData = <T>(response: unknown): T => {
   if (response === null || response === undefined) return response as T;
   
   // If the response itself has a 'data' property and is a successful envelope
   if (typeof response === 'object' && 'succeeded' in response && 'data' in response) {
-    return response.data as T;
+    return (response as ApiResponse<T>).data as T;
   }
   
   // If we already have the data (either directly or from axios interceptor)
   return response as T;
+};
+
+const getAuthorizedHeaders = (): Record<string, string> => {
+  const token = tokenManager.getAccessToken() || localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
 export const urgentCasesService = {
@@ -65,17 +71,22 @@ export const urgentCasesService = {
   },
 
   create: async (payload: CreateUrgentCasePayload): Promise<UrgentCase> => {
-    // Build JSON payload wrapped in dto object
-    const apiPayload = {
-      dto: {
-        title: payload.title,
-        description: payload.description,
-        requiredAmount: payload.targetAmount,
-        urgencyLevel: payload.urgencyLevel ?? 1,  
-      }
+    // Build JSON payload with image as URL only
+    const apiPayload: Record<string, unknown> = {
+      title: payload.title,
+      description: payload.description,
+      requiredAmount: payload.targetAmount,
+      urgencyLevel: payload.urgencyLevel ?? 1,
     };
 
-    const response = await api.post<ApiResponse<UrgentCase> | UrgentCase>('/v1/emergency-cases', apiPayload);
+    // Only add imageUrl if it's a string URL
+    if (typeof payload.image === 'string' && payload.image.trim()) {
+      apiPayload.imageUrl = payload.image.trim();
+    }
+
+    const response = await api.post<ApiResponse<UrgentCase> | UrgentCase>('/v1/emergency-cases', apiPayload, {
+      headers: getAuthorizedHeaders(),
+    });
     return unwrapData<UrgentCase>(response);
   },
 
@@ -85,6 +96,8 @@ export const urgentCasesService = {
   },
 
   delete: async (id: number): Promise<void> => {
-    await api.delete(`/v1/emergency-cases/${id}`);
+    await api.delete(`/v1/emergency-cases/${id}`, {
+      headers: getAuthorizedHeaders(),
+    });
   },
 };

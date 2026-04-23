@@ -269,19 +269,21 @@ const toUiEmergencyCase = (item: RawEmergencyCase): EmergencyCase => {
 
 export const sponsorshipApi = {
   create: async (payload: CreateSponsorshipPayload): Promise<SponsorshipProgram> => {
-    // Send JSON payload - axios will automatically set Content-Type
+    // Send JSON payload - image and icon as URLs only (not null)
     const apiPayload = {
       name: payload.name,
       description: payload.description,
-      imageUrl: payload.imageUrl && payload.imageUrl.trim() ? payload.imageUrl : null,
-      icon: payload.icon && payload.icon.trim() ? payload.icon : null,
+      imageUrl: payload.imageUrl && payload.imageUrl.trim() ? payload.imageUrl.trim() : undefined,
+      icon: payload.icon && payload.icon.trim() ? payload.icon.trim() : undefined,
       targetAmount: payload.targetAmount,
       isActive: payload.isActive ?? true,
       collectedAmount: payload.collectedAmount ?? 0,
     };
 
     const raw = unwrapData<RawSponsorshipProgram>(
-      await api.post('/v1/sponsorships', apiPayload),
+      await api.post('/v1/sponsorships', apiPayload, {
+        headers: getAuthorizedHeaders(),
+      }),
     );
     return toUiSponsorshipProgram(raw);
   },
@@ -333,7 +335,9 @@ export const sponsorshipApi = {
   },
 
   delete: async (id: number): Promise<void> => {
-    await api.delete(`/v1/sponsorships/${id}`);
+    await api.delete(`/v1/sponsorships/${id}`, {
+      headers: getAuthorizedHeaders(),
+    });
   },
 
   getAll: async (params?: { isActive?: boolean }): Promise<SponsorshipProgram[]> => {
@@ -359,12 +363,12 @@ export const emergencyApi = {
   create: async (payload: CreateEmergencyCasePayload): Promise<EmergencyCase> => {
     // Build JSON payload wrapped in dto object
     const apiPayload = {
-      dto: {
+      
         title: payload.title,
         description: payload.description,
         requiredAmount: payload.requiredAmount ?? payload.targetAmount ?? 0,
         urgencyLevel: payload.urgencyLevel ?? URGENCY_LEVELS.NORMAL,
-      }
+      
     };
 
     const raw = unwrapData<RawEmergencyCase>(
@@ -438,6 +442,8 @@ getAll: async (params?: { isActive?: boolean }): Promise<EmergencyCase[]> => {
   },
 
   delete: async (id: number): Promise<void> => {
-    await api.delete(`/v1/emergency-cases/${id}`);
+    await api.delete(`/v1/emergency-cases/${id}`, {
+      headers: getAuthorizedHeaders(),
+    });
   },
 };
