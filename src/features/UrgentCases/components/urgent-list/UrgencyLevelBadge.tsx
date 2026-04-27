@@ -6,6 +6,8 @@ import {
   urgencyLevelStyles,
 } from '../../types/urgency-level.types';
 
+import { normalizeUrgencyLevel } from '@/api/services/sponsorshipService';
+
 interface UrgencyLevelBadgeProps {
   level: UrgencyLevel | number | string;
   size?: 'sm' | 'md' | 'lg';
@@ -25,8 +27,8 @@ export const UrgencyLevelBadge: React.FC<UrgencyLevelBadgeProps> = ({
   animate = false,
   className = '',
 }) => {
-  // ✅ FIXED: Properly convert to number, not just cast
-  const numLevel = Number(level) as UrgencyLevel;
+  // ✅ FIXED: Use robust normalization for string/number inputs
+  const numLevel = normalizeUrgencyLevel(level);
   const label = urgencyLevelLabels[numLevel] || 'غير محدد';
   const styles = urgencyLevelStyles[numLevel];
 
@@ -98,16 +100,7 @@ export const UrgencyLevelBadgeHighlight: React.FC<UrgencyLevelBadgeProps> = ({
   level,
   className = '',
 }) => {
-  const numLevel =
-  level === 1 || level === 2 || level === 3
-    ? level
-    : level === "High"
-      ? 3
-      : level === "Medium"
-        ? 2
-        : level === "Low"
-          ? 1
-          : null;
+  const numLevel = normalizeUrgencyLevel(level);
   const label = urgencyLevelLabels[numLevel] || 'غير محدد';
 
   const getGradientStyles = () => {

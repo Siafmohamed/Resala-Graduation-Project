@@ -55,6 +55,13 @@ export const receptionMenu: NavConfig = [
     roles: [Role.RECEPTIONIST],
   },
   {
+    id: 'emergency-payments',
+    label: 'دفعات الطوارئ',
+    path: '/emergency-payments',
+    icon: HeartHandshake,
+    roles: [Role.RECEPTIONIST],
+  },
+  {
     id: 'settings',
     label: 'الإعدادات',
     path: '/reception-settings',

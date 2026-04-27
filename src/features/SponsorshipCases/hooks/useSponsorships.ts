@@ -144,7 +144,10 @@ export function useCreateSponsorship() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: CreateSponsorshipPayload) => sponsorshipApi.create(payload),
+    mutationFn: (data: FormData | CreateSponsorshipPayload) => {
+      // If it's FormData, send directly; if it's an object, the service will convert it
+      return sponsorshipApi.create(data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sponsorshipQueryKeys.lists(), exact: false });
       toast.success('تم إنشاء برنامج الكفالة بنجاح');
@@ -163,7 +166,10 @@ export function useCreateEmergencyCase() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: CreateEmergencyCasePayload) => emergencyApi.create(payload),
+    mutationFn: (data: FormData | CreateEmergencyCasePayload) => {
+      // If it's FormData, send directly; if it's an object, the service will convert it
+      return emergencyApi.create(data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: emergencyQueryKeys.lists(), exact: false });
       toast.success('تم إنشاء الحالة الحرجة بنجاح');
@@ -182,11 +188,16 @@ export function useUpdateSponsorship() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: UpdateSponsorshipPayload }) =>
+    mutationFn: ({ id, payload }: { id: number; payload: UpdateSponsorshipPayload | FormData }) =>
       sponsorshipApi.update(id, payload),
 
     // OPTIMISTIC UPDATE - Update both list and detail caches
     onMutate: async ({ id, payload }) => {
+      // Skip optimistic update if payload is FormData
+      if (payload instanceof FormData) {
+        return { previousList: undefined, previousSponsorship: undefined };
+      }
+
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: sponsorshipQueryKeys.lists(), exact: false });
       await queryClient.cancelQueries({ queryKey: sponsorshipQueryKeys.detail(id) });
@@ -251,20 +262,24 @@ export function useUpdateSponsorship() {
     },
 
     onSuccess: async (data, variables) => {
-      const isFreshServerData = hasUpdatedSponsorshipValues(data, variables.payload);
+      // Skip comparison if payload is FormData
+      let isFreshServerData = true; // Default to true for FormData
+      if (!(variables.payload instanceof FormData)) {
+        isFreshServerData = hasUpdatedSponsorshipValues(data, variables.payload);
 
-      if (isFreshServerData) {
-        queryClient.setQueryData(
-          sponsorshipQueryKeys.detail(variables.id),
-          data,
-        );
-        queryClient.setQueryData(
-          sponsorshipQueryKeys.lists(),
-          (old: SponsorshipProgram[] | undefined) => {
-            if (!old) return old;
-            return old.map((item) => (item.id === variables.id ? data : item));
-          },
-        );
+        if (isFreshServerData) {
+          queryClient.setQueryData(
+            sponsorshipQueryKeys.detail(variables.id),
+            data,
+          );
+          queryClient.setQueryData(
+            sponsorshipQueryKeys.lists(),
+            (old: SponsorshipProgram[] | undefined) => {
+              if (!old) return old;
+              return old.map((item) => (item.id === variables.id ? data : item));
+            },
+          );
+        }
       }
 
       // Return the invalidation promise so mutation lifecycle awaits stale marking.
@@ -307,11 +322,16 @@ export function useUpdateEmergencyCase() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: UpdateEmergencyCasePayload }) =>
+    mutationFn: ({ id, payload }: { id: number; payload: UpdateEmergencyCasePayload | FormData }) =>
       emergencyApi.update(id, payload),
 
     // OPTIMISTIC UPDATE - Update both list and detail caches
     onMutate: async ({ id, payload }) => {
+      // Skip optimistic update if payload is FormData
+      if (payload instanceof FormData) {
+        return { previousList: undefined, previousCase: undefined };
+      }
+
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: emergencyQueryKeys.lists(), exact: false });
       await queryClient.cancelQueries({ queryKey: emergencyQueryKeys.detail(id) });
@@ -397,20 +417,24 @@ export function useUpdateEmergencyCase() {
     },
 
     onSuccess: async (data, variables) => {
-      const isFreshServerData = hasUpdatedEmergencyValues(data, variables.payload);
+      // Skip comparison if payload is FormData
+      let isFreshServerData = true; // Default to true for FormData
+      if (!(variables.payload instanceof FormData)) {
+        isFreshServerData = hasUpdatedEmergencyValues(data, variables.payload);
 
-      if (isFreshServerData) {
-        queryClient.setQueryData(
-          emergencyQueryKeys.detail(variables.id),
-          data,
-        );
-        queryClient.setQueryData(
-          emergencyQueryKeys.lists(),
-          (old: EmergencyCase[] | undefined) => {
-            if (!old) return old;
-            return old.map((item) => (item.id === variables.id ? data : item));
-          },
-        );
+        if (isFreshServerData) {
+          queryClient.setQueryData(
+            emergencyQueryKeys.detail(variables.id),
+            data,
+          );
+          queryClient.setQueryData(
+            emergencyQueryKeys.lists(),
+            (old: EmergencyCase[] | undefined) => {
+              if (!old) return old;
+              return old.map((item) => (item.id === variables.id ? data : item));
+            },
+          );
+        }
       }
 
       // Return the invalidation promise so mutation lifecycle awaits stale marking.

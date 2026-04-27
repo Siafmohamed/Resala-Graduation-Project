@@ -85,6 +85,9 @@ export const EditUrgentCaseModal: React.FC<EditUrgentCaseModalProps> = ({
       return;
     }
 
+import { normalizeUrgencyLevel } from '@/api/services/sponsorshipService';
+
+// ... (in the useEffect)
     // Load case data when modal opens or case changes
     setTitle(activeCase.title);
     setDescription(activeCase.description);
@@ -92,12 +95,7 @@ export const EditUrgentCaseModal: React.FC<EditUrgentCaseModalProps> = ({
     setCollectedAmount(activeCase.collectedAmount);
     
     // ✅ Ensure urgencyLevel is always a valid number (1, 2, or 3)
-    const level = Number(activeCase.urgencyLevel);
-    if ([1, 2, 3].includes(level)) {
-      setUrgencyLevel(level as UrgencyLevel);
-    } else {
-      setUrgencyLevel(UrgencyLevel.Normal);
-    }
+    setUrgencyLevel(normalizeUrgencyLevel(activeCase.urgencyLevel));
     
     setIsActive(activeCase.isActive);
     if (activeCase.imageUrl) {

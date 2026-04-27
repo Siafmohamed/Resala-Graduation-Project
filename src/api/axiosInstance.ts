@@ -203,8 +203,9 @@ api.interceptors.response.use(
         // Log token info for debugging auth issues
         const currentToken = tokenManager.getAccessToken();
         if (currentToken) {
-          const decoded = tokenManager.decodeToken<{ role?: string; exp?: number }>(currentToken);
-          console.log('[API ERROR] Current token role:', decoded?.role, 'exp:', new Date(decoded?.exp ? decoded.exp * 1000 : 0));
+          const role = tokenManager.getRoleFromToken();
+          const decoded = tokenManager.decodeToken<{ exp?: number }>(currentToken);
+          console.log('[API ERROR] Current token role:', role, 'exp:', new Date(decoded?.exp ? decoded.exp * 1000 : 0));
         }
       }
     }

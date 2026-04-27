@@ -33,21 +33,23 @@ import {
   Flame,
   Clock
 } from "lucide-react";
-import type { 
+import { 
   SponsorshipProgram, 
   EmergencyCase, 
   CreateSponsorshipPayload, 
   CreateEmergencyCasePayload,
   UpdateSponsorshipPayload,
   UpdateEmergencyCasePayload,
-  UrgencyLevel
+  UrgencyLevel,
+  normalizeUrgencyLevel
 } from "../services/sponsorship.service";
 import { URGENCY_LEVELS } from "../services/sponsorship.service";
+import { string } from "zod";
 
 const urgencyConfig: Record<number, { label: string; icon: any; className: string }> = {
-  [URGENCY_LEVELS.NORMAL]: { label: 'عادي', icon: AlertCircle, className: 'bg-gradient-to-r from-blue-500 to-blue-400 border-blue-400/50' },
-  [URGENCY_LEVELS.URGENT]: { label: 'عاجل', icon: Clock, className: 'bg-gradient-to-r from-orange-500 to-orange-400 border-orange-400/50' },
-  [URGENCY_LEVELS.CRITICAL]: { label: 'حرج جداً', icon: Flame, className: 'bg-gradient-to-r from-[#F04930] to-red-500 border-red-400/50' },
+  [URGENCY_LEVELS.NORMAL]: { label: 'عادية', icon: AlertCircle, className: 'bg-gradient-to-r from-blue-500 to-blue-400 border-blue-400/50' },
+  [URGENCY_LEVELS.URGENT]: { label: 'حرجة', icon: Clock, className: 'bg-gradient-to-r from-orange-500 to-orange-400 border-orange-400/50' },
+  [URGENCY_LEVELS.CRITICAL]: { label: 'حرجة جدا', icon: Flame, className: 'bg-gradient-to-r from-[#F04930] to-red-500 border-red-400/50' },
 };
 
 type ModalStep = null | "choose-type" | "add-regular" | "add-urgent" | "edit-regular" | "edit-urgent" | "delete-regular" | "delete-urgent";
@@ -148,14 +150,7 @@ function CaseFormModal({
       setCollectedAmount(initialData.collectedAmount || 0);
       
       // Normalize urgency level from various data formats
-      let level: UrgencyLevel = urgent ? URGENCY_LEVELS.URGENT : URGENCY_LEVELS.NORMAL;
-      if (initialData.urgencyLevel) {
-        const numLevel = Number(initialData.urgencyLevel);
-        if (numLevel === 1 || numLevel === 2 || numLevel === 3) {
-          level = numLevel as UrgencyLevel;
-        }
-      }
-      setUrgencyLevel(level);
+      setUrgencyLevel(normalizeUrgencyLevel(initialData.urgencyLevel));
       
       setIsActive(initialData.isActive ?? true);
       setImagePreview(initialData.imageUrl || null);
@@ -302,52 +297,45 @@ function CaseFormModal({
     setError(null);
     if (!validateForm()) return;
 
-    // Helper to filter out data URLs (base64) and keep only real URLs
-    const getValidImageUrl = (url: string | null): string | undefined => {
-      if (!url) return undefined;
-      if (url.startsWith('data:')) return undefined; // Don't send data URLs
-      return url;
-    };
-
     if (urgent) {
-      const validImageUrl = getValidImageUrl(imagePreview);
-      const payload: any = {
-        title: title.trim(),
-        description: description.trim(),
-        targetAmount,
-        requiredAmount: targetAmount,
-        urgencyLevel: urgencyLevel,
-        isCritical: urgencyLevel === URGENCY_LEVELS.CRITICAL,
-        isActive,
-      };
+      // Emergency case - build FormData
+      const formData = new FormData();
+      formData.append('Title', title.trim());
+      formData.append('Description', description.trim());
+      formData.append('UrgencyLevel', String(urgencyLevel));
+      formData.append('RequiredAmount', String(targetAmount));
 
-      // Only include collectedAmount in add mode
-      if (mode === "add") {
-        payload.collectedAmount = collectedAmount;
+      // Add attachment FILE (actual binary file)
+      if (imageFile) {
+        formData.append('Attachment', imageFile);
       }
-      // Only include imageUrl if it's a valid HTTP URL
-      if (validImageUrl) {
-        payload.imageUrl = validImageUrl;
-      }
-      onSave(payload);
+
+      onSave(formData as any);
     } else {
-      const validImageUrl = getValidImageUrl(imagePreview);
-      const payload: any = {
-        name: title.trim(),
-        description: description.trim(),
-        targetAmount,
-        isActive,
-        // Note: collectedAmount is NOT sent for sponsorships as it's managed separately
-      };
-      // Only include imageUrl if it's a valid HTTP URL
-      if (validImageUrl) {
-        payload.imageUrl = validImageUrl;
+      // Sponsorship - build FormData
+      const formData = new FormData();
+      formData.append('Name', title.trim());
+      formData.append('Description', description.trim());
+      formData.append('TargetAmount', String(targetAmount));
+      formData.append('IsActive', String(isActive));
+      formData.append('CollectedAmount', String(collectedAmount));
+
+      // Add icon FILE (actual binary file)
+      if (iconFile) {
+        formData.append('IconFile', iconFile);
       }
-      // Only include icon if it's a valid URL (not a data URL and not null)
-      if (iconPreview !== null && !iconPreview.startsWith('data:')) {
-        payload.icon = iconPreview;
+
+      // Add icon name if provided
+      if (iconPreview && !iconPreview.startsWith('data:')) {
+        formData.append('IconName', iconPreview);
       }
-      onSave(payload);
+
+      // Add image FILE (actual binary file)
+      if (imageFile) {
+        formData.append('ImageFile', imageFile);
+      }
+
+      onSave(formData as any);
     }
   };
 
@@ -500,7 +488,7 @@ function CaseFormModal({
                         }`}
                       >
                         <Clock size={18} className="mx-auto mb-1" />
-                        <span className="block">عاجل</span>
+                        <span className="block">حرجة</span>
                         <span className="text-xs text-gray-500">الأولوية 2</span>
                       </button>
 
@@ -515,7 +503,7 @@ function CaseFormModal({
                         }`}
                       >
                         <Flame size={18} className="mx-auto mb-1" />
-                        <span className="block">حرج جداً</span>
+                        <span className="block">حرجة جدا</span>
                         <span className="text-xs text-gray-500">الأولوية 3</span>
                       </button>
                     </div>
@@ -793,12 +781,12 @@ export default function SponsorshipsAPIManagement() {
   const isLoading = loadingSponsorships || loadingEmergency;
   const isError = errorSponsorships || errorEmergency;
 
-  const handleCreateSponsorship = (payload: CreateSponsorshipPayload) => createSponsorshipMutation.mutate(payload, { onSuccess: () => setModal(null) });
-  const handleUpdateSponsorship = (id: number, payload: UpdateSponsorshipPayload) => updateSponsorshipMutation.mutate({ id, payload }, { onSuccess: () => { setModal(null); setSelectedProgram(null); } });
+  const handleCreateSponsorship = (data: FormData) => createSponsorshipMutation.mutate(data, { onSuccess: () => setModal(null) });
+  const handleUpdateSponsorship = (id: number, data: FormData) => updateSponsorshipMutation.mutate({ id, payload: data }, { onSuccess: () => { setModal(null); setSelectedProgram(null); } });
   const handleDeleteSponsorship = (id: number) => deleteSponsorshipMutation.mutate(id, { onSuccess: () => { setModal(null); setSelectedProgram(null); } });
 
-  const handleCreateEmergency = (payload: CreateEmergencyCasePayload) => createEmergencyMutation.mutate(payload, { onSuccess: () => setModal(null) });
-  const handleUpdateEmergency = (id: number, payload: UpdateEmergencyCasePayload) => updateEmergencyMutation.mutate({ id, payload }, { onSuccess: () => { setModal(null); setSelectedProgram(null); } });
+  const handleCreateEmergency = (data: FormData) => createEmergencyMutation.mutate(data, { onSuccess: () => setModal(null) });
+  const handleUpdateEmergency = (id: number, data: FormData) => updateEmergencyMutation.mutate({ id, payload: data }, { onSuccess: () => { setModal(null); setSelectedProgram(null); } });
   const handleDeleteEmergency = (id: number) => deleteEmergencyMutation.mutate(id, { onSuccess: () => { setModal(null); setSelectedProgram(null); } });
 
   // Merge and normalize data
@@ -809,7 +797,7 @@ export default function SponsorshipsAPIManagement() {
       title: s.name,
       targetAmount: Number(s.targetAmount) || 0,
       collectedAmount: Number(s.collectedAmount) || 0,
-      urgencyLevel: (Number(s.urgencyLevel) || URGENCY_LEVELS.NORMAL) as UrgencyLevel,
+      urgencyLevel: normalizeUrgencyLevel(s.urgencyLevel),
       createdAt: s.createdAt || new Date().toISOString()
     }));
     const normEmergency = emergencyCases.map(e => ({ 
@@ -818,7 +806,7 @@ export default function SponsorshipsAPIManagement() {
       title: e.title,
       targetAmount: Number(e.targetAmount) || 0,
       collectedAmount: Number(e.collectedAmount) || 0,
-      urgencyLevel: (Number(e.urgencyLevel) || URGENCY_LEVELS.URGENT) as UrgencyLevel,
+      urgencyLevel: normalizeUrgencyLevel(e.urgencyLevel),
       createdAt: e.createdOn || new Date().toISOString()
     }));
     return [...normSponsorships, ...normEmergency].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -973,7 +961,7 @@ export default function SponsorshipsAPIManagement() {
                     {item.isActive ? "✓ نشط" : "× غير نشط"}
                   </span>
                   
-                 ={item.caseType === 'urgent' && (() => {
+                {item.caseType === 'urgent' && (() => {
   const config = urgencyConfig[item.urgencyLevel ?? URGENCY_LEVELS.NORMAL];
   const Icon = config.icon;
   return (
@@ -1000,6 +988,7 @@ export default function SponsorshipsAPIManagement() {
                       </div>
                     ) : (
                       item.icon ? (
+
                         <div className="w-8 h-8 flex items-center justify-center p-1.5 bg-blue-50 rounded-lg flex-shrink-0 border border-blue-100">
                           <img src={item.icon} alt="icon" className="w-full h-full object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
                         </div>
@@ -1143,7 +1132,7 @@ export default function SponsorshipsAPIManagement() {
                         </span>
                         {item.caseType === 'urgent' && item.urgencyLevel !== undefined && (
                           <span className={`text-[9px] font-bold font-[Cairo] ${item.urgencyLevel === URGENCY_LEVELS.CRITICAL ? 'text-red-600' : item.urgencyLevel === URGENCY_LEVELS.URGENT ? 'text-orange-500' : 'text-blue-600'}`}>
-                            ({item.urgencyLevel === URGENCY_LEVELS.CRITICAL ? 'حرج جداً' : item.urgencyLevel === URGENCY_LEVELS.URGENT ? 'عاجل' : 'عادي'})
+                            ({item.urgencyLevel === URGENCY_LEVELS.CRITICAL ? 'حرجة جدا' : item.urgencyLevel === URGENCY_LEVELS.URGENT ? 'حرجة' : 'عادية'})
                           </span>
                         )}
                       </div>

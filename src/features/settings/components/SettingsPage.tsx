@@ -2,31 +2,17 @@ import { useState } from 'react';
 import { 
   Building2, 
   CreditCard, 
-  MapPin, 
   ShieldCheck, 
   Save, 
-  X,
   CheckCircle2
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/shared/components/ui/Card';
 import { Input } from '@/shared/components/ui/Input';
 import { Button } from '@/shared/components/ui/Button';
+import { SubscriptionSlotsManager } from './SubscriptionSlotsManager';
+import { DeliveryAreasManager } from './DeliveryAreasManager';
 
 export function SettingsPage() {
-  const [areas, setAreas] = useState(['طنطا', 'كفر الزيات', 'السنطة', 'بسيون', 'قطور']);
-  const [newArea, setNewArea] = useState('');
-
-  const handleAddArea = () => {
-    if (newArea.trim() && !areas.includes(newArea.trim())) {
-      setAreas([...areas, newArea.trim()]);
-      setNewArea('');
-    }
-  };
-
-  const handleRemoveArea = (area: string) => {
-    setAreas(areas.filter(a => a !== area));
-  };
-
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-8 pb-20" dir="rtl">
       {/* 1. Association Info */}
@@ -99,48 +85,13 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* 3. Representative Areas */}
-      <Card className="border-none shadow-[0px_4px_20px_rgba(0,0,0,0.03)] rounded-2xl overflow-hidden">
-        <CardHeader className="bg-[#00549A] py-4 px-6">
-          <CardTitle className="text-white font-[Cairo] text-lg flex items-center gap-2 font-bold">
-            <MapPin className="w-5 h-5" />
-            مناطق خدمة المندوبين
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-3 font-[Cairo]">المناطق المتاحة حالياً</label>
-            <div className="flex flex-wrap gap-2">
-              {areas.map((area) => (
-                <div key={area} className="flex items-center gap-2 bg-white border border-[#00549A] text-[#00549A] px-4 py-1.5 rounded-full text-sm font-bold font-[Cairo]">
-                  {area}
-                  <button onClick={() => handleRemoveArea(area)} className="hover:text-red-500 transition-colors">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-[#101727] font-[Cairo]">إضافة منطقة جديدة</label>
-            <div className="flex gap-2">
-              <Input 
-                placeholder="اسم المنطقة..." 
-                className="font-[Cairo] flex-1" 
-                value={newArea}
-                onChange={(e) => setNewArea(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddArea()}
-              />
-              <Button onClick={handleAddArea} className="bg-[#00549A] hover:bg-[#004480] font-[Cairo] px-8">
-                إضافة
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* 3. Subscription Slots */}
+      <SubscriptionSlotsManager />
 
-      {/* 4. Sponsorship Policies */}
+      {/* 4. Representative Areas */}
+      <DeliveryAreasManager />
+
+      {/* 5. Sponsorship Policies */}
       <Card className="border-none shadow-[0px_4px_20px_rgba(0,0,0,0.03)] rounded-2xl overflow-hidden">
         <CardHeader className="bg-[#00549A] py-4 px-6">
           <CardTitle className="text-white font-[Cairo] text-lg flex items-center gap-2 font-bold">

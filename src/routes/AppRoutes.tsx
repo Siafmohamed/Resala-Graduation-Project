@@ -30,6 +30,8 @@ const UrgentCasesPage = lazy(() => import('../features/UrgentCases/components/Ur
 const BranchPaymentsPage = lazy(() => import('../features/BranchPayments/components/BranchPaymentsPage').then(m => ({ default: m.BranchPaymentsPage })));
 const RegisterNewDonorPage = lazy(() => import('../features/RegisterNewDonor/components/RegisterNewDonorPage').then(m => ({ default: m.RegisterNewDonorPage })));
 const ReceptionSettingsPage = lazy(() => import('../features/authentication/components/pages/ReceptionSettingsPage').then(m => ({ default: m.ReceptionSettingsPage })));
+const EmergencyPaymentsDashboard = lazy(() => import('../features/EmergencyPayments/components/EmergencyPaymentsDashboard'));
+const EmergencyPaymentDetails = lazy(() => import('../features/EmergencyPayments/components/EmergencyPaymentDetails'));
 
 // Forms
 const FormsDashboardPage = lazy(() => import('../features/formsDashboard/components/FormsDashboardPage').then(m => ({ default: m.FormsDashboardPage })));
@@ -135,6 +137,8 @@ const AppRoutes: React.FC = () => {
           <Route path="/in-kind-donations/:id" element={<RegisterDonationPage />} />
           <Route path="/in-kind-donations/edit/:id" element={<RegisterDonationPage />} />
           <Route path="/reception-settings" element={<ReceptionSettingsPage />} />
+          <Route path="/emergency-payments" element={<EmergencyPaymentsDashboard />} />
+          <Route path="/emergency-payments/:id" element={<EmergencyPaymentDetails />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/donation-details/:id" element={<ReceptionDashboard />} />
         </Route>
