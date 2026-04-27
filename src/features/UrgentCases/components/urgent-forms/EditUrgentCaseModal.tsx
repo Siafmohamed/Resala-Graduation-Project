@@ -4,6 +4,7 @@ import { UrgencyLevel } from '../../types/urgency-level.types';
 import type { UrgentCase } from '../../types/urgent-case.types';
 import { UrgencyLevelSelector } from './UrgencyLevelSelector';
 import { useUpdateUrgentCase, useUrgentCase } from '../../hooks/useUrgentCases';
+import { normalizeUrgencyLevel } from '@/api/services/sponsorshipService';
 
 interface EditUrgentCaseModalProps {
   /**
@@ -85,7 +86,7 @@ export const EditUrgentCaseModal: React.FC<EditUrgentCaseModalProps> = ({
       return;
     }
 
-import { normalizeUrgencyLevel } from '@/api/services/sponsorshipService';
+
 
 // ... (in the useEffect)
     // Load case data when modal opens or case changes
