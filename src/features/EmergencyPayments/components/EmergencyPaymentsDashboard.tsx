@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   RefreshCw, 
@@ -16,8 +15,12 @@ import Pagination from '../../PendingPayments/components/Pagination'; // Reusing
 import EmergencyPdfExportButton from './EmergencyPdfExportButton';
 import { useEmergencyPayments } from '../hooks/useEmergencyPayments';
 import { useVerifyEmergencyPayment } from '../hooks/useVerifyEmergencyPayment';
+import { useRejectEmergencyPayment } from '../hooks/useRejectEmergencyPayment';
 import type { EmergencyPaymentMethod, EmergencyPayment } from '../types/emergencyPayments.types';
 import { Card, CardContent } from '@/shared/components/ui/Card';
+import { Modal } from '@/shared/components/ui/Modal';
+import { Label } from '@/shared/components/ui/Label';
+import { Button } from '@/shared/components/ui/Button';
 
 const EmergencyPaymentsDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -27,7 +30,13 @@ const EmergencyPaymentsDashboard: React.FC = () => {
   const itemsPerPage = 10;
 
   const { data: payments = [], isLoading, isError, refetch } = useEmergencyPayments(activeTab);
-  const { mutate: verifyPayment, isPending: isApproving } = useVerifyEmergencyPayment();
+  const { mutateAsync: verifyPayment } = useVerifyEmergencyPayment();
+  const { mutateAsync: rejectPayment } = useRejectEmergencyPayment();
+
+  const [selectedPaymentForReject, setSelectedPaymentForReject] = useState<EmergencyPayment | null>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [approvingPaymentId, setApprovingPaymentId] = useState<number | null>(null);
+  const [rejectingPaymentId, setRejectingPaymentId] = useState<number | null>(null);
 
   // Stats calculation
   const stats = useMemo(() => {
@@ -59,11 +68,18 @@ const EmergencyPaymentsDashboard: React.FC = () => {
   }, [payments, searchQuery]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredPayments.length / itemsPerPage));
+  
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
   const paginatedPayments = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredPayments.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredPayments, currentPage]);
+  }, [filteredPayments, currentPage, itemsPerPage]);
 
   const handleTabChange = (tab: EmergencyPaymentMethod) => {
     setActiveTab(tab);
@@ -75,8 +91,26 @@ const EmergencyPaymentsDashboard: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handleApprovePayment = (paymentId: number) => {
-    verifyPayment(paymentId);
+  const handleApprovePayment = async (paymentId: number) => {
+    setApprovingPaymentId(paymentId);
+    try {
+      await verifyPayment(paymentId);
+    } finally {
+      setApprovingPaymentId(null);
+    }
+  };
+
+  const handleRejectPayment = async () => {
+    if (selectedPaymentForReject && rejectionReason.trim()) {
+      setRejectingPaymentId(selectedPaymentForReject.id);
+      try {
+        await rejectPayment({ paymentId: selectedPaymentForReject.id, reason: rejectionReason });
+        setSelectedPaymentForReject(null);
+        setRejectionReason('');
+      } finally {
+        setRejectingPaymentId(null);
+      }
+    }
   };
 
   const handleViewDetails = (payment: EmergencyPayment) => {
@@ -154,7 +188,9 @@ const EmergencyPaymentsDashboard: React.FC = () => {
           isLoading={isLoading} 
           onViewDetails={handleViewDetails}
           onApprovePayment={handleApprovePayment}
-          isApproving={isApproving}
+          onRejectPayment={(payment) => setSelectedPaymentForReject(payment)}
+          approvingPaymentId={approvingPaymentId}
+          rejectingPaymentId={rejectingPaymentId}
         />
 
         <div className="bg-gray-50/50">
@@ -165,6 +201,51 @@ const EmergencyPaymentsDashboard: React.FC = () => {
           />
         </div>
       </div>
+
+      {/* Reject Payment Modal */}
+      <Modal
+        isOpen={!!selectedPaymentForReject}
+        onClose={() => {
+          setSelectedPaymentForReject(null);
+          setRejectionReason('');
+        }}
+        title="رفض عملية الدفع"
+        maxWidth="max-w-[425px]"
+      >
+        <div className="space-y-4 py-4" dir="rtl">
+          <div className="space-y-2">
+            <Label htmlFor="reason" className="font-[Cairo] text-[#495565]">
+              سبب الرفض
+            </Label>
+            <textarea
+              id="reason"
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              className="w-full font-[Cairo] min-h-[100px] p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00549A] focus:border-transparent"
+              placeholder="اكتب سبب رفض العملية هنا..."
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSelectedPaymentForReject(null);
+                setRejectionReason('');
+              }}
+              className="font-[Cairo] font-bold"
+            >
+              إلغاء
+            </Button>
+            <Button
+              className="bg-red-600 text-white hover:bg-red-700 font-[Cairo] font-bold"
+              onClick={handleRejectPayment}
+              disabled={!rejectionReason.trim() || rejectingPaymentId !== null}
+            >
+              {rejectingPaymentId !== null ? 'جاري الرفض...' : 'تأكيد الرفض'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

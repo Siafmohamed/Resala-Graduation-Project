@@ -1,23 +1,27 @@
-import { useQuery } from '@tanstack/react-query';
-import { useIsInitialized } from '@/features/authentication';
-import { sponsorshipCasesService } from '../services/sponsorshipCasesService';
-import type { SponsorshipCase } from '../types/sponsorshipCases.types';
-import { CACHE_DURATIONS } from '@/shared/constants/cacheDurations';
+import { useMemo } from 'react';
+import { useSponsorships } from './useSponsorships';
+import { useEmergencyCases } from './useEmergencyCases';
+import { mergeSponsorshipCases } from '../utils/sponsorshipHelpers';
 
-export function useSponsorshipCases(): {
-  data: SponsorshipCase[] | undefined;
-  isLoading: boolean;
-  isError: boolean;
-} {
-  const isInitialized = useIsInitialized();
-  
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['sponsorship-cases'],
-    queryFn: () => sponsorshipCasesService.getAll(),
-    staleTime: CACHE_DURATIONS.REAL_TIME,
-    enabled: isInitialized === true,
-  });
+/**
+ * Aggregator hook - combines sponsorships and emergency cases
+ * Replaces the combinedData useMemo from SponsorshipManagementAPI.tsx
+ */
+export function useSponsorshipCases() {
+  const { data: sponsorships = [], isLoading: loadingSponsorships, isError: errorSponsorships } = useSponsorships();
+  const { data: emergencyCases = [], isLoading: loadingEmergency, isError: errorEmergency } = useEmergencyCases();
 
-  return { data, isLoading, isError };
+  const cases = useMemo(
+    () => mergeSponsorshipCases(sponsorships, emergencyCases),
+    [sponsorships, emergencyCases]
+  );
+
+  return {
+    cases,
+    isLoading: loadingSponsorships || loadingEmergency,
+    isError: errorSponsorships || errorEmergency,
+    error: errorSponsorships || errorEmergency ? 'Failed to load cases' : null,
+  };
 }
 
+export default useSponsorshipCases;

@@ -72,114 +72,133 @@ export function UrgentCaseCard({ caseId, onSuccess }: UrgentCaseCardProps) {
 
   return (
     <>
-      <Card className="group border border-gray-200 shadow-[0px_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0px_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 overflow-hidden flex flex-col">
+      <Card className="group border-none shadow-[0px_4px_25px_rgba(0,0,0,0.05)] rounded-[24px] overflow-hidden hover:shadow-[0px_10px_40px_rgba(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-500 bg-white flex flex-col h-full">
         {/* Image Section */}
-        <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+        <div className="relative h-52 overflow-hidden bg-gray-50">
           {caseItem.imageUrl ? (
             <>
               <img
                 src={caseItem.imageUrl}
                 alt={caseItem.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </>
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              <div className="text-center">
-                <div className="text-3xl mb-2">📋</div>
-                <p className="text-xs font-[Cairo]">لا توجد صورة</p>
+            <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 bg-gradient-to-br from-gray-50 to-gray-100">
+              <div className="w-16 h-16 rounded-full bg-white/50 flex items-center justify-center mb-3">
+                <span className="text-3xl">📋</span>
               </div>
+              <p className="text-xs font-bold font-[Cairo]">لا توجد صورة للحالة</p>
             </div>
           )}
 
-          {/* Status Badges */}
-          <div className="absolute top-4 right-4 flex flex-col gap-2">
+          {/* Status Badges - Glassmorphism style */}
+          <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
             <span
-              className={`px-3 py-1.5 rounded-full text-[11px] font-bold font-[Cairo] backdrop-blur-md shadow-lg text-white transition-all transform group-hover:scale-105 ${
+              className={`px-4 py-2 rounded-2xl text-[11px] font-bold font-[Cairo] backdrop-blur-xl shadow-xl text-white transition-all transform group-hover:scale-105 border border-white/20 ${
                 caseItem.isActive
-                  ? 'bg-gradient-to-r from-[#F04930] to-[#e63d1f] border border-red-300/50'
-                  : 'bg-gradient-to-r from-gray-500 to-gray-400 border border-gray-300/50'
+                  ? 'bg-red-500/80'
+                  : 'bg-gray-500/80'
               }`}
             >
-              {caseItem.isActive ? '🚨 نشط' : '× غير نشط'}
+              {caseItem.isActive ? '🚨 نشط حالياً' : '× غير نشط'}
             </span>
 
             <UrgencyLevelBadge level={caseItem.urgencyLevel} />
           </div>
+
+          {/* Floating Edit/Delete buttons on hover over image */}
+          <div className="absolute bottom-4 left-4 flex gap-2 translate-y-12 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 z-10">
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="p-3 bg-white/95 text-[#00549A] hover:bg-[#00549A] hover:text-white rounded-2xl shadow-xl transition-all transform active:scale-90"
+              title="تعديل"
+            >
+              <Edit2 size={18} />
+            </button>
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="p-3 bg-white/95 text-[#F04930] hover:bg-[#F04930] hover:text-white rounded-2xl shadow-xl transition-all transform active:scale-90"
+              title="حذف"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Card Content */}
-        <CardContent className="p-6 flex flex-col flex-1">
-          {/* Title and Quick Actions */}
-          <div className="flex justify-between items-start gap-3 mb-4">
-            <div className="flex-1">
-              <h3 className="font-bold text-[#101727] font-[Cairo] line-clamp-2 text-sm leading-snug">
+        <CardContent className="p-7 flex flex-col flex-1">
+          {/* Header Section */}
+          <div className="flex items-start gap-4 mb-5">
+            <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <AlertCircle size={24} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-[#101727] font-[Cairo] line-clamp-1 text-base group-hover:text-red-600 transition-colors">
                 {caseItem.title}
               </h3>
-            </div>
-
-            {/* Quick Action Buttons */}
-            <div className="flex gap-1.5 flex-shrink-0">
-              <button
-                onClick={() => setIsEditModalOpen(true)}
-                title="تعديل"
-                className="p-2 text-[#697282] hover:text-[#00549A] hover:bg-[#e6eff7] rounded-lg transition-all transform hover:scale-110 active:scale-95"
-              >
-                <Edit2 size={16} />
-              </button>
-              <button
-                onClick={() => setIsDeleteModalOpen(true)}
-                title="حذف"
-                className="p-2 text-[#697282] hover:text-[#F04930] hover:bg-[#fdeceb] rounded-lg transition-all transform hover:scale-110 active:scale-95"
-              >
-                <Trash2 size={16} />
-              </button>
+              <p className="text-[11px] text-[#697282] font-[Cairo] mt-0.5 flex items-center gap-1.5">
+                <Clock size={12} className="opacity-60" />
+                <span>أُضيفت {new Date(caseItem.createdAt || Date.now()).toLocaleDateString('ar-EG')}</span>
+              </p>
             </div>
           </div>
 
           {/* Description */}
-          <p className="text-sm text-[#697282] font-[Cairo] line-clamp-2 mb-6">
-            {caseItem.description || 'لا يوجد وصف متوفر'}
+          <p className="text-[13px] text-[#697282] font-[Cairo] line-clamp-2 mb-6 leading-relaxed">
+            {caseItem.description || 'لا يوجد وصف متوفر لهذه الحالة حالياً. يتم تحديث البيانات دورياً لضمان الدقة.'}
           </p>
 
-          {/* Financial Info with Progress Bar */}
-          <div className="space-y-3 pt-4 border-t border-gray-100 mt-auto">
+          {/* Financial Progress Section */}
+          <div className="space-y-4 p-5 bg-gray-50/50 rounded-3xl border border-gray-100/50 mt-auto">
             {/* Amount Details */}
-            <div className="flex justify-between items-end text-sm">
-              <div className="flex flex-col gap-1">
-                <span className="text-[#697282] font-[Cairo] text-[11px]">المحصل</span>
-                <span className="font-bold text-[#101727] font-[Cairo]">
-                  {(caseItem.collectedAmount ?? 0).toLocaleString('ar-EG')} ج.م
+            <div className="flex justify-between items-center text-sm">
+              <div className="flex flex-col">
+                <span className="text-[#697282] font-[Cairo] text-[10px] uppercase tracking-wider mb-1">المبلغ المحصل</span>
+                <span className="font-bold text-[#101727] font-[Cairo] text-base">
+                  {(caseItem.collectedAmount ?? 0).toLocaleString('ar-EG')}{' '}
+                  <span className="text-[10px] font-medium text-gray-500">ج.م</span>
                 </span>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="text-[#697282] font-[Cairo] text-[11px]">الهدف</span>
-                <span className="font-bold text-[#F04930] font-[Cairo]">
-                  {(caseItem.targetAmount ?? 0).toLocaleString('ar-EG')} ج.م
+              <div className="flex flex-col items-end">
+                <span className="text-[#697282] font-[Cairo] text-[10px] uppercase tracking-wider mb-1">المبلغ المستهدف</span>
+                <span className="font-bold text-red-500 font-[Cairo] text-base">
+                  {(caseItem.targetAmount ?? 0).toLocaleString('ar-EG')}{' '}
+                  <span className="text-[10px] font-medium text-gray-500">ج.م</span>
                 </span>
               </div>
             </div>
 
-            {/* Progress Bar */}
-            <div className="space-y-2">
-              <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+            {/* Elegant Progress Bar */}
+            <div className="space-y-3">
+              <div className="h-2.5 bg-gray-200/50 rounded-full overflow-hidden p-[2px]">
                 <div
-                  className="h-full rounded-full transition-all duration-700 ease-out shadow-lg bg-gradient-to-r from-[#F04930] to-[#e63d1f]"
+                  className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden bg-gradient-to-r from-red-600 to-orange-500"
                   style={{ width: `${progressPercentage}%` }}
-                />
+                >
+                  <div className="absolute inset-0 bg-white/20 skew-x-12 translate-x-[-100%] animate-[shimmer_3s_infinite]" />
+                </div>
               </div>
 
-              {/* Percentage Text */}
-              <div className="flex justify-between items-center text-xs text-[#697282] font-[Cairo]">
-                <span>{progressPercentage.toFixed(1)}% مكتمل</span>
-                {(caseItem.targetAmount ?? 0) > (caseItem.collectedAmount ?? 0) && (
-                  <span>
+              {/* Progress Stats */}
+              <div className="flex justify-between items-center text-[11px] font-bold font-[Cairo]">
+                <div className="flex items-center gap-1.5 text-red-600">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+                  <span>{progressPercentage.toFixed(1)}% مكتمل</span>
+                </div>
+                {caseItem.targetAmount > caseItem.collectedAmount ? (
+                  <span className="text-gray-500">
                     المتبقي:{' '}
                     {(
                       (caseItem.targetAmount ?? 0) - (caseItem.collectedAmount ?? 0)
                     ).toLocaleString('ar-EG')}{' '}
                     ج.م
+                  </span>
+                ) : (
+                  <span className="text-green-600 flex items-center gap-1">
+                    <CheckCircle2 size={12} />
+                    تم اكتمال الهدف
                   </span>
                 )}
               </div>
@@ -187,6 +206,7 @@ export function UrgentCaseCard({ caseId, onSuccess }: UrgentCaseCardProps) {
           </div>
         </CardContent>
       </Card>
+
 
       {/* Edit Modal */}
       {isEditModalOpen && (

@@ -6,7 +6,8 @@ export const emergencyPaymentsService = {
   getEmergencyPayments: async (method: EmergencyPaymentMethod): Promise<EmergencyPayment[]> => {
     let url = API_PATH_GUIDE.emergencyCases.payments.pending;
     if (method !== 'All') {
-      url = API_PATH_GUIDE.emergencyCases.payments.pendingByMethod(method.toLowerCase().replace(' ', ''));
+      const normalizedMethod = method.toLowerCase().replace(/\s+/g, '');
+      url = API_PATH_GUIDE.emergencyCases.payments.pendingByMethod(normalizedMethod);
     }
     const response = await axiosInstance.get<ApiResponse<EmergencyPayment[]>>(url);
     return response.data;

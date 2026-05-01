@@ -15,7 +15,7 @@ import {
   Image as ImageIcon,
   MessageSquare
 } from 'lucide-react';
-import { useEmergencyPayments } from '../hooks/useEmergencyPayments';
+import { useEmergencyPaymentDetails } from '../hooks/useEmergencyPaymentDetails';
 import { useVerifyEmergencyPayment } from '../hooks/useVerifyEmergencyPayment';
 import { useRejectEmergencyPayment } from '../hooks/useRejectEmergencyPayment';
 import {LoadingSpinner } from '@/shared/components/feedback/LoadingSpinner';
@@ -24,7 +24,6 @@ import { Button } from '@/shared/components/ui/Button';
 import { Card } from '@/shared/components/ui/Card';
 import { Badge } from '@/shared/components/ui/Badge';
 import { Modal } from '@/shared/components/ui/Modal';
-import { Input } from '@/shared/components/ui/Input';
 import { Label } from '@/shared/components/ui/Label';
 import { formatDate } from '@/shared/utils/formatters/dateFormatter';
 
@@ -36,16 +35,14 @@ const EmergencyPaymentDetails: React.FC = () => {
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
 
-  // We fetch all to find the specific one (simulating getById if not available)
-  const { data: payments, isLoading, error } = useEmergencyPayments('All');
-  const payment = payments?.find(p => p.id === paymentId);
+  const { data: payment, isLoading, error } = useEmergencyPaymentDetails(paymentId);
 
   const verifyMutation = useVerifyEmergencyPayment();
   const rejectMutation = useRejectEmergencyPayment();
 
   if (isLoading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage message="فشل في تحميل بيانات الدفعة" />;
-  if (!payment) return <ErrorMessage message="الدفعة غير موجودة" />;
+  if (error) return <ErrorMessage error="فشل في تحميل بيانات الدفعة" />;
+  if (!payment) return <ErrorMessage error="الدفعة غير موجودة" />;
 
   const handleApprove = async () => {
     await verifyMutation.mutateAsync(paymentId);
@@ -308,12 +305,12 @@ const EmergencyPaymentDetails: React.FC = () => {
         <div className="space-y-4 py-4" dir="rtl">
           <div className="space-y-2">
             <Label htmlFor="reason">سبب الرفض</Label>
-            <Input
+            <textarea
               id="reason"
               placeholder="اكتب سبب رفض العملية هنا..."
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              className="min-h-[100px]"
+              className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
           </div>
           <div className="flex justify-end gap-3 pt-4">

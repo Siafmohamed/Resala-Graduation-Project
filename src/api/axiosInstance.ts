@@ -69,13 +69,18 @@ const setAuthorizationHeader = (request: RetriableConfig, token: string) => {
 };
 
 const refreshAccessToken = async (): Promise<string> => {
+  const refreshToken = tokenManager.getRefreshToken();
+  if (!refreshToken) {
+    throw new Error('No refresh token available for session refresh');
+  }
+
   if (refreshController) {
     refreshController.abort();
   }
   refreshController = new AbortController();
 
   try {
-    const response = await refreshClient.post('/v1/auth/refresh-token', {}, {
+    const response = await refreshClient.post('/v1/auth/refresh-token', { refreshToken }, {
       signal: refreshController.signal,
     });
     const refreshedToken = response?.data?.data?.token as string | undefined;

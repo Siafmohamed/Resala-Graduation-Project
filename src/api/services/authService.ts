@@ -35,7 +35,8 @@ export const authService = {
   },
 
   async refreshToken(): Promise<RefreshTokenResponse> {
-    return api.post<RefreshTokenResponse>('/v1/auth/refresh-token', {});
+    const refreshToken = tokenManager.getRefreshToken();
+    return api.post<RefreshTokenResponse>('/v1/auth/refresh-token', refreshToken ? { refreshToken } : {});
   },
 
   async validateSession(): Promise<AuthResponse> {

@@ -5,9 +5,8 @@ import {
   Smartphone, 
   Building2, 
   User, 
-  Zap, 
-  Calendar, 
-  Phone,
+  Zap,
+  Calendar,
   ArrowUpRight,
   Clock,
   CheckCircle2,
@@ -20,7 +19,9 @@ interface EmergencyPaymentTableProps {
   isLoading: boolean;
   onViewDetails: (payment: EmergencyPayment) => void;
   onApprovePayment: (paymentId: number) => void;
-  isApproving: boolean;
+  onRejectPayment: (payment: EmergencyPayment) => void;
+  approvingPaymentId: number | null;
+  rejectingPaymentId: number | null;
 }
 
 const getMethodIcon = (method: string) => {
@@ -32,7 +33,7 @@ const getMethodIcon = (method: string) => {
   return <ArrowUpRight size={16} className="text-gray-400" />;
 };
 
-const getStatusStyles = (status: string) => {
+const getStatusStyles = () => {
   // Assuming all here are pending based on the endpoint, but adding logic for flexibility
   return "bg-amber-50 text-amber-700 border-amber-100";
 };
@@ -51,7 +52,9 @@ const EmergencyPaymentTable: React.FC<EmergencyPaymentTableProps> = ({
   isLoading, 
   onViewDetails,
   onApprovePayment,
-  isApproving
+  onRejectPayment,
+  approvingPaymentId,
+  rejectingPaymentId
 }) => {
   if (isLoading) {
     return (
@@ -144,7 +147,7 @@ const EmergencyPaymentTable: React.FC<EmergencyPaymentTableProps> = ({
 
               {/* Status */}
               <td className="px-6 py-4 border-y border-gray-100 group-hover:border-[#00549A]/20">
-                <span className={`inline-flex px-3 py-1 rounded-full text-[11px] font-bold font-[Cairo] border ${getStatusStyles(payment.status)}`}>
+                <span className={`inline-flex px-3 py-1 rounded-full text-[11px] font-bold font-[Cairo] border ${getStatusStyles()}`}>
                   {payment.status}
                 </span>
               </td>
@@ -160,11 +163,19 @@ const EmergencyPaymentTable: React.FC<EmergencyPaymentTableProps> = ({
                     <span>عرض التفاصيل</span>
                   </button>
                   <button 
+                    onClick={() => onRejectPayment(payment)}
+                    disabled={rejectingPaymentId === payment.id || approvingPaymentId !== null}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all font-[Cairo] font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed border border-red-200"
+                  >
+                    {rejectingPaymentId === payment.id ? 'جاري الرفض...' : 'رفض'}
+                    <XCircle size={16} />
+                  </button>
+                  <button 
                     onClick={() => onApprovePayment(payment.id)}
-                    disabled={isApproving}
+                    disabled={approvingPaymentId === payment.id || rejectingPaymentId !== null}
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00549A] text-white hover:bg-[#004077] transition-all font-[Cairo] font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-[#00549A]/20"
                   >
-                    {isApproving ? 'جاري التأكيد...' : 'تأكيد الدفع'}
+                    {approvingPaymentId === payment.id ? 'جاري التأكيد...' : 'تأكيد الدفع'}
                     <Check size={16} />
                   </button>
                 </div>

@@ -1,44 +1,53 @@
+export interface SvgValidationResult {
+  valid: boolean;
+  error?: string;
+}
+
 /**
- * Validates if a file is a proper SVG
+ * Validates SVG content for safety and correctness
  */
-export const validateSvgFile = (file: File): { isValid: boolean; error?: string } => {
-  // Check file type
-  if (file.type !== 'image/svg+xml') {
-    return { isValid: false, error: 'يجب أن يكون الملف بصيغة SVG فقط.' };
+export const validateSvgContent = (content: string): SvgValidationResult => {
+  // Check if content is empty
+  if (!content.trim()) {
+    return { valid: false, error: 'محتوى SVG فارغ' };
   }
 
-  // Check file size (e.g., max 500KB for an icon)
-  const MAX_SIZE = 500 * 1024;
-  if (file.size > MAX_SIZE) {
-    return { isValid: false, error: 'حجم ملف الأيقونة يجب أن لا يتجاوز 500 كيلوبايت.' };
+  // Check if it starts with <svg
+  if (!content.trim().toLowerCase().startsWith('<svg')) {
+    return { valid: false, error: 'الملف يجب أن يكون بصيغة SVG صالحة' };
   }
 
-  return { isValid: true };
+  // Check for potentially dangerous elements
+  const dangerousPatterns = [
+    /<script/i,
+    /javascript:/i,
+    /on\w+\s*=/i, // onclick=, onload=, etc.
+    /<iframe/i,
+    /<embed/i,
+    /<object/i,
+  ];
+
+  for (const pattern of dangerousPatterns) {
+    if (pattern.test(content)) {
+      return { valid: false, error: 'يحتوي SVG على عناصر غير آمنة' };
+    }
+  }
+
+  return { valid: true };
 };
 
 /**
- * Validates SVG content string
+ * Sanitizes SVG content by removing potentially dangerous attributes
  */
-export const validateSvgContent = (content: string): boolean => {
-  const trimmed = content.trim().toLowerCase();
-  return trimmed.startsWith('<svg') && trimmed.endsWith('</svg>');
-};
+export const sanitizeSvg = (content: string): string => {
+  // Remove script tags
+  let sanitized = content.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+  
+  // Remove event handlers
+  sanitized = sanitized.replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '');
+  
+  // Remove javascript: URLs
+  sanitized = sanitized.replace(/href\s*=\s*["']javascript:[^"']*["']/gi, '');
 
-/**
- * Helper to read file as text (useful for SVG)
- */
-export const readSvgAsText = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      if (validateSvgContent(result)) {
-        resolve(result);
-      } else {
-        reject(new Error('محتوى SVG غير صالح.'));
-      }
-    };
-    reader.onerror = () => reject(new Error('فشل قراءة الملف.'));
-    reader.readAsText(file);
-  });
+  return sanitized;
 };

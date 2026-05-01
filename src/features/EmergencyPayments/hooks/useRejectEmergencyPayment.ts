@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { emergencyPaymentsService } from '../services/emergencyPaymentsService';
+import type { EmergencyPayment } from '../types/emergencyPayments.types';
 import { toast } from 'react-toastify';
 
 export const useRejectEmergencyPayment = () => {
@@ -8,10 +9,14 @@ export const useRejectEmergencyPayment = () => {
   return useMutation({
     mutationFn: ({ paymentId, reason }: { paymentId: number; reason: string }) =>
       emergencyPaymentsService.rejectEmergencyPayment(paymentId, reason),
-    onSuccess: (response) => {
+    onSuccess: (response, { paymentId }) => {
       if (response.succeeded) {
         toast.success('تم رفض الدفعة بنجاح');
-        queryClient.invalidateQueries({ queryKey: ['emergencyPayments'] });
+        queryClient.setQueriesData(
+          { queryKey: ['emergencyPayments'] },
+          (old: EmergencyPayment[] | undefined) =>
+            Array.isArray(old) ? old.filter((payment) => payment.id !== paymentId) : old,
+        );
       } else {
         toast.error(response.message || 'فشل في رفض الدفعة');
       }

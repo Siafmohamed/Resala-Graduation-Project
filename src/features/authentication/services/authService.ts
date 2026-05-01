@@ -1,1 +1,1 @@
-export { authService, extractApiError } from '@/api/services/authService';
+export { authApi as authService, extractApiError } from '../api/auth.api';

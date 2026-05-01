@@ -3,6 +3,7 @@ import { useIsInitialized } from '@/features/authentication';
 import { inKindDonationService } from '../services/donationService';
 import type {
   CreateInKindDonationDTO,
+  InKindDonation,
   UpdateInKindDonationDTO,
 } from '../types/inKindDonation.types';
 import { toast } from 'react-toastify';
@@ -20,6 +21,13 @@ export const inKindDonationQueryKeys = {
     [...inKindDonationQueryKeys.all, 'history', donorId] as const,
   details: () => [...inKindDonationQueryKeys.all, 'detail'] as const,
   detail: (id: number) => [...inKindDonationQueryKeys.details(), id] as const,
+};
+
+const upsertDonationInArray = (items: InKindDonation[] | undefined, donation: InKindDonation) => {
+  if (!Array.isArray(items)) return [donation];
+  const exists = items.some((item) => item.id === donation.id);
+  if (exists) return items.map((item) => (item.id === donation.id ? donation : item));
+  return [donation, ...items];
 };
 
 /** ── Donor dropdown (debounced live search) ────────────────────────── */
@@ -74,10 +82,16 @@ export function useCreateInKindDonation() {
   return useMutation({
     mutationFn: (payload: CreateInKindDonationDTO) => inKindDonationService.create(payload),
     onSuccess: (res) => {
-      qc.invalidateQueries({
-        queryKey: inKindDonationQueryKeys.history(res.data.donorId),
-      });
-      qc.invalidateQueries({ queryKey: inKindDonationQueryKeys.lists() });
+      const created = res.data;
+      qc.setQueryData<InKindDonation[]>(
+        inKindDonationQueryKeys.lists(),
+        (old) => upsertDonationInArray(old, created),
+      );
+      qc.setQueryData<InKindDonation[]>(
+        inKindDonationQueryKeys.history(created.donorId),
+        (old) => upsertDonationInArray(old, created),
+      );
+      qc.setQueryData(inKindDonationQueryKeys.detail(created.id), created);
       toast.success('تم تسجيل التبرع العيني بنجاح');
     },
     onError: (error: any) => {
@@ -94,11 +108,24 @@ export function useUpdateInKindDonation() {
     mutationFn: ({ id, payload }: { id: number | string; payload: UpdateInKindDonationDTO }) =>
       inKindDonationService.update(Number(id), payload),
     onSuccess: (res) => {
-      qc.invalidateQueries({
-        queryKey: inKindDonationQueryKeys.history(res.data.donorId),
-      });
-      qc.invalidateQueries({ queryKey: inKindDonationQueryKeys.lists() });
-      qc.invalidateQueries({ queryKey: inKindDonationQueryKeys.detail(res.data.id) });
+      const updated = res.data;
+      qc.setQueryData<InKindDonation[]>(
+        inKindDonationQueryKeys.lists(),
+        (old = []) => old.map((item) => (item.id === updated.id ? updated : item)),
+      );
+      // Keep all donor history caches coherent (handles donorId changes on edit).
+      qc.setQueriesData<InKindDonation[]>(
+        { queryKey: [...inKindDonationQueryKeys.all, 'history'] },
+        (old = []) => {
+          const withoutDonation = old.filter((item) => item.id !== updated.id);
+          return old.some((item) => item.donorId === updated.donorId) ? [...withoutDonation, updated] : withoutDonation;
+        },
+      );
+      qc.setQueryData<InKindDonation[]>(
+        inKindDonationQueryKeys.history(updated.donorId),
+        (old) => upsertDonationInArray(old, updated),
+      );
+      qc.setQueryData(inKindDonationQueryKeys.detail(updated.id), updated);
       toast.success('تم تحديث بيانات التبرع بنجاح');
     },
     onError: (error: any) => {
@@ -138,8 +165,17 @@ export function useDeleteInKindDonation() {
 
   return useMutation({
     mutationFn: (id: number | string) => inKindDonationService.delete(Number(id)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: inKindDonationQueryKeys.lists() });
+    onSuccess: (_, id) => {
+      const numericId = Number(id);
+      queryClient.setQueryData<InKindDonation[]>(
+        inKindDonationQueryKeys.lists(),
+        (old = []) => old.filter((item) => item.id !== numericId),
+      );
+      queryClient.setQueriesData<InKindDonation[]>(
+        { queryKey: [...inKindDonationQueryKeys.all, 'history'] },
+        (old = []) => old.filter((item) => item.id !== numericId),
+      );
+      queryClient.removeQueries({ queryKey: inKindDonationQueryKeys.detail(numericId), exact: true });
       toast.success('تم حذف التبرع العيني بنجاح');
     },
     onError: (error: any) => {

@@ -70,8 +70,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     const tokenRole =
       tokenManager.getRoleFromToken() || normalizedSession.role;
 
-    tokenManager.setSessionData(normalizedSession);
-
+    // Pure state update only - storage should be handled separately
     set({
       session: normalizedSession,
       isAuthenticated: true,

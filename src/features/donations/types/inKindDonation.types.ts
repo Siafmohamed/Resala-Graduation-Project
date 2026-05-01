@@ -40,14 +40,19 @@ export interface DonorOption {
   name: string;
 }
 
-export interface PaginatedDonors {
-  data: {
-    id: number;
-    name: string;
-    phone?: string;
-    email?: string;
-  }[];
-  totalCount: number;
-  pageNumber: number;
-  pageSize: number;
+interface PaginatedDonorItem {
+  id: number;
+  name: string;
+  phone?: string;
+  email?: string;
 }
+
+/** The backend may return either a paginated envelope OR a plain array */
+export type PaginatedDonors =
+  | {
+      data: PaginatedDonorItem[];
+      totalCount: number;
+      pageNumber: number;
+      pageSize: number;
+    }
+  | PaginatedDonorItem[];

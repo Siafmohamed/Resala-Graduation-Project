@@ -16,9 +16,17 @@ export function DonorSearchModal({ isOpen, onSelect, onClose }: Props) {
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
 
-  const { data, isFetching } = useDonorsPaginated(search, page, PAGE_SIZE);
+  const { data: rawData, isFetching } = useDonorsPaginated(search, page, PAGE_SIZE);
 
-  const totalPages = data ? Math.ceil(data.totalCount / PAGE_SIZE) : 0;
+  // Normalize: API may return a paginated object { data: [], totalCount } or a plain array
+  const items = Array.isArray(rawData)
+    ? (rawData as { id: number; name: string; phone?: string }[])
+    : (rawData?.data ?? []);
+  const totalCount = Array.isArray(rawData)
+    ? rawData.length
+    : (rawData?.totalCount ?? 0);
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   // Reset to page 1 when search changes
   const handleSearch = (val: string) => {
@@ -47,7 +55,7 @@ export function DonorSearchModal({ isOpen, onSelect, onClose }: Props) {
         )}
 
         <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-          {data?.data.map((d) => (
+          {items.map((d) => (
             <div
               key={d.id}
               onClick={() => {
@@ -69,7 +77,7 @@ export function DonorSearchModal({ isOpen, onSelect, onClose }: Props) {
             </div>
           ))}
 
-          {!isFetching && data?.data.length === 0 && (
+          {!isFetching && items.length === 0 && (
             <div className="text-center py-8 text-gray-500 font-[Cairo]">
               لا توجد نتائج تطابق بحثك.
             </div>

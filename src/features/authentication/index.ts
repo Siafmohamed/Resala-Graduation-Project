@@ -47,6 +47,9 @@ export {
   useAuthGuard,
 } from './hooks/useAuthGuard';
 export { useAuthLogoutListener } from './hooks/useAuthLogoutListener';
+export { useTokenRefreshScheduler } from './hooks/useTokenRefreshScheduler';
+export { useVisibilityTokenRefresh } from './hooks/useVisibilityTokenRefresh';
+export { useSessionExpiryListener } from './hooks/useSessionExpiryListener';
 export { AuthProvider, useAuth } from './context/AuthProvider';
 
 // ── Route Guards ─────────────────────────────────────────

@@ -1,17 +1,12 @@
 import { jwtDecode } from 'jwt-decode';
+import type { SessionData } from '../types/auth.types';
 
 interface JwtPayload {
     exp: number;
     [key: string]: unknown;
 }
 
-interface SessionData {
-    accessToken?: string;
-    refreshToken?: string;
-    role?: string;
-    userId?: string;
-    name?: string;
-    phoneNumber?: string;
+interface SessionDataStorage extends Partial<SessionData> {
     [key: string]: unknown;
 }
 
@@ -34,18 +29,18 @@ const localStorageAccessTokenAdapter: AccessTokenAdapter = {
         return session?.accessToken || null;
     },
     set: (token) => {
-        const session = tokenManager.getSessionData() || {};
+        const session: SessionDataStorage = tokenManager.getSessionData() || {};
         if (token) {
             session.accessToken = token;
         } else {
             delete session.accessToken;
         }
-        tokenManager.setSessionData(session);
+        tokenManager.setSessionData(session as SessionData);
     },
     clear: () => {
         const session = tokenManager.getSessionData();
         if (!session) return;
-        delete session.accessToken;
+        delete (session as any).accessToken;
         tokenManager.setSessionData(session);
     },
 };

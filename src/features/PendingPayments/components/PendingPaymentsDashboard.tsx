@@ -1,12 +1,12 @@
-import React, { useState, useMemo } from 'react';
-import { 
-  RefreshCw, 
-  AlertCircle, 
-  DollarSign, 
-  Users, 
-  Clock, 
-  TrendingUp,
-  X
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import {
+  RefreshCw,
+  AlertCircle,
+  DollarSign,
+  Users,
+  Clock,
+  TrendingUp
 } from 'lucide-react';
 import SearchBar from './SearchBar';
 import PaymentTabs from './PaymentTabs';
@@ -14,6 +14,7 @@ import PaymentTable from './PaymentTable';
 import Pagination from './Pagination';
 import PdfExportButton from './PdfExportButton';
 import { usePendingPayments } from '../hooks/usePendingPayments';
+import { useVerifyPendingPayment } from '../hooks/useVerifyPendingPayment';
 import type { PaymentMethod, PendingPayment } from '../types/pendingPayments.types';
 import { Card, CardContent } from '@/shared/components/ui/Card';
 
@@ -21,10 +22,26 @@ const PendingPaymentsDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PaymentMethod>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedPayment, setSelectedPayment] = useState<PendingPayment | null>(null);
   const itemsPerPage = 10;
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const { data: payments = [], isLoading, isError, refetch } = usePendingPayments(activeTab);
+  const { mutateAsync: verifyPayment } = useVerifyPendingPayment();
+
+  const [approvingPaymentId, setApprovingPaymentId] = useState<number | null>(null);
+
+  const handleApprovePayment = async (paymentId: number) => {
+    setApprovingPaymentId(paymentId);
+    try {
+      await verifyPayment(paymentId);
+    } finally {
+      setApprovingPaymentId(null);
+    }
+  };
+
+  const handleViewDetails = (payment: PendingPayment) => {
+    navigate(`/payment-details/${payment.id}`); // Navigate to details page
+  };
 
   // Stats calculation
   const stats = useMemo(() => {
@@ -54,11 +71,18 @@ const PendingPaymentsDashboard: React.FC = () => {
   }, [payments, searchQuery]);
 
   // Pagination
-  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredPayments.length / itemsPerPage));
+  
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
   const paginatedPayments = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredPayments.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredPayments, currentPage]);
+  }, [filteredPayments, currentPage, itemsPerPage]);
 
   const handleTabChange = (tab: PaymentMethod) => {
     setActiveTab(tab);
@@ -136,10 +160,12 @@ const PendingPaymentsDashboard: React.FC = () => {
           }}
         />
         
-        <PaymentTable 
-          payments={paginatedPayments} 
-          isLoading={isLoading} 
-          onViewDetails={(p) => setSelectedPayment(p)}
+        <PaymentTable
+          payments={paginatedPayments}
+          isLoading={isLoading}
+          onViewDetails={handleViewDetails}
+          onApprovePayment={handleApprovePayment}
+          approvingPaymentId={approvingPaymentId}
         />
 
         <div className="bg-gray-50/50">
@@ -152,67 +178,7 @@ const PendingPaymentsDashboard: React.FC = () => {
       </div>
 
       {/* Simple Detail Modal Overlay (Placeholder for future expansion) */}
-      {selectedPayment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <h3 className="font-[Cairo] font-bold text-lg text-[#101727]">تفاصيل الدفعة #{selectedPayment.id}</h3>
-              <button 
-                onClick={() => setSelectedPayment(null)}
-                className="p-2 hover:bg-white rounded-full transition-colors text-gray-400 hover:text-gray-600"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-8">
-               <div className="grid grid-cols-2 gap-8 mb-8">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-bold text-[#94a3b8] font-[Cairo]">اسم المتبرع</span>
-                    <span className="font-bold text-[#101727] font-[Cairo]">{selectedPayment.userName}</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-bold text-[#94a3b8] font-[Cairo]">رقم الهاتف</span>
-                    <span className="font-bold text-[#101727]">{selectedPayment.phone}</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-bold text-[#94a3b8] font-[Cairo]">المبلغ</span>
-                    <span className="font-bold text-[#00549A] text-xl font-[Cairo]">{selectedPayment.amount.toLocaleString()} ج.م</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[11px] font-bold text-[#94a3b8] font-[Cairo]">طريقة الدفع</span>
-                    <span className="font-bold text-[#101727] font-[Cairo]">{selectedPayment.method}</span>
-                  </div>
-               </div>
-               
-               {selectedPayment.receiptImageUrl && (
-                 <div className="flex flex-col gap-3">
-                   <span className="text-[11px] font-bold text-[#94a3b8] font-[Cairo]">صورة الإيصال</span>
-                   <div className="aspect-video w-full rounded-2xl bg-gray-100 overflow-hidden border border-gray-200">
-                     <img 
-                       src={selectedPayment.receiptImageUrl} 
-                       alt="Receipt" 
-                       className="w-full h-full object-contain"
-                     />
-                   </div>
-                 </div>
-               )}
-            </div>
-            <div className="p-6 bg-gray-50 flex justify-end gap-3">
-              <button 
-                onClick={() => setSelectedPayment(null)}
-                className="px-6 py-2.5 rounded-xl bg-white border border-gray-200 font-[Cairo] font-bold text-[#495565] hover:bg-gray-50 transition-all"
-              >
-                إغلاق
-              </button>
-              <button 
-                className="px-8 py-2.5 rounded-xl bg-[#00549A] text-white font-[Cairo] font-bold hover:bg-[#004077] transition-all shadow-lg shadow-[#00549A]/20"
-              >
-                تأكيد الدفعة
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Removed selectedPayment modal */}
     </div>
   );
 };

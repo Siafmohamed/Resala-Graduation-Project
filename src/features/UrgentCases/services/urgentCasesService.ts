@@ -1,7 +1,2 @@
-export type {
-  ApiResponse,
-  UrgentCase,
-  CreateUrgentCasePayload,
-  UpdateUrgentCasePayload,
-} from '@/api/services/urgentCasesService';
-export { urgentCasesService } from '@/api/services/urgentCasesService';
+export * from '../api/urgentCases.api';
+export { urgentCasesApi as urgentCasesService } from '../api/urgentCases.api';

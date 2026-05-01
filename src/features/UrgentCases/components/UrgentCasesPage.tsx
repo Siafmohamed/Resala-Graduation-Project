@@ -156,18 +156,9 @@ export function UrgentCasesPage() {
                     {caseItem.description}
                   </p>
 
-                  {/* Status and Date Row */}
-                  <div className="flex items-center justify-between gap-2 mb-4">
-                    <span
-                      className={`text-[10px] font-bold font-[Cairo] px-3.5 py-2 rounded-full whitespace-nowrap backdrop-blur-sm transition-all ${
-                        caseItem.isActive
-                          ? 'bg-gradient-to-r from-emerald-100 to-emerald-50 text-emerald-700 border border-emerald-200'
-                          : 'bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 border border-gray-200'
-                      }`}
-                    >
-                      {caseItem.isActive ? '🟢 نشطة' : '⭕ غير نشطة'}
-                    </span>
-                    <span className="text-[10px] text-[#697282] font-[Cairo] whitespace-nowrap px-2 py-1 rounded-lg bg-gray-50">
+                  {/* Date Row */}
+                  <div className="flex items-center justify-start gap-2 mb-4">
+                    <span className="text-[10px] text-[#697282] font-[Cairo] whitespace-nowrap px-3 py-2 rounded-lg bg-gray-50 border border-gray-100">
                       📅 {(() => {
   const dateStr = caseItem.createdOn ?? caseItem.createdAt;
   return dateStr

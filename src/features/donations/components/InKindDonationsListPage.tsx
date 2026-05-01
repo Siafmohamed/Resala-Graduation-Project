@@ -21,11 +21,11 @@ import { Button } from '@/shared/components/ui/Button';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { useUserRole, Role } from '@/features/authentication';
-import { type Permission } from '@/features/authentication/types/role.types';
 
 export function InKindDonationsListPage() {
   const navigate = useNavigate();
-  const [selectedDonorId, setSelectedDonorId] = useState<string | null>(null);
+  const [selectedDonorId, setSelectedDonorId] = useState<number | null>(null);
+  const [selectedDonorName, setSelectedDonorName] = useState<string | undefined>(undefined);
   const userRole = useUserRole();
   const deleteMutation = useDeleteInKindDonation();
   
@@ -36,13 +36,9 @@ export function InKindDonationsListPage() {
   const donations = selectedDonorId ? donorDonations : allDonations;
   const isLoading = selectedDonorId ? isLoadingDonor : isLoadingAll;
 
-  const handleDelete = (id: string, donationName: string) => {
+  const handleDelete = (id: number, donationName: string) => {
     if (window.confirm(`هل أنت متأكد من رغبتك في حذف تبرع "${donationName}"؟`)) {
-      deleteMutation.mutate(id, {
-        onSuccess: () => {
-          // Toast is already shown in the hook
-        },
-      });
+      deleteMutation.mutate(id);
     }
   };
 
@@ -115,15 +111,19 @@ export function InKindDonationsListPage() {
           </div>
           <div className="flex flex-col md:flex-row items-center gap-4">
             <div className="flex-1 w-full">
-              <DonorSearchSelect 
-                onSelect={(id) => setSelectedDonorId(id)}
-                selectedDonorId={selectedDonorId || undefined}
+              <DonorSearchSelect
+                onSelect={(id, name) => {
+                  setSelectedDonorId(id);
+                  setSelectedDonorName(name);
+                }}
+                selectedDonorId={selectedDonorId ?? undefined}
+                selectedDonorName={selectedDonorName}
               />
             </div>
             {selectedDonorId && (
-              <Button 
-                variant="outline" 
-                onClick={() => setSelectedDonorId(null)}
+              <Button
+                variant="outline"
+                onClick={() => { setSelectedDonorId(null); setSelectedDonorName(undefined); }}
                 className="flex items-center gap-2 px-4 py-2 border-none bg-red-50 text-red-500 hover:bg-red-100 transition-colors font-[Cairo] font-bold rounded-xl"
               >
                 <X size={16} />
@@ -216,8 +216,10 @@ export function InKindDonationsListPage() {
                               <Calendar size={14} className="text-[#00549A]" />
                             </div>
                             <span>
-                              {donation.createdAt 
-                                ? format(new Date(donation.createdAt), 'dd MMMM yyyy', { locale: ar }) 
+                              {donation.recordedAt
+                                ? format(new Date(donation.recordedAt), 'dd MMMM yyyy', { locale: ar })
+                                : donation.createdOn
+                                ? format(new Date(donation.createdOn), 'dd MMMM yyyy', { locale: ar })
                                 : 'غير محدد'}
                             </span>
                           </div>

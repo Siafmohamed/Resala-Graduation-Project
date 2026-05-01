@@ -21,7 +21,6 @@ export const AddUrgentCaseModal: React.FC<AddUrgentCaseModalProps> = ({
   const [targetAmount, setTargetAmount] = useState(0);
   const [collectedAmount, setCollectedAmount] = useState(0);
   const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel>(UrgencyLevel.Normal);
-  const [isActive, setIsActive] = useState(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [draggingImg, setDraggingImg] = useState(false);
@@ -109,7 +108,6 @@ export const AddUrgentCaseModal: React.FC<AddUrgentCaseModalProps> = ({
         targetAmount,
         collectedAmount,
         urgencyLevel,
-        isActive,
         image: imageFile || imagePreview,
       });
 
@@ -119,7 +117,6 @@ export const AddUrgentCaseModal: React.FC<AddUrgentCaseModalProps> = ({
       setTargetAmount(0);
       setCollectedAmount(0);
       setUrgencyLevel(UrgencyLevel.Normal);
-      setIsActive(true);
       setImageFile(null);
       setImagePreview(null);
       setError(null);
@@ -346,34 +343,6 @@ export const AddUrgentCaseModal: React.FC<AddUrgentCaseModalProps> = ({
                     if (f) handleImageSelect(f);
                   }}
                 />
-              </div>
-
-              {/* Active Status Toggle */}
-              <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
-                <label className="flex items-center justify-between cursor-pointer">
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
-                      <CheckCircle2 size={18} />
-                    </div>
-                    <div>
-                      <span className="text-sm font-bold text-[#495565] font-[Cairo] block">الحالة نشطة</span>
-                      <p className="text-[11px] text-[#697282] font-[Cairo]">الحالات النشطة فقط تظهر للمتبرعين</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsActive(!isActive)}
-                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all flex-shrink-0 ${
-                      isActive ? 'bg-[#00549A]' : 'bg-gray-300'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                        isActive ? 'translate-x-1' : '-translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </label>
               </div>
             </div>
           </div>

@@ -1,22 +1,26 @@
 import React from 'react';
 import type { PendingPayment } from '../types/pendingPayments.types';
-import { 
-  Eye, 
-  Smartphone, 
-  Building2, 
-  User, 
-  Zap, 
-  Calendar, 
+import { formatDate } from '@/shared/utils/formatters/dateFormatter';
+import {
+  Eye,
+  Smartphone,
+  Building2,
+  User,
+  Zap,
+  Calendar,
   Phone,
   ArrowUpRight,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  Check // Added Check icon
 } from 'lucide-react';
 
 interface PaymentTableProps {
   payments: PendingPayment[];
   isLoading: boolean;
   onViewDetails: (payment: PendingPayment) => void;
+  onApprovePayment: (paymentId: number) => void;
+  approvingPaymentId: number | null;
 }
 
 const getMethodIcon = (method: string) => {
@@ -28,12 +32,12 @@ const getMethodIcon = (method: string) => {
   return <ArrowUpRight size={16} className="text-gray-400" />;
 };
 
-const getStatusStyles = (status: string) => {
+const getStatusStyles = () => {
   // Assuming all here are pending based on the endpoint, but adding logic for flexibility
   return "bg-amber-50 text-amber-700 border-amber-100";
 };
 
-const PaymentTable: React.FC<PaymentTableProps> = ({ payments, isLoading, onViewDetails }) => {
+const PaymentTable: React.FC<PaymentTableProps> = ({ payments, isLoading, onViewDetails, onApprovePayment, approvingPaymentId }) => {
   if (isLoading) {
     return (
       <div className="w-full space-y-3 p-6">
@@ -119,31 +123,39 @@ const PaymentTable: React.FC<PaymentTableProps> = ({ payments, isLoading, onView
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1 text-sm text-[#495565] font-[Cairo]">
                     <Calendar size={12} className="text-[#697282]" />
-                    <span>{new Date(payment.createdOn).toLocaleDateString('ar-EG')}</span>
+                    <span>{payment.createdOn ? formatDate(payment.createdOn) : 'غير محدد'}</span>
                   </div>
                   <div className="flex items-center gap-1 text-[11px] text-[#94a3b8] font-[Cairo]">
                     <Clock size={10} />
-                    <span>{new Date(payment.createdOn).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>{payment.createdOn ? new Date(payment.createdOn).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
                   </div>
                 </div>
               </td>
 
               {/* Status */}
               <td className="px-6 py-4 border-y border-gray-100 group-hover:border-[#00549A]/20">
-                <span className={`inline-flex px-3 py-1 rounded-full text-[11px] font-bold font-[Cairo] border ${getStatusStyles(payment.status)}`}>
+                <span className={`inline-flex px-3 py-1 rounded-full text-[11px] font-bold font-[Cairo] border ${getStatusStyles()}`}>
                   {payment.status}
                 </span>
               </td>
 
               {/* Action */}
               <td className="px-6 py-4 last:rounded-l-2xl border-y border-l border-gray-100 group-hover:border-[#00549A]/20">
-                <div className="flex justify-center">
-                  <button 
+                <div className="flex justify-center gap-2">
+                  <button
                     onClick={() => onViewDetails(payment)}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#f8fafc] text-[#00549A] hover:bg-[#00549A] hover:text-white transition-all font-[Cairo] font-bold text-xs"
                   >
                     <Eye size={16} />
                     <span>عرض التفاصيل</span>
+                  </button>
+                  <button
+                    onClick={() => onApprovePayment(payment.id)}
+                    disabled={approvingPaymentId === payment.id}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00549A] text-white hover:bg-[#004077] transition-all font-[Cairo] font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-[#00549A]/20"
+                  >
+                    {approvingPaymentId === payment.id ? 'جاري التأكيد...' : 'موافق'}
+                    <Check size={16} />
                   </button>
                 </div>
               </td>

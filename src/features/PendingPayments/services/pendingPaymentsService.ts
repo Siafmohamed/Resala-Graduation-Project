@@ -1,5 +1,6 @@
 import api from '@/api/axiosInstance';
 import type { PendingPayment, DeliveryArea, ApiResponse, PaymentMethod } from '../types/pendingPayments.types';
+import { API_PATH_GUIDE } from '@/shared/api/apiPathGuide';
 
 // Constants
 const BASE_URL = '/v1/subscriptions/payments/pending';
@@ -33,6 +34,21 @@ export const pendingPaymentsService = {
 
   getDeliveryAreas: async (): Promise<DeliveryArea[]> => {
     const response = await api.get<ApiResponse<DeliveryArea[]>>(DELIVERY_AREAS_URL);
+    return response.data;
+  },
+
+  verifyPayment: async (paymentId: number): Promise<ApiResponse<null>> => {
+    const response = await api.post<ApiResponse<null>>(API_PATH_GUIDE.subscriptions.payments.verify(paymentId));
+    return response.data;
+  },
+
+  getPaymentDetails: async (paymentId: number): Promise<PendingPayment> => {
+    const response = await api.get<ApiResponse<PendingPayment>>(API_PATH_GUIDE.subscriptions.payments.getDetails(paymentId));
+    return response.data;
+  },
+
+  rejectPayment: async (paymentId: number, reason: string): Promise<ApiResponse<null>> => {
+    const response = await api.post<ApiResponse<null>>(API_PATH_GUIDE.subscriptions.payments.reject(paymentId), { reason });
     return response.data;
   },
 };

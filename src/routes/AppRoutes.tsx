@@ -32,6 +32,7 @@ const RegisterNewDonorPage = lazy(() => import('../features/RegisterNewDonor/com
 const ReceptionSettingsPage = lazy(() => import('../features/authentication/components/pages/ReceptionSettingsPage').then(m => ({ default: m.ReceptionSettingsPage })));
 const EmergencyPaymentsDashboard = lazy(() => import('../features/EmergencyPayments/components/EmergencyPaymentsDashboard'));
 const EmergencyPaymentDetails = lazy(() => import('../features/EmergencyPayments/components/EmergencyPaymentDetails'));
+const PaymentDetailsPage = lazy(() => import('../features/PendingPayments/components/PaymentDetailsPage')); // New import
 
 // Forms
 const FormsDashboardPage = lazy(() => import('../features/formsDashboard/components/FormsDashboardPage').then(m => ({ default: m.FormsDashboardPage })));
@@ -105,7 +106,7 @@ const AppRoutes: React.FC = () => {
   </PublicRoute>
 } />
 
-        {/* Shared Staff routes (accessible to both Receptionist and Admin, but not public) */}
+        {/* Shared Staff routes (accessible to both Receptionist and Admin) */}
         <Route
           element={
             <ProtectedRoute redirectTo="/login">
@@ -114,7 +115,6 @@ const AppRoutes: React.FC = () => {
           }
         >
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/donations" element={<RegisterDonationPage />} />
         </Route>
 
         {/* Receptionist-only routes (including donors list) */}
@@ -134,11 +134,14 @@ const AppRoutes: React.FC = () => {
           <Route path="/branch-payments" element={<BranchPaymentsPage />} />
           <Route path="/register-new-donor" element={<RegisterNewDonorPage />} />
           <Route path="/in-kind-donations" element={<InKindDonationsListPage />} />
-          <Route path="/in-kind-donations/:id" element={<RegisterDonationPage />} />
+          {/* /donations is the legacy create-donation URL still used in sidebar */}
+          <Route path="/donations" element={<RegisterDonationPage />} />
+          <Route path="/in-kind-donations/new" element={<RegisterDonationPage />} />
           <Route path="/in-kind-donations/edit/:id" element={<RegisterDonationPage />} />
           <Route path="/reception-settings" element={<ReceptionSettingsPage />} />
           <Route path="/emergency-payments" element={<EmergencyPaymentsDashboard />} />
           <Route path="/emergency-payments/:id" element={<EmergencyPaymentDetails />} />
+          <Route path="/payment-details/:paymentId" element={<PaymentDetailsPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/donation-details/:id" element={<ReceptionDashboard />} />
         </Route>

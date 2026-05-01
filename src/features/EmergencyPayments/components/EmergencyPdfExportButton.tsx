@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download } from 'lucide-react';
+import { Download, Loader2, FileText, CheckCircle2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { emergencyPaymentsService } from '../services/emergencyPaymentsService';
@@ -18,52 +18,85 @@ const EmergencyPdfExportButton: React.FC<EmergencyPdfExportButtonProps> = ({ pay
       const representativePayments = await emergencyPaymentsService.getEmergencyPayments('Representative');
 
       if (representativePayments.length === 0) {
-        alert('لا توجد دفعات للمندوبين لتصديرها.');
+        alert('لا توجد دفعات طوارئ للمندوبين لتصديرها حالياً.');
         setIsExporting(false);
         return;
       }
 
       const today = new Date().toISOString().split('T')[0];
-      const filename = `emergency_representative_payments_${today}.pdf`;
+      const filename = `resala_emergency_representative_orders_${today}.pdf`;
 
-      // Create a hidden div to render HTML content for PDF
+      // Create a hidden div with professional styling
       const pdfContent = document.createElement('div');
-      pdfContent.dir = 'rtl'; // Set direction to RTL for Arabic
-      pdfContent.style.width = '190mm'; // A4 width minus margins
-      pdfContent.style.padding = '10mm';
+      pdfContent.dir = 'rtl';
+      pdfContent.style.width = '210mm'; // Full A4 width
+      pdfContent.style.padding = '20mm';
       pdfContent.style.backgroundColor = '#ffffff';
-      pdfContent.style.fontFamily = 'Cairo, sans-serif'; // Use Cairo font
+      pdfContent.style.fontFamily = 'Cairo, sans-serif';
+      pdfContent.style.position = 'absolute';
+      pdfContent.style.left = '-9999px';
+      pdfContent.style.top = '-9999px';
 
       let html = `
-        <h1 style="font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; color: #00549A;">
-          تقرير دفعات الطوارئ للمندوبين
-        </h1>
-        <p style="font-size: 12px; text-align: center; margin-bottom: 30px; color: #697282;">
-          تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}
-        </p>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <div style="border-bottom: 3px solid #F04930; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h1 style="font-size: 28px; font-weight: 800; color: #101727; margin: 0; font-family: Cairo;">جمعية رسالة للأعمال الخيرية</h1>
+            <p style="font-size: 14px; color: #F04930; font-weight: 600; margin: 5px 0 0 0;">تقرير أوردرات المناديب - حالات الطوارئ</p>
+          </div>
+          <div style="text-align: left;">
+            <p style="font-size: 12px; color: #697282; margin: 0;">تاريخ التقرير</p>
+            <p style="font-size: 14px; font-weight: 700; color: #101727; margin: 0;">${new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
+        </div>
+
+        <div style="background-color: #fef2f2; border-radius: 15px; padding: 20px; margin-bottom: 30px; border: 1px solid #fee2e2; display: flex; justify-content: space-around;">
+          <div style="text-align: center;">
+            <p style="font-size: 11px; color: #697282; margin: 0; text-transform: uppercase;">إجمالي أوردرات الطوارئ</p>
+            <p style="font-size: 20px; font-weight: 800; color: #F04930; margin: 5px 0 0 0;">${representativePayments.length}</p>
+          </div>
+          <div style="text-align: center; border-right: 1px solid #fee2e2; padding-right: 20px;">
+            <p style="font-size: 11px; color: #697282; margin: 0; text-transform: uppercase;">إجمالي المبالغ العاجلة</p>
+            <p style="font-size: 20px; font-weight: 800; color: #dc2626; margin: 5px 0 0 0;">${representativePayments.reduce((sum, p) => sum + p.amount, 0).toLocaleString()} ج.م</p>
+          </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 20px;">
           <thead>
-            <tr style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-              <th style="padding: 12px; text-align: right; font-size: 12px; font-weight: bold; color: #495565;">عنوان الحالة</th>
-              <th style="padding: 12px; text-align: right; font-size: 12px; font-weight: bold; color: #495565;">اسم جهة الاتصال</th>
-              <th style="padding: 12px; text-align: right; font-size: 12px; font-weight: bold; color: #495565;">هاتف جهة الاتصال</th>
-              <th style="padding: 12px; text-align: right; font-size: 12px; font-weight: bold; color: #495565;">العنوان</th>
-              <th style="padding: 12px; text-align: right; font-size: 12px; font-weight: bold; color: #495565;">المبلغ</th>
-              <th style="padding: 12px; text-align: right; font-size: 12px; font-weight: bold; color: #495565;">ملاحظات المندوب</th>
+            <tr>
+              <th style="background-color: #F04930; color: white; padding: 15px; text-align: right; font-size: 12px; font-weight: 700; border-radius: 0 10px 0 0;">الحالة / المتبرع</th>
+              <th style="background-color: #F04930; color: white; padding: 15px; text-align: right; font-size: 12px; font-weight: 700;">العنوان التفصيلي</th>
+              <th style="background-color: #F04930; color: white; padding: 15px; text-align: center; font-size: 12px; font-weight: 700;">المبلغ</th>
+              <th style="background-color: #F04930; color: white; padding: 15px; text-align: center; font-size: 12px; font-weight: 700;">موعد الاستلام</th>
+              <th style="background-color: #F04930; color: white; padding: 15px; text-align: center; font-size: 12px; font-weight: 700; border-radius: 10px 0 0 0;">الحالة</th>
             </tr>
           </thead>
           <tbody>
       `;
 
-      representativePayments.forEach((p) => {
+      representativePayments.forEach((p, index) => {
+        const scheduledDateStr = p.scheduledDate ? new Date(p.scheduledDate).toLocaleDateString('ar-EG') : 'غير محدد';
+        const bgColor = index % 2 === 0 ? '#ffffff' : '#fffafb';
+        
         html += `
-          <tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 12px; text-align: right; font-size: 11px; color: #101727;">${p.emergencyCaseTitle}</td>
-            <td style="padding: 12px; text-align: right; font-size: 11px; color: #101727;">${p.contactName}</td>
-            <td style="padding: 12px; text-align: right; font-size: 11px; color: #101727;">${p.contactPhone}</td>
-            <td style="padding: 12px; text-align: right; font-size: 11px; color: #101727;">${p.address}</td>
-            <td style="padding: 12px; text-align: right; font-size: 11px; color: #00549A; font-weight: bold;">${p.amount.toLocaleString()} ج.م</td>
-            <td style="padding: 12px; text-align: right; font-size: 11px; color: #101727;">${p.representativeNotes || 'لا يوجد'}</td>
+          <tr style="background-color: ${bgColor};">
+            <td style="padding: 15px; border-bottom: 1px solid #fecaca; vertical-align: top;">
+              <p style="font-size: 13px; font-weight: 700; color: #101727; margin: 0;">${p.emergencyCaseTitle || 'حالة طوارئ'}</p>
+              <p style="font-size: 11px; color: #F04930; font-weight: 600; margin: 4px 0 0 0;">المتبرع: ${p.userName || 'غير متوفر'}</p>
+              <p style="font-size: 10px; color: #697282; margin: 4px 0 0 0;">الهاتف: ${p.phone || ''}</p>
+            </td>
+            <td style="padding: 15px; border-bottom: 1px solid #fecaca; vertical-align: top; max-width: 200px;">
+              <p style="font-size: 12px; color: #101727; line-height: 1.4; margin: 0;">${p.address || 'غير متوفر'}</p>
+              ${p.deliveryAreaName ? `<p style="font-size: 10px; color: #F04930; font-weight: 700; margin: 5px 0 0 0;">📍 ${p.deliveryAreaName}</p>` : ''}
+            </td>
+            <td style="padding: 15px; border-bottom: 1px solid #fecaca; text-align: center; vertical-align: middle;">
+              <p style="font-size: 14px; font-weight: 800; color: #dc2626; margin: 0;">${p.amount.toLocaleString()} <span style="font-size: 10px; font-weight: 400;">ج.م</span></p>
+            </td>
+            <td style="padding: 15px; border-bottom: 1px solid #fecaca; text-align: center; vertical-align: middle;">
+              <p style="font-size: 12px; color: #101727; font-weight: 600; margin: 0;">${scheduledDateStr}</p>
+            </td>
+            <td style="padding: 15px; border-bottom: 1px solid #fecaca; text-align: center; vertical-align: middle;">
+              <div style="display: inline-block; padding: 4px 10px; border-radius: 6px; background-color: #fee2e2; color: #991b1b; font-size: 10px; font-weight: 700;">عاجل جداً</div>
+            </td>
           </tr>
         `;
       });
@@ -71,13 +104,34 @@ const EmergencyPdfExportButton: React.FC<EmergencyPdfExportButtonProps> = ({ pay
       html += `
           </tbody>
         </table>
+        
+        <div style="margin-top: 50px; display: flex; justify-content: space-between;">
+          <div style="text-align: center; width: 200px;">
+            <p style="font-size: 12px; font-weight: 700; color: #101727; margin-bottom: 40px;">توقيع المسؤول</p>
+            <div style="border-bottom: 1px solid #e2e8f0; width: 100%;"></div>
+          </div>
+          <div style="text-align: center; width: 200px;">
+            <p style="font-size: 12px; font-weight: 700; color: #101727; margin-bottom: 40px;">ختم الجمعية</p>
+            <div style="border-bottom: 1px solid #e2e8f0; width: 100%;"></div>
+          </div>
+        </div>
+        
+        <div style="position: fixed; bottom: 0; right: 0; left: 0; padding: 20px; border-top: 1px solid #f1f5f9; text-align: center;">
+          <p style="font-size: 10px; color: #94a3b8; margin: 0;">هذا التقرير تم إنشاؤه آلياً بواسطة نظام إدارة رسالة - قسم الطوارئ</p>
+        </div>
       `;
 
       pdfContent.innerHTML = html;
-      document.body.appendChild(pdfContent); // Append to body to be rendered by html2canvas
+      document.body.appendChild(pdfContent);
 
-      const canvas = await html2canvas(pdfContent, { scale: 2 }); // Scale for better quality
+      const canvas = await html2canvas(pdfContent, { 
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+      
       const imgData = canvas.toDataURL('image/png');
+      document.body.removeChild(pdfContent);
 
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -85,28 +139,26 @@ const EmergencyPdfExportButton: React.FC<EmergencyPdfExportButtonProps> = ({ pay
         format: 'a4',
       });
 
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
+      const imgWidth = 210;
+      const pageHeight = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       let heightLeft = imgHeight;
       let position = 0;
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
       heightLeft -= pageHeight;
 
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pageHeight;
       }
 
       pdf.save(filename);
-      document.body.removeChild(pdfContent); // Clean up hidden div
-
     } catch (error) {
-      console.error('Failed to export emergency payments PDF:', error);
-      alert('حدث خطأ أثناء تصدير ملف PDF لدفعات الطوارئ.');
+      console.error('PDF Export Error:', error);
+      alert('حدث خطأ أثناء إنشاء ملف الـ PDF للطوارئ. يرجى المحاولة مرة أخرى.');
     } finally {
       setIsExporting(false);
     }
@@ -116,10 +168,26 @@ const EmergencyPdfExportButton: React.FC<EmergencyPdfExportButtonProps> = ({ pay
     <button
       onClick={handleExport}
       disabled={isExporting}
-      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#E6F0F8] text-[#00549A] hover:bg-[#CCE0F0] transition-all font-[Cairo] font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+      className={`group flex items-center gap-2 px-6 py-3 rounded-2xl font-bold font-[Cairo] text-sm transition-all shadow-lg
+        ${isExporting 
+          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+          : 'bg-white text-[#F04930] hover:bg-[#F04930] hover:text-white border border-[#F04930]/10 shadow-[#F04930]/5'
+        }`}
     >
-      {isExporting ? 'جاري التصدير...' : 'تصدير PDF'}
-      <Download size={16} />
+      {isExporting ? (
+        <>
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>جاري التصدير...</span>
+        </>
+      ) : (
+        <>
+          <div className="p-1.5 rounded-lg bg-[#F04930]/5 group-hover:bg-white/20 transition-colors">
+            <FileText className="w-4 h-4" />
+          </div>
+          <span>تصدير أوردرات الطوارئ (PDF)</span>
+          <Download className="w-4 h-4 mr-1 opacity-50 group-hover:opacity-100" />
+        </>
+      )}
     </button>
   );
 };

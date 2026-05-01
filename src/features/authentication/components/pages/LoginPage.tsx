@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { authService } from '../../services/authService';
 import { useAuth } from '../../context/AuthProvider';
 import { useAuthStore } from '../../store/authSlice';
 import { PublicRoute } from '../PublicRoute';
@@ -19,24 +18,18 @@ const LoginPage: React.FC = () => {
     try {
       setIsSubmitting(true);
       setError(null);
-      const response = await authService.login(formData);
-
-      // Check if login succeeded
-      if (!response.succeeded) {
-        setError(response.message || 'فشل تسجيل الدخول');
-        return;
-      }
-
-      // Extract session data
-      const { accessToken, refreshToken, role, userId, name, phoneNumber } = response.data;
-
+      
+      // Delegate entire login flow to AuthProvider context
+      await login(formData);
+      
+      // Get role from auth store after successful login
+      const userRole = useAuthStore.getState().session?.role;
+      
       // Block donors from accessing staff portal
-      if (role === 'Donor') {
+      if (userRole === 'Donor') {
         setError('الوصول مقصور على حسابات الموظفين فقط.');
         return;
       }
-
-      await login(formData);
 
       // Role-based redirection
       const from = location.state?.from;
@@ -44,9 +37,9 @@ const LoginPage: React.FC = () => {
         navigate(from, { replace: true });
       } else {
         // Default based on role
-        if (role === 'Admin') {
+        if (userRole === 'Admin') {
           navigate('/admin-dashboard', { replace: true });
-        } else if (role === 'Reception') {
+        } else if (userRole === 'Reception') {
           navigate('/reception-dashboard', { replace: true });
         } else {
           navigate('/dashboard', { replace: true });
