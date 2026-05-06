@@ -287,7 +287,7 @@ export function DeliveryAreasManager() {
               مواعيد استقبال المتبرعين
             </CardTitle>
             <button
-              onClick={() => setShowModal(true)}
+              onClick={() => setShowAddModal(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white font-[Cairo] text-sm font-bold border border-white/20 transition-colors"
             >
               <Plus className="w-4 h-4" />
