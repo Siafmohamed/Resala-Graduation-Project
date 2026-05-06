@@ -104,11 +104,11 @@ export default function SponsorshipsAPIManagement() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col lg:flex-row items-center gap-6 bg-white p-6 rounded-[28px] shadow-[0px_4px_30px_rgba(0,0,0,0.03)] border border-gray-50">
+      <div className="flex flex-col lg:flex-row items-center gap-6 bg-white p-6 rounded-[28px] shadow-[0px_8px_40px_rgba(0,0,0,0.02)] border border-gray-50/50">
         <div className="relative flex-1 w-full group">
-          <Search className="absolute right-5 top-1/2 -translate-y-1/2 text-[#697282] group-focus-within:text-[#00549A] transition-colors" size={20} />
+          <Search className="absolute right-5 top-1/2 -translate-y-1/2 text-[#697282] group-focus-within:text-[#00549A] transition-all duration-300" size={20} />
           <input
-            className="w-full pr-14 pl-6 py-4 rounded-2xl bg-gray-50/50 border border-gray-100 focus:bg-white focus:ring-4 focus:ring-[#00549A]/5 focus:border-[#00549A] transition-all font-[Cairo] text-sm outline-none placeholder:text-gray-400"
+            className="w-full pr-14 pl-6 py-4 rounded-2xl bg-gray-50/30 border border-gray-100 focus:bg-white focus:ring-[10px] focus:ring-[#00549A]/5 focus:border-[#00549A] transition-all duration-300 font-[Cairo] text-sm outline-none placeholder:text-gray-400 font-medium"
             placeholder="ابحث باسم الكفالة أو الحالة أو الوصف..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -116,33 +116,33 @@ export default function SponsorshipsAPIManagement() {
         </div>
         
         <div className="flex flex-col md:flex-row items-center gap-4 w-full lg:w-auto">
-          <div className="relative w-full md:w-56">
-            <Filter className="absolute right-5 top-1/2 -translate-y-1/2 text-[#697282]" size={18} />
+          <div className="relative w-full md:w-60">
+            <div className="absolute right-5 top-1/2 -translate-y-1/2 text-[#697282] z-10">
+              <Filter size={18} />
+            </div>
             <select 
-              className="w-full pr-14 pl-12 py-4 rounded-2xl bg-gray-50/50 border border-gray-100 focus:bg-white focus:ring-4 focus:ring-[#00549A]/5 focus:border-[#00549A] appearance-none cursor-pointer font-[Cairo] text-sm outline-none font-bold text-[#101727]"
+              className="w-full pr-14 pl-12 py-4 rounded-2xl bg-gray-50/30 border border-gray-100 focus:bg-white focus:ring-[10px] focus:ring-[#00549A]/5 focus:border-[#00549A] appearance-none cursor-pointer font-[Cairo] text-sm outline-none font-bold text-[#101727] transition-all duration-300"
               value={filter} 
               onChange={(e) => setFilter(e.target.value)}
             >
-              <option>جميع الحالات</option>
-              <option>الكفالات العادية</option>
-              <option>الحالات الحرجة</option>
-              <option>نشطة</option>
-              <option>غير نشطة</option>
+              <option value="جميع الحالات">جميع الحالات</option>
+              <option value="كفالات">كفالات</option>
+              <option value="حالات حرجة">حالات حرجة</option>
             </select>
-            <ChevronDown className="absolute left-5 top-1/2 -translate-y-1/2 text-[#697282] pointer-events-none" size={16} />
+            <ChevronDown className="absolute left-5 top-1/2 -translate-y-1/2 text-[#697282] pointer-events-none transition-transform group-focus-within:rotate-180" size={16} />
           </div>
           
-          <div className="flex bg-gray-100/50 p-1.5 rounded-2xl border border-gray-100">
+          <div className="flex bg-gray-100/40 p-1.5 rounded-2xl border border-gray-100/50">
             <button 
               onClick={() => setViewMode("grid")}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all font-[Cairo] text-xs font-bold ${viewMode === "grid" ? "bg-white text-[#00549A] shadow-sm" : "text-[#697282] hover:bg-white/50"}`}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 font-[Cairo] text-xs font-bold ${viewMode === "grid" ? "bg-white text-[#00549A] shadow-[0px_4px_12px_rgba(0,0,0,0.05)]" : "text-[#697282] hover:bg-white/50"}`}
             >
               <LayoutGrid size={18} />
               <span>شبكة</span>
             </button>
             <button 
               onClick={() => setViewMode("table")}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all font-[Cairo] text-xs font-bold ${viewMode === "table" ? "bg-white text-[#00549A] shadow-sm" : "text-[#697282] hover:bg-white/50"}`}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all duration-300 font-[Cairo] text-xs font-bold ${viewMode === "table" ? "bg-white text-[#00549A] shadow-[0px_4px_12px_rgba(0,0,0,0.05)]" : "text-[#697282] hover:bg-white/50"}`}
             >
               <List size={18} />
               <span>قائمة</span>

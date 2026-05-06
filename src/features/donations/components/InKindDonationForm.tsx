@@ -1,312 +1,210 @@
-import { useState, useRef, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import {
-  useDonorDropdown,
-  useCreateInKindDonation,
-  useUpdateInKindDonation,
-} from '../hooks/useInKindDonations';
-import { DonorSearchModal } from './DonorSearchModal';
-import type { DonorOption, InKindDonation } from '../types/inKindDonation.types';
-import { Loader2, Search, User, Info, Package, Hash, AlertCircle, CheckCircle2 } from 'lucide-react';
+import * as z from 'zod';
+import { 
+  Gift, 
+  User, 
+  Hash, 
+  FileText, 
+  Plus, 
+  CheckCircle2, 
+  Loader2, 
+  X,
+  Package,
+  Layers,
+  ClipboardList
+} from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button';
+import { Input } from '@/shared/components/ui/Input';
+import { DonorSearchSelect } from './DonorSearchSelect';
+import { 
+  useCreateInKindDonation, 
+  useUpdateInKindDonation 
+} from '../hooks/useInKindDonations';
+import type { InKindDonation } from '../types/inKindDonation.types';
 
-// ── Validation schema ───────────────────────────────────────────────
-const schema = z.object({
-  donorId: z.number({ required_error: 'يرجى اختيار متبرع' }),
-  donorName: z.string(), // display only
-  donationTypeName: z.string().min(1, 'يرجى إدخال نوع التبرع'),
-  quantity: z.coerce.number().int().positive('يجب أن تكون الكمية أكبر من صفر'),
+const donationSchema = z.object({
+  donorId: z.number({ required_error: 'يجب اختيار المتبرع' }),
+  donationTypeName: z.string().min(2, 'نوع التبرع مطلوب'),
+  quantity: z.number().min(1, 'الكمية يجب أن تكون 1 على الأقل'),
   description: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+type DonationFormValues = z.infer<typeof donationSchema>;
 
-interface Props {
-  mode: 'create' | 'edit';
-  donationId?: number; // required for edit
-  defaultValues?: Partial<FormValues>;
-  onSuccess?: (data: InKindDonation) => void;
+interface InKindDonationFormProps {
+  existingDonation?: InKindDonation;
+  onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export function InKindDonationForm({
-  mode,
-  donationId,
-  defaultValues,
-  onSuccess,
-  onCancel,
-}: Props) {
-  const [searchInput, setSearchInput] = useState(defaultValues?.donorName ?? '');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isAdvancedModalOpen, setIsAdvancedModalOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const { data: donors = [], isFetching: searchLoading } = useDonorDropdown(searchInput);
-
+export function InKindDonationForm({ 
+  existingDonation, 
+  onSuccess, 
+  onCancel 
+}: InKindDonationFormProps) {
+  const isEditMode = !!existingDonation;
   const createMutation = useCreateInKindDonation();
   const updateMutation = useUpdateInKindDonation();
-  const isPending = createMutation.isPending || updateMutation.isPending;
 
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const { 
+    register, 
+    handleSubmit, 
+    setValue, 
+    watch, 
+    formState: { errors, isSubmitting }, 
+    reset 
+  } = useForm<DonationFormValues>({
+    resolver: zodResolver(donationSchema),
     defaultValues: {
-      donorId: defaultValues?.donorId,
-      donorName: defaultValues?.donorName ?? '',
-      donationTypeName: defaultValues?.donationTypeName ?? '',
-      quantity: defaultValues?.quantity ?? 1,
-      description: defaultValues?.description ?? '',
+      donorId: existingDonation?.donorId,
+      donationTypeName: existingDonation?.donationTypeName || '',
+      quantity: existingDonation?.quantity || 1,
+      description: existingDonation?.description || '',
     },
   });
 
   const selectedDonorId = watch('donorId');
 
-  // ── Handle clicks outside dropdown ─────────────────────────────
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
+    if (existingDonation) {
+      reset({
+        donorId: existingDonation.donorId,
+        donationTypeName: existingDonation.donationTypeName,
+        quantity: existingDonation.quantity,
+        description: existingDonation.description || '',
+      });
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [existingDonation, reset]);
 
-  // ── Donor selection ─────────────────────────────────────────────
-  const handleSelectDonor = (donor: DonorOption) => {
-    setValue('donorId', donor.id, { shouldValidate: true });
-    setValue('donorName', donor.name);
-    setSearchInput(donor.name);
-    setIsDropdownOpen(false);
+  const onSubmit = async (data: DonationFormValues) => {
+    try {
+      if (isEditMode && existingDonation) {
+        await updateMutation.mutateAsync({
+          id: existingDonation.id,
+          payload: data,
+        });
+      } else {
+        await createMutation.mutateAsync(data);
+      }
+      onSuccess?.();
+    } catch (error) {
+      console.error('Failed to save donation:', error);
+    }
   };
 
-  // ── Submit ──────────────────────────────────────────────────────
-  const onSubmit = handleSubmit(async (values) => {
-    const dto = {
-      donorId: values.donorId,
-      donationTypeName: values.donationTypeName,
-      quantity: values.quantity,
-      description: values.description,
-    };
-
-    try {
-      if (mode === 'edit' && donationId) {
-        const result = await updateMutation.mutateAsync({ id: donationId, payload: dto });
-        if (result.succeeded) onSuccess?.(result.data);
-      } else {
-        const result = await createMutation.mutateAsync(dto);
-        if (result.succeeded) onSuccess?.(result.data);
-      }
-    } catch (err) {
-      // Errors handled by mutation hooks
-    }
-  });
-
   return (
-    <form onSubmit={onSubmit} dir="rtl" className="space-y-6">
-      {/* ── Donor ComboBox ────────────────────────────────────── */}
-      <div className="space-y-2">
-        <label className="text-sm font-bold text-gray-700 font-[Cairo] flex items-center gap-2">
-          <User size={16} className="text-primary" />
-          <span>المتبرع *</span>
-        </label>
-        <div className="relative" ref={dropdownRef}>
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              className={`w-full pr-10 pl-10 py-3 rounded-xl border-2 transition-all font-[Cairo] focus:outline-none ${
-                errors.donorId ? 'border-red-300 focus:border-red-500' : 'border-gray-100 focus:border-primary'
-              }`}
-              value={searchInput}
-              onChange={(e) => {
-                setSearchInput(e.target.value);
-                setIsDropdownOpen(true);
-                if (selectedDonorId) {
-                  setValue('donorId', undefined as any);
-                  setValue('donorName', '');
-                }
-              }}
-              onFocus={() => setIsDropdownOpen(true)}
-              placeholder="ابحث باسم المتبرع..."
-              autoComplete="off"
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" dir="rtl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Donor Selection - Full Width in Mobile, Half in Desktop */}
+        <div className="md:col-span-2 space-y-3">
+          <label className="text-sm font-bold text-[#101727] font-[Cairo] flex items-center gap-2 pr-1">
+            <User size={16} className="text-[#00549A]" />
+            اختيار المتبرع <span className="text-red-500">*</span>
+          </label>
+          <div className="relative group">
+            <DonorSearchSelect
+              onSelect={(id) => setValue('donorId', id, { shouldValidate: true })}
+              selectedDonorId={selectedDonorId}
+              selectedDonorName={existingDonation?.donorName}
             />
-            {searchLoading && (
-              <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                <Loader2 size={18} className="animate-spin text-primary" />
-              </div>
+            {errors.donorId && (
+              <p className="text-xs text-red-500 font-[Cairo] mt-1.5 pr-1 flex items-center gap-1">
+                <X size={12} /> {errors.donorId.message}
+              </p>
             )}
           </div>
-
-          {isDropdownOpen && (searchInput.trim().length > 0 || donors.length > 0) && (
-            <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-              <ul className="max-h-60 overflow-y-auto">
-                {donors.map((d) => (
-                  <li
-                    key={d.id}
-                    onClick={() => handleSelectDonor(d)}
-                    className="flex items-center justify-between p-3 hover:bg-primary/5 cursor-pointer transition-colors group"
-                  >
-                    <span className="font-[Cairo] text-gray-700 group-hover:text-primary transition-colors">{d.name}</span>
-                    <span className="text-xs font-mono text-gray-400">#{d.id}</span>
-                  </li>
-                ))}
-                {donors.length === 0 && !searchLoading && (
-                  <li className="p-4 text-center text-sm text-gray-500 font-[Cairo]">لا توجد نتائج</li>
-                )}
-              </ul>
-              <div className="p-2 bg-gray-50 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={() => setIsAdvancedModalOpen(true)}
-                  className="w-full py-2 text-sm font-bold text-primary hover:bg-primary/5 rounded-lg transition-all font-[Cairo]"
-                >
-                  بحث متقدم عن متبرع
-                </button>
-              </div>
-            </div>
-          )}
         </div>
-        {errors.donorId && (
-          <p className="text-xs text-red-600 font-[Cairo] flex items-center gap-1">
-            <AlertCircle size={12} />
-            {errors.donorId.message}
-          </p>
-        )}
-        {!selectedDonorId && !isDropdownOpen && !searchInput && (
-          <button
-            type="button"
-            onClick={() => setIsAdvancedModalOpen(true)}
-            className="text-xs font-bold text-primary hover:underline font-[Cairo]"
-          >
-            لم تجد المتبرع؟ استخدم البحث المتقدم
-          </button>
-        )}
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* ── Donation type ─────────────────────────────────────── */}
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 font-[Cairo] flex items-center gap-2">
-            <Package size={16} className="text-primary" />
-            <span>نوع التبرع *</span>
+        {/* Donation Type */}
+        <div className="space-y-3">
+          <label className="text-sm font-bold text-[#101727] font-[Cairo] flex items-center gap-2 pr-1">
+            <Layers size={16} className="text-[#00549A]" />
+            نوع التبرع <span className="text-red-500">*</span>
           </label>
-          <Controller
-            name="donationTypeName"
-            control={control}
-            render={({ field }) => (
-              <input
-                {...field}
-                className={`w-full px-4 py-3 rounded-xl border-2 transition-all font-[Cairo] focus:outline-none ${
-                  errors.donationTypeName ? 'border-red-300 focus:border-red-500' : 'border-gray-100 focus:border-primary'
-                }`}
-                placeholder="مثال: ملابس، أغذية، أدوية"
-              />
-            )}
-          />
-          {errors.donationTypeName && (
-            <p className="text-xs text-red-600 font-[Cairo] flex items-center gap-1">
-              <AlertCircle size={12} />
-              {errors.donationTypeName.message}
-            </p>
-          )}
-        </div>
-
-        {/* ── Quantity ──────────────────────────────────────────── */}
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 font-[Cairo] flex items-center gap-2">
-            <Hash size={16} className="text-primary" />
-            <span>الكمية *</span>
-          </label>
-          <Controller
-            name="quantity"
-            control={control}
-            render={({ field }) => (
-              <input
-                {...field}
-                type="number"
-                min={1}
-                className={`w-full px-4 py-3 rounded-xl border-2 transition-all font-[Cairo] focus:outline-none ${
-                  errors.quantity ? 'border-red-300 focus:border-red-500' : 'border-gray-100 focus:border-primary'
-                }`}
-              />
-            )}
-          />
-          {errors.quantity && (
-            <p className="text-xs text-red-600 font-[Cairo] flex items-center gap-1">
-              <AlertCircle size={12} />
-              {errors.quantity.message}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* ── Description ───────────────────────────────────────── */}
-      <div className="space-y-2">
-        <label className="text-sm font-bold text-gray-700 font-[Cairo] flex items-center gap-2">
-          <Info size={16} className="text-primary" />
-          <span>ملاحظات (اختياري)</span>
-        </label>
-        <Controller
-          name="description"
-          control={control}
-          render={({ field }) => (
-            <textarea
-              {...field}
-              rows={3}
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 focus:border-primary transition-all font-[Cairo] focus:outline-none resize-none"
-              placeholder="أي تفاصيل إضافية حول التبرع..."
+          <div className="relative group">
+            <input
+              {...register('donationTypeName')}
+              className={`w-full px-5 py-4 rounded-2xl border transition-all font-[Cairo] text-sm outline-none bg-gray-50/30 focus:bg-white
+                ${errors.donationTypeName ? 'border-red-300 focus:ring-red-500/10 focus:border-red-500' : 'border-gray-200 focus:ring-[#00549A]/10 focus:border-[#00549A]'}
+              `}
+              placeholder="مثال: ملابس، مواد غذائية، أثاث..."
             />
-          )}
-        />
+            {errors.donationTypeName && (
+              <p className="text-xs text-red-500 font-[Cairo] mt-1.5 pr-1 flex items-center gap-1">
+                <X size={12} /> {errors.donationTypeName.message}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Quantity */}
+        <div className="space-y-3">
+          <label className="text-sm font-bold text-[#101727] font-[Cairo] flex items-center gap-2 pr-1">
+            <Package size={16} className="text-[#00549A]" />
+            الكمية / العدد <span className="text-red-500">*</span>
+          </label>
+          <div className="relative group">
+            <input
+              type="number"
+              {...register('quantity', { valueAsNumber: true })}
+              className={`w-full px-5 py-4 rounded-2xl border transition-all font-[Cairo] text-sm outline-none bg-gray-50/30 focus:bg-white
+                ${errors.quantity ? 'border-red-300 focus:ring-red-500/10 focus:border-red-500' : 'border-gray-200 focus:ring-[#00549A]/10 focus:border-[#00549A]'}
+              `}
+              placeholder="0"
+            />
+            {errors.quantity && (
+              <p className="text-xs text-red-500 font-[Cairo] mt-1.5 pr-1 flex items-center gap-1">
+                <X size={12} /> {errors.quantity.message}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Description - Full Width */}
+        <div className="md:col-span-2 space-y-3">
+          <label className="text-sm font-bold text-[#101727] font-[Cairo] flex items-center gap-2 pr-1">
+            <ClipboardList size={16} className="text-[#00549A]" />
+            وصف إضافي (اختياري)
+          </label>
+          <textarea
+            {...register('description')}
+            rows={4}
+            className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/30 focus:bg-white focus:ring-4 focus:ring-[#00549A]/10 focus:border-[#00549A] transition-all font-[Cairo] text-sm outline-none resize-none"
+            placeholder="أضف أي تفاصيل أخرى عن حالة التبرع أو ملاحظات خاصة..."
+          />
+        </div>
       </div>
 
-      {/* ── Actions ────────────────────────────────────────────── */}
-      <div className="flex items-center justify-end gap-3 pt-4">
-        {onCancel && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onCancel}
-            className="font-[Cairo] font-bold"
-          >
-            إلغاء
-          </Button>
-        )}
+      {/* Action Buttons */}
+      <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-100">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onCancel}
+          className="px-8 py-3.5 font-bold text-[#697282] hover:text-[#101727] hover:bg-gray-100 rounded-2xl transition-all font-[Cairo] text-sm"
+        >
+          إلغاء
+        </Button>
         <Button
           type="submit"
-          disabled={isPending}
-          className="px-8 font-[Cairo] font-bold gap-2"
+          disabled={isSubmitting}
+          className="px-10 py-3.5 rounded-2xl bg-gradient-to-r from-[#00549A] to-[#0070c0] text-white font-bold font-[Cairo] text-sm shadow-xl shadow-[#00549A]/20 hover:shadow-2xl hover:shadow-[#00549A]/30 transition-all transform active:scale-95 disabled:opacity-50 flex items-center gap-2"
         >
-          {isPending ? (
-            <Loader2 size={20} className="animate-spin" />
-          ) : mode === 'edit' ? (
-            <CheckCircle2 size={20} />
+          {isSubmitting ? (
+            <>
+              <Loader2 size={18} className="animate-spin" />
+              <span>جاري الحفظ...</span>
+            </>
           ) : (
-            <Package size={20} />
+            <>
+              {isEditMode ? <CheckCircle2 size={18} /> : <Plus size={18} strokeWidth={3} />}
+              <span>{isEditMode ? 'حفظ التعديلات' : 'تسجيل التبرع'}</span>
+            </>
           )}
-          <span>
-            {isPending
-              ? 'جاري الحفظ...'
-              : mode === 'edit'
-              ? 'تحديث التبرع'
-              : 'تسجيل التبرع'}
-          </span>
         </Button>
       </div>
-
-      {/* ── Advanced Search Modal ──────────────────────────────── */}
-      <DonorSearchModal
-        isOpen={isAdvancedModalOpen}
-        onClose={() => setIsAdvancedModalOpen(false)}
-        onSelect={handleSelectDonor}
-      />
     </form>
   );
 }

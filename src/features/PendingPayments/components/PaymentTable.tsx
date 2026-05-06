@@ -1,4 +1,5 @@
 import React from 'react';
+import { format } from 'date-fns';
 import type { PendingPayment } from '../types/pendingPayments.types';
 import { formatDate } from '@/shared/utils/formatters/dateFormatter';
 import {
@@ -12,15 +13,17 @@ import {
   ArrowUpRight,
   Clock,
   CheckCircle2,
-  Check // Added Check icon
+  Check
 } from 'lucide-react';
-
+import { XCircle } from 'lucide-react';
 interface PaymentTableProps {
   payments: PendingPayment[];
   isLoading: boolean;
   onViewDetails: (payment: PendingPayment) => void;
   onApprovePayment: (paymentId: number) => void;
+  onRejectPayment: (payment: PendingPayment) => void;
   approvingPaymentId: number | null;
+  rejectingPaymentId: number | null;
 }
 
 const getMethodIcon = (method: string) => {
@@ -37,7 +40,15 @@ const getStatusStyles = () => {
   return "bg-amber-50 text-amber-700 border-amber-100";
 };
 
-const PaymentTable: React.FC<PaymentTableProps> = ({ payments, isLoading, onViewDetails, onApprovePayment, approvingPaymentId }) => {
+const PaymentTable: React.FC<PaymentTableProps> = ({ 
+  payments, 
+  isLoading, 
+  onViewDetails, 
+  onApprovePayment, 
+  onRejectPayment,
+  approvingPaymentId,
+  rejectingPaymentId
+}) => {
   if (isLoading) {
     return (
       <div className="w-full space-y-3 p-6">
@@ -119,19 +130,22 @@ const PaymentTable: React.FC<PaymentTableProps> = ({ payments, isLoading, onView
               </td>
 
               {/* Date */}
-              <td className="px-6 py-4 border-y border-gray-100 group-hover:border-[#00549A]/20">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1 text-sm text-[#495565] font-[Cairo]">
-                    <Calendar size={12} className="text-[#697282]" />
-                    <span>{payment.createdOn ? formatDate(payment.createdOn) : 'غير محدد'}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[11px] text-[#94a3b8] font-[Cairo]">
-                    <Clock size={10} />
-                    <span>{payment.createdOn ? new Date(payment.createdOn).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
-                  </div>
-                </div>
-              </td>
-
+             <td className="px-6 py-4 border-y border-gray-100 group-hover:border-[#00549A]/20">
+  <div className="flex flex-col">
+    <div className="flex items-center gap-1 text-sm text-[#495565] font-[Cairo]">
+      <Calendar className="w-4 h-4 text-[#495565]" />
+      <span>{payment.createdOn ? formatDate(payment.createdOn) : 'غير محدد'}</span>
+    </div>
+    <div className="flex items-center gap-1 text-[11px] text-[#00549A] font-bold font-[Cairo] bg-blue-50/50 px-2 py-0.5 rounded-md w-fit mt-1">
+      <Clock className="w-3.5 h-3.5 text-[#00549A]" />
+      <span>
+        {payment.createdOn ? 
+          format(new Date(payment.createdOn), 'HH:mm')
+          : ''}
+      </span>
+    </div>
+  </div>
+</td>
               {/* Status */}
               <td className="px-6 py-4 border-y border-gray-100 group-hover:border-[#00549A]/20">
                 <span className={`inline-flex px-3 py-1 rounded-full text-[11px] font-bold font-[Cairo] border ${getStatusStyles()}`}>
@@ -144,17 +158,27 @@ const PaymentTable: React.FC<PaymentTableProps> = ({ payments, isLoading, onView
                 <div className="flex justify-center gap-2">
                   <button
                     onClick={() => onViewDetails(payment)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#f8fafc] text-[#00549A] hover:bg-[#00549A] hover:text-white transition-all font-[Cairo] font-bold text-xs"
+                    className="p-2.5 rounded-xl bg-gray-50 text-gray-500 hover:text-[#00549A] hover:bg-blue-50 transition-all shadow-sm"
+                    title="عرض التفاصيل"
                   >
-                    <Eye size={16} />
-                    <span>عرض التفاصيل</span>
+                    <Eye size={18} />
                   </button>
+                  
+                  <button
+                    onClick={() => onRejectPayment(payment)}
+                    disabled={approvingPaymentId === payment.id || rejectingPaymentId === payment.id}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all font-[Cairo] font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed shadow-sm shadow-red-100"
+                  >
+                    {rejectingPaymentId === payment.id ? 'جاري الرفض...' : 'رفض'}
+                    <XCircle size={16} />
+                  </button>
+
                   <button
                     onClick={() => onApprovePayment(payment.id)}
-                    disabled={approvingPaymentId === payment.id}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#00549A] text-white hover:bg-[#004077] transition-all font-[Cairo] font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-[#00549A]/20"
+                    disabled={approvingPaymentId === payment.id || rejectingPaymentId === payment.id}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00549A] text-white hover:bg-[#004077] transition-all font-[Cairo] font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-[#00549A]/20"
                   >
-                    {approvingPaymentId === payment.id ? 'جاري التأكيد...' : 'موافق'}
+                    {approvingPaymentId === payment.id ? 'جاري التأكيد...' : 'تأكيد'}
                     <Check size={16} />
                   </button>
                 </div>

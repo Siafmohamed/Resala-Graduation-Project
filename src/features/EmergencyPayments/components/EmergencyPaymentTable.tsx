@@ -1,4 +1,6 @@
 import React from 'react';
+import { format } from 'date-fns';
+import { formatDate } from '@/shared/utils/formatters/dateFormatter';
 import type { EmergencyPayment } from '../types/emergencyPayments.types';
 import { 
   Eye, 
@@ -132,18 +134,22 @@ const EmergencyPaymentTable: React.FC<EmergencyPaymentTableProps> = ({
               </td>
 
               {/* Date */}
-              <td className="px-6 py-4 border-y border-gray-100 group-hover:border-[#00549A]/20">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1 text-sm text-[#495565] font-[Cairo]">
-                    <Calendar size={12} className="text-[#697282]" />
-                    <span>{new Date(payment.createdOn).toLocaleDateString('ar-EG')}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-[11px] text-[#94a3b8] font-[Cairo]">
-                    <Clock size={10} />
-                    <span>{new Date(payment.createdOn).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                </div>
-              </td>
+<td className="px-6 py-4 border-y border-gray-100 group-hover:border-[#00549A]/20">
+  <div className="flex flex-col">
+    <div className="flex items-center gap-1 text-sm text-[#495565] font-[Cairo]">
+      <Calendar className="w-4 h-4 text-[#495565]" />
+      <span>{payment.createdOn ? formatDate(payment.createdOn) : 'غير محدد'}</span>
+    </div>
+    <div className="flex items-center gap-1 text-[11px] text-[#00549A] font-bold font-[Cairo] bg-blue-50/50 px-2 py-0.5 rounded-md w-fit mt-1">
+      <Clock className="w-3.5 h-3.5 text-[#00549A]" />
+      <span>
+        {payment.createdOn ? 
+          format(new Date(payment.createdOn), 'HH:mm')
+          : ''}
+      </span>
+    </div>
+  </div>
+</td>
 
               {/* Status */}
               <td className="px-6 py-4 border-y border-gray-100 group-hover:border-[#00549A]/20">

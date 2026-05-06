@@ -10,4 +10,11 @@ export const API_PATH_GUIDE = {
   deliveryAreas: {
     admin: '/v1/subscriptions/delivery-areas/admin',
   },
+  subscriptions: {
+    payments: {
+      getDetails: (id: number) => `/v1/subscriptions/payments/${id}`,
+      verify: (id: number) => `/v1/subscriptions/payments/${id}/verify`,
+      reject: (id: number) => `/v1/subscriptions/payments/${id}/reject`,
+    },
+  },
 };

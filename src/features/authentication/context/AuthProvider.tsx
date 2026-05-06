@@ -49,16 +49,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
-      // 1. Perform complete cleanup to remove any stale state from previous session
-      // This includes clearing axios interceptor state which is critical for role switches
-      completeAuthCleanup();
-      queryClient.clear();
-
-      // 2. Perform login
+      // 1. Perform login
       const response = await authService.login(credentials);
       if (!response.succeeded) {
         throw new Error(response.message || 'Login failed');
       }
+
+      // 2. Perform complete cleanup ONLY after successful login response
+      // to avoid unnecessary re-renders or state clears on failed attempts
+      completeAuthCleanup();
+      queryClient.clear();
 
       // 3. Store the new session in token manager (storage layer)
       const sessionData = response.data as SessionData;
@@ -67,9 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 4. Update auth store with new session (state layer)
       setAuth(sessionData);
       
-      // 5. Mark initialization as complete so route guards and components 
-      // that depend on isInitialized flag know auth state is ready
-      // This is critical for logout/login cycles without page reload (role switches)
+      // 5. Mark initialization as complete
       setInitialized(true);
       
       console.log('[AuthProvider] Login successful:', { role: response.data.role, userId: response.data.userId });

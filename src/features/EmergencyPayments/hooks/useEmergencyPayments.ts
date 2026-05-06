@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { emergencyPaymentsService } from '../services/emergencyPaymentsService';
 import type { EmergencyPaymentMethod } from '../types/emergencyPayments.types';
 
@@ -12,6 +12,7 @@ export const useEmergencyPayments = (method: EmergencyPaymentMethod) => {
         (a.deliveryAreaName || '').localeCompare(b.deliveryAreaName || '', 'ar')
       );
     },
+    placeholderData: keepPreviousData,
     retry: 1,
     refetchOnWindowFocus: false,
   });

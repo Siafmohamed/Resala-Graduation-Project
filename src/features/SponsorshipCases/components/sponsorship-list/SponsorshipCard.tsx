@@ -51,11 +51,7 @@ export function SponsorshipCard({ item, onEdit, onDelete }: SponsorshipCardProps
           <span className={`px-4 py-2 rounded-2xl text-[11px] font-bold font-[Cairo] backdrop-blur-xl shadow-xl text-white transition-all transform group-hover:scale-105 border border-white/20 ${item.caseType === 'urgent' ? 'bg-red-500/80' : 'bg-[#00549A]/80'}`}>
             {item.caseType === 'urgent' ? '🚨 حالة عاجلة' : '❤️ كفالة عادية'}
           </span>
-          
-          {/* Active Status Badge */}
-          <span className={`px-4 py-2 rounded-2xl text-[11px] font-bold font-[Cairo] backdrop-blur-xl shadow-xl border transition-all ${item.isActive ? "bg-white/90 text-green-600 border-green-100" : "bg-white/90 text-gray-400 border-gray-100"}`}>
-            {item.isActive ? "● نشط" : "○ غير نشط"}
-          </span>
+                      
           
           {item.caseType === 'urgent' && (() => {
             const config = urgencyConfig[item.urgencyLevel] ?? urgencyConfig[URGENCY_LEVELS.NORMAL];

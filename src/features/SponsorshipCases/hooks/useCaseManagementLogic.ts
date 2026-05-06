@@ -114,10 +114,8 @@ export const useCaseManagementLogic = () => {
     const matchSearch = title.includes(searchTerm) || description.includes(searchTerm);
     
     const matchFilter = filter === "جميع الحالات" || 
-                       (filter === "نشطة" && item.isActive) || 
-                       (filter === "غير نشطة" && !item.isActive) ||
-                       (filter === "الكفالات العادية" && item.caseType === 'regular') ||
-                       (filter === "الحالات الحرجة" && item.caseType === 'urgent');
+                       (filter === "كفالات" && item.caseType === 'regular') ||
+                       (filter === "حالات حرجة" && item.caseType === 'urgent');
 
     return matchSearch && matchFilter;
   });

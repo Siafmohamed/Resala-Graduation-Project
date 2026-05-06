@@ -23,7 +23,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
           className={`
             flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold font-[Cairo] transition-all
             ${currentPage === 1 
-              ? 'text-gray-300 cursor-not-allowed' 
+              ? 'text-gray-300 cursor-not-allowed pointer-events-none' 
               : 'text-[#00549A] hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100'
             }
           `}
@@ -57,8 +57,11 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
                 </button>
               );
             }
-            if (page === currentPage - 2 || page === currentPage + 2) {
-              return <span key={page} className="text-gray-300">...</span>;
+            if (page === currentPage - 2 && page > 2) {
+              return <span key={page} className="text-gray-300 px-1">...</span>;
+            }
+            if (page === currentPage + 2 && page < totalPages - 1) {
+              return <span key={page} className="text-gray-300 px-1">...</span>;
             }
             return null;
           })}
@@ -70,7 +73,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
           className={`
             flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold font-[Cairo] transition-all
             ${currentPage === totalPages 
-              ? 'text-gray-300 cursor-not-allowed' 
+              ? 'text-gray-300 cursor-not-allowed pointer-events-none' 
               : 'text-[#00549A] hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100'
             }
           `}

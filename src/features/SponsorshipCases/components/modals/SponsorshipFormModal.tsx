@@ -10,6 +10,7 @@ import {
   Loader2,
   Shield
 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import type { Sponsorship } from "../../types/sponsorship.types";
 
 interface SponsorshipFormModalProps {

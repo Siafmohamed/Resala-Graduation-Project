@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { format, formatDistanceToNow } from 'date-fns';
+import { ar } from 'date-fns/locale';
 import { 
   RefreshCw, 
   AlertCircle, 
@@ -8,10 +10,10 @@ import {
   Clock, 
   TrendingUp
 } from 'lucide-react';
-import SearchBar from '../../PendingPayments/components/SearchBar'; // Reusing existing SearchBar
+import SearchBar from '../../PendingPayments/components/SearchBar';
 import EmergencyPaymentTabs from './EmergencyPaymentTabs';
 import EmergencyPaymentTable from './EmergencyPaymentTable';
-import Pagination from '../../PendingPayments/components/Pagination'; // Reusing existing Pagination
+import Pagination from '../../PendingPayments/components/Pagination';
 import EmergencyPdfExportButton from './EmergencyPdfExportButton';
 import { useEmergencyPayments } from '../hooks/useEmergencyPayments';
 import { useVerifyEmergencyPayment } from '../hooks/useVerifyEmergencyPayment';
@@ -29,7 +31,7 @@ const EmergencyPaymentsDashboard: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const { data: payments = [], isLoading, isError, refetch } = useEmergencyPayments(activeTab);
+  const { data: allPayments = [], isLoading, isError, refetch } = useEmergencyPayments('All');
   const { mutateAsync: verifyPayment } = useVerifyEmergencyPayment();
   const { mutateAsync: rejectPayment } = useRejectEmergencyPayment();
 
@@ -38,23 +40,30 @@ const EmergencyPaymentsDashboard: React.FC = () => {
   const [approvingPaymentId, setApprovingPaymentId] = useState<number | null>(null);
   const [rejectingPaymentId, setRejectingPaymentId] = useState<number | null>(null);
 
-  // Stats calculation
-  const stats = useMemo(() => {
-    const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
-    const uniqueDonors = new Set(payments.map(p => p.phone)).size;
-    const avgAmount = payments.length > 0 ? totalAmount / payments.length : 0;
+  // 1. Tab Filtering
+  const tabFilteredPayments = useMemo(() => {
+    if (activeTab === 'All') return allPayments;
 
-    return [
-      { label: 'إجمالي المبالغ المعلقة', value: `${totalAmount.toLocaleString()} ج.م`, icon: DollarSign, color: '#00549A', bg: '#e6eff7' },
-      { label: 'عدد المتبرعين', value: uniqueDonors.toString(), icon: Users, color: '#22c55e', bg: '#e9f9ef' },
-      { label: 'متوسط قيمة الدفعة', value: `${Math.round(avgAmount).toLocaleString()} ج.م`, icon: TrendingUp, color: '#7e22ce', bg: '#f3e8ff' },
-      { label: 'دفعات تنتظر المراجعة', value: payments.length.toString(), icon: Clock, color: '#f59e0b', bg: '#fef3c7' },
-    ];
-  }, [payments]);
+    return allPayments.filter((p) => {
+      const method = (p.method ?? '').toLowerCase();
+      switch (activeTab) {
+        case 'Representative':
+          return method.includes('representative') || method.includes('مندوب');
+        case 'Branch':
+          return method.includes('branch') || method.includes('فرع');
+        case 'Vodafone Cash':
+          return method.includes('vodafone');
+        case 'InstaPay':
+          return method.includes('instapay');
+        default:
+          return true;
+      }
+    });
+  }, [allPayments, activeTab]);
 
-  // Filtering
+  // 2. Search Filtering
   const filteredPayments = useMemo(() => {
-    return payments.filter((payment) => {
+    const filtered = tabFilteredPayments.filter((payment) => {
       const query = searchQuery.toLowerCase();
       return (
         payment.userName?.toLowerCase().includes(query) ||
@@ -65,30 +74,56 @@ const EmergencyPaymentsDashboard: React.FC = () => {
         payment.address?.toLowerCase().includes(query)
       );
     });
-  }, [payments, searchQuery]);
 
-  // Pagination
-  const totalPages = Math.max(1, Math.ceil(filteredPayments.length / itemsPerPage));
-  
+    // Order by createdOn (Newest first)
+    return [...filtered].sort((a, b) => 
+      new Date(b.createdOn).getTime() - new Date(a.createdOn).getTime()
+    );
+  }, [tabFilteredPayments, searchQuery]);
+
+  // ✅ FIX: Single useEffect handles page reset for both tab and search changes
   useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [totalPages, currentPage]);
+    setCurrentPage(1);
+  }, [activeTab, searchQuery]);
 
+  // Stats calculation - Based on filtered results for better feedback
+  const stats = useMemo(() => {
+    const totalAmount = filteredPayments.reduce((sum, p) => sum + p.amount, 0);
+    const uniqueDonors = new Set(filteredPayments.map(p => p.phone)).size;
+    const avgAmount = filteredPayments.length > 0 ? totalAmount / filteredPayments.length : 0;
+
+    // Find oldest payment
+    const oldestPayment = filteredPayments.length > 0 
+      ? [...filteredPayments].sort((a, b) => new Date(a.createdOn).getTime() - new Date(b.createdOn).getTime())[0]
+      : null;
+
+    const oldestDuration = oldestPayment 
+      ? formatDistanceToNow(new Date(oldestPayment.createdOn), { locale: ar }).replace('تقريباً', '').trim()
+      : 'لا يوجد';
+
+    return [
+      { label: 'إجمالي المبالغ المعلقة', value: `${totalAmount.toLocaleString()} ج.م`, icon: DollarSign, color: '#00549A', bg: '#e6eff7' },
+      { label: 'عدد المتبرعين', value: uniqueDonors.toString(), icon: Users, color: '#22c55e', bg: '#e9f9ef' },
+      { label: 'متوسط قيمة الدفعة', value: `${Math.round(avgAmount).toLocaleString()} ج.م`, icon: TrendingUp, color: '#7e22ce', bg: '#f3e8ff' },
+      { label: 'أقدم طلب معلق', value: oldestDuration, icon: Clock, color: '#f59e0b', bg: '#fef3c7' },
+    ];
+  }, [filteredPayments]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredPayments.length / itemsPerPage));
+
+  // ✅ FIX: Single paginatedPayments declaration (removed the duplicate)
   const paginatedPayments = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredPayments.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredPayments, currentPage, itemsPerPage]);
 
+  // ✅ FIX: Handlers no longer manually call setCurrentPage(1) — useEffect handles it
   const handleTabChange = (tab: EmergencyPaymentMethod) => {
     setActiveTab(tab);
-    setCurrentPage(1);
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1);
   };
 
   const handleApprovePayment = async (paymentId: number) => {
@@ -138,12 +173,8 @@ const EmergencyPaymentsDashboard: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-8 pb-10" dir="rtl">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-6">
-        <div className="flex flex-col gap-1">
-          <h2 className="font-[Cairo] font-bold text-2xl text-[#101727]">إدارة دفعات الطوارئ</h2>
-          <p className="font-[Cairo] text-[#697282] text-sm">مراجعة وتأكيد دفعات الحالات الطارئة</p>
-        </div>
+      {/* Actions Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-end gap-6 px-6">
         <div className="flex items-center gap-3">
           {activeTab === 'Representative' && (
             <EmergencyPdfExportButton payments={filteredPayments} />
@@ -175,11 +206,11 @@ const EmergencyPaymentsDashboard: React.FC = () => {
           activeTab={activeTab} 
           onTabChange={handleTabChange} 
           counts={{
-            'All': payments.length,
-            'Representative': payments.filter(p => p.method.includes('Representative') || p.method.includes('مندوب')).length,
-            'Branch': payments.filter(p => p.method.includes('Branch') || p.method.includes('فرع')).length,
-            'Vodafone Cash': payments.filter(p => p.method.toLowerCase().includes('vodafone')).length,
-            'InstaPay': payments.filter(p => p.method.toLowerCase().includes('instapay')).length,
+            'All': allPayments.length,
+            'Representative': allPayments.filter(p => p.method.includes('Representative') || p.method.includes('مندوب')).length,
+            'Branch': allPayments.filter(p => p.method.includes('Branch') || p.method.includes('فرع')).length,
+            'Vodafone Cash': allPayments.filter(p => p.method.toLowerCase().includes('vodafone')).length,
+            'InstaPay': allPayments.filter(p => p.method.toLowerCase().includes('instapay')).length,
           }}
         />
         

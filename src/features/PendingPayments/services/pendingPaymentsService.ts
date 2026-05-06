@@ -38,8 +38,7 @@ export const pendingPaymentsService = {
   },
 
   verifyPayment: async (paymentId: number): Promise<ApiResponse<null>> => {
-    const response = await api.post<ApiResponse<null>>(API_PATH_GUIDE.subscriptions.payments.verify(paymentId));
-    return response.data;
+    return api.post<ApiResponse<null>>(API_PATH_GUIDE.subscriptions.payments.verify(paymentId));
   },
 
   getPaymentDetails: async (paymentId: number): Promise<PendingPayment> => {
@@ -48,7 +47,6 @@ export const pendingPaymentsService = {
   },
 
   rejectPayment: async (paymentId: number, reason: string): Promise<ApiResponse<null>> => {
-    const response = await api.post<ApiResponse<null>>(API_PATH_GUIDE.subscriptions.payments.reject(paymentId), { reason });
-    return response.data;
+    return api.post<ApiResponse<null>>(API_PATH_GUIDE.subscriptions.payments.reject(paymentId), { reason });
   },
 };

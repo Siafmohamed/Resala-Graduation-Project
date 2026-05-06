@@ -41,6 +41,7 @@ export function useDonorDropdown(rawSearch: string) {
     enabled: search.length > 0 && isInitialized === true,
     staleTime: 1000 * 30, // 30s cache
     placeholderData: (prev) => prev,
+    select: (res: any) => res.data || [],
   });
 }
 
@@ -62,16 +63,15 @@ export function useDonorsPaginated(
   });
 }
 
-/** ── Donor history ─────────────────────────────────────────────────── */
-export function useInKindDonationsByDonor(donorId: number | string | null) {
+/** Hook to fetch donations by donor ID */
+export function useInKindDonationsByDonor(donorId: number | string) {
   const isInitialized = useIsInitialized();
-  const idAsNumber = donorId ? Number(donorId) : null;
-  
+  const idAsNumber = Number(donorId);
+
   return useQuery({
-    queryKey: inKindDonationQueryKeys.history(idAsNumber!),
-    queryFn: () => inKindDonationService.getByDonorId(idAsNumber!),
-    enabled: idAsNumber !== null && !isNaN(idAsNumber) && isInitialized === true,
-    select: (data) => data.data,
+    queryKey: inKindDonationQueryKeys.history(idAsNumber),
+    queryFn: () => inKindDonationService.getByDonorId(idAsNumber),
+    enabled: !!donorId && !isNaN(idAsNumber) && isInitialized === true,
   });
 }
 
@@ -141,7 +141,6 @@ export function useInKindDonations() {
   return useQuery({
     queryKey: inKindDonationQueryKeys.lists(),
     queryFn: () => inKindDonationService.getAll(),
-    select: (data) => data.data,
     enabled: isInitialized === true,
   });
 }
@@ -155,7 +154,6 @@ export function useInKindDonation(id: number | string) {
     queryKey: inKindDonationQueryKeys.detail(idAsNumber),
     queryFn: () => inKindDonationService.getById(idAsNumber),
     enabled: !!id && !isNaN(idAsNumber) && isInitialized === true,
-    select: (data) => data.data,
   });
 }
 

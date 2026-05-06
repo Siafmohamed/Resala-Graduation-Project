@@ -58,4 +58,8 @@ export const PAGE_METADATA: { [key: string]: { title: string; subtitle: string }
     title: 'الإعدادات',
     subtitle: 'إدارة معلوماتك الشخصية وكلمة المرور',
   },
+  '/emergency-payments': {
+    title: 'دفعات الطوارئ',
+    subtitle: 'مراجعة وتأكيد دفعات الحالات العاجلة',
+  },
 };
