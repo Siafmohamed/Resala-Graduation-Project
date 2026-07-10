@@ -1,6 +1,6 @@
-import api from '@/api/axiosInstance';
+import api from '@/shared/api/axiosInstance';
 import { tokenManager } from '@/features/authentication/utils/tokenManager';
-import { normalizeUrgencyLevel, type UrgencyLevel } from '@/constants/urgencyLevels';
+import { normalizeUrgencyLevel, type UrgencyLevel } from '@/shared/constants/urgencyLevels';
 
 export interface ApiResponse<T> {
   succeeded: boolean;

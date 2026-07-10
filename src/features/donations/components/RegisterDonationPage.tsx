@@ -1,10 +1,11 @@
+import { useEffect, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Gift, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/Card';
 import { Button } from '@/shared/components/ui/Button';
 import { InKindDonationForm } from './InKindDonationForm';
 import { useInKindDonation } from '../hooks/useInKindDonations';
-import type { InKindDonation } from '../types/inKindDonation.types';
+import { LayoutContext } from '@/shared/components/layout/MainLayout';
 
 /**
  * Page wrapper for creating / editing an in-kind donation.
@@ -14,6 +15,7 @@ import type { InKindDonation } from '../types/inKindDonation.types';
 export function RegisterDonationPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { setHeader } = useContext(LayoutContext);
 
   const isEditMode = !!id;
 
@@ -24,7 +26,17 @@ export function RegisterDonationPage() {
     isError,
   } = useInKindDonation(id ?? '');
 
-  const handleSuccess = (_donation: InKindDonation) => {
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    const subtitle = existingDonation
+      ? `تعديل تبرع المتبرع: ${existingDonation.donorName}`
+      : 'تعديل بيانات التبرع العيني المسجل';
+
+    setHeader('تعديل التبرع العيني', subtitle);
+  }, [isEditMode, existingDonation, setHeader]);
+
+  const handleSuccess = () => {
     navigate('/in-kind-donations');
   };
 
@@ -54,20 +66,10 @@ export function RegisterDonationPage() {
   }
 
   // Build default values from the fetched donation (edit) or undefined (create)
-  const defaultValues = existingDonation
-    ? {
-        donorId: existingDonation.donorId,
-        donorName: existingDonation.donorName,
-        donationTypeName: existingDonation.donationTypeName,
-        quantity: existingDonation.quantity,
-        description: existingDonation.description ?? '',
-      }
-    : undefined;
-
   return (
     <div className="flex flex-col gap-8 p-8 bg-[#f8fafc] min-h-screen" dir="rtl">
       {/* ── Page Header ──────────────────────────────────────────── */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center">
         <Button
           variant="outline"
           onClick={handleCancel}
@@ -76,16 +78,6 @@ export function RegisterDonationPage() {
           <ArrowLeft size={18} />
           رجوع
         </Button>
-        <div className="flex flex-col gap-1">
-          <h1 className="font-[Cairo] font-bold text-2xl text-[#101727]">
-            {isEditMode ? 'تعديل التبرع العيني' : 'تسجيل تبرع عيني'}
-          </h1>
-          <p className="font-[Cairo] font-medium text-[#697282] text-sm">
-            {isEditMode
-              ? 'تعديل بيانات التبرع العيني المسجل'
-              : 'إضافة تبرع عيني جديد إلى النظام'}
-          </p>
-        </div>
       </div>
 
       {/* ── Form Card ─────────────────────────────────────────────── */}
@@ -108,9 +100,7 @@ export function RegisterDonationPage() {
 
           {/* Shared form (React Hook Form + Zod) */}
           <InKindDonationForm
-            mode={isEditMode ? 'edit' : 'create'}
-            donationId={isEditMode ? Number(id) : undefined}
-            defaultValues={defaultValues}
+            existingDonation={existingDonation}
             onSuccess={handleSuccess}
             onCancel={handleCancel}
           />

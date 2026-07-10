@@ -9,15 +9,16 @@ import {
   X,
   Eye,
   Edit2,
-  Trash2,
   Plus,
   Filter,
   Package,
   TrendingUp,
-  Users
+  Users,
+  Trash2
 } from 'lucide-react';
 import { Card, CardContent } from '@/shared/components/ui/Card';
 import { Button } from '@/shared/components/ui/Button';
+import { Modal } from '@/shared/components/ui/Modal';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { useUserRole, Role } from '@/features/authentication';
@@ -26,7 +27,10 @@ export function InKindDonationsListPage() {
   const navigate = useNavigate();
   const [selectedDonorId, setSelectedDonorId] = useState<number | null>(null);
   const [selectedDonorName, setSelectedDonorName] = useState<string | undefined>(undefined);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [donationToDelete, setDonationToDelete] = useState<number | null>(null);
   const userRole = useUserRole();
+  
   const deleteMutation = useDeleteInKindDonation();
   
   // Conditionally use the donor filter hook or the general hook
@@ -36,20 +40,9 @@ export function InKindDonationsListPage() {
   const donations = selectedDonorId ? donorDonations : allDonations;
   const isLoading = selectedDonorId ? isLoadingDonor : isLoadingAll;
 
-  const handleDelete = (id: number, donationName: string) => {
-    if (window.confirm(`هل أنت متأكد من رغبتك في حذف تبرع "${donationName}"؟`)) {
-      deleteMutation.mutate(id);
-    }
-  };
-
   return (
     <div className="flex flex-col gap-8 p-8 bg-[#f8fafc] min-h-screen" dir="rtl">
-      {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-[Cairo] font-bold text-2xl text-[#101727]">التبرعات العينية</h1>
-          <p className="font-[Cairo] font-medium text-[#697282] text-sm">إدارة ومتابعة جميع التبرعات العينية المسجلة في النظام</p>
-        </div>
+      <div className="flex justify-end">
         <Button 
           onClick={() => navigate('/donations')}
           className="flex items-center gap-2 px-6 py-3 bg-[#00549A] text-white rounded-xl font-bold shadow-lg shadow-[#00549A]/20 hover:opacity-90 transition-all transform hover:-translate-y-0.5 active:scale-95 font-[Cairo]"
@@ -252,9 +245,11 @@ export function InKindDonationsListPage() {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => handleDelete(donation.id, donation.donationTypeName)}
-                        disabled={deleteMutation.isPending}
-                        className="flex-1 md:flex-none text-[#F04930] hover:bg-red-50 hover:text-[#F04930] rounded-xl font-[Cairo] font-bold gap-2 transition-all disabled:opacity-50"
+                        onClick={() => {
+                          setDonationToDelete(donation.id);
+                          setDeleteDialogOpen(true);
+                        }}
+                        className="flex-1 md:flex-none text-[#F04930] hover:bg-[#ffebe8] hover:text-[#F04930] rounded-xl font-[Cairo] font-bold gap-2 transition-all"
                       >
                         <Trash2 size={16} />
                         <span className="md:hidden lg:inline">حذف</span>
@@ -267,6 +262,49 @@ export function InKindDonationsListPage() {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Modal 
+        isOpen={deleteDialogOpen} 
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setDonationToDelete(null);
+        }}
+        title="تأكيد الحذف"
+      >
+        <div className="flex flex-col gap-6">
+          <p className="text-center font-[Cairo] text-[#697282]">
+            هل أنت متأكد من حذف هذا التبرع العيني؟ لا يمكن التراجع عن هذا الإجراء.
+          </p>
+          
+          <div className="flex gap-4 justify-center">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setDonationToDelete(null);
+              }}
+              className="px-8 py-3 bg-gray-100 text-gray-700 hover:bg-gray-200 font-[Cairo] font-bold rounded-xl"
+            >
+              إلغاء
+            </Button>
+            
+            <Button 
+              onClick={() => {
+                if (donationToDelete) {
+                  deleteMutation.mutate(donationToDelete);
+                  setDeleteDialogOpen(false);
+                  setDonationToDelete(null);
+                }
+              }}
+              className="px-8 py-3 bg-[#F04930] text-white hover:bg-[#e03d25] font-[Cairo] font-bold rounded-xl"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'جاري الحذف...' : 'حذف'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

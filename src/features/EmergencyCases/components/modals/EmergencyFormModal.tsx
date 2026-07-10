@@ -16,7 +16,7 @@ import {
   normalizeUrgencyLevel,
   URGENCY_LEVELS,
   type UrgencyLevel,
-} from "@/api/services/sponsorshipService";
+} from "@/shared/api/services/sponsorshipService";
 import type { EmergencyCase } from "../../types/emergencyCase.types";
 
 interface EmergencyFormModalProps {

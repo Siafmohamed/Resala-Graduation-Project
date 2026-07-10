@@ -7,9 +7,11 @@ export type DateFormat = 'short' | 'long' | 'relative' | 'datetime';
  * Format date for display in Arabic locale.
  */
 export function formatDate(
-  date: Date | string,
+  date: Date | string | null | undefined,
   formatType: DateFormat = 'short'
 ): string {
+  if (!date) return '—';
+  
   const d = typeof date === 'string' ? new Date(date) : date;
   if (Number.isNaN(d.getTime())) return '—';
 

@@ -6,7 +6,7 @@ import {
   urgencyLevelStyles,
 } from '../../types/urgency-level.types';
 
-import { normalizeUrgencyLevel } from '@/api/services/sponsorshipService';
+import { normalizeUrgencyLevel } from '@/shared/api/services/sponsorshipService';
 
 interface UrgencyLevelBadgeProps {
   level: UrgencyLevel | number | string;

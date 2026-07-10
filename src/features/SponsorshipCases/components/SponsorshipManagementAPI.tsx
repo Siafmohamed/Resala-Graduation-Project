@@ -65,15 +65,7 @@ export default function SponsorshipsAPIManagement() {
 
   return (
     <div className="flex flex-col gap-8 p-10 bg-[#fbfcfd] min-h-screen" dir="rtl">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div className="flex flex-col gap-2">
-          <h1 className="font-[Cairo] font-black text-3xl text-[#101727] tracking-tight">إدارة الكفالات والحالات</h1>
-          <div className="flex items-center gap-2 text-[#697282]">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <p className="font-[Cairo] font-medium text-sm">متابعة وتعديل برامج الكفالات العادية والحالات الحرجة في الوقت الفعلي</p>
-          </div>
-        </div>
+      <div className="flex justify-end">
         <button 
           onClick={() => setModal("choose-type")}
           className="group flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#00549A] to-[#0070c0] text-white rounded-[20px] font-bold shadow-xl shadow-[#00549A]/20 hover:shadow-2xl hover:shadow-[#00549A]/30 transition-all transform hover:-translate-y-1 active:scale-95 font-[Cairo] text-sm"

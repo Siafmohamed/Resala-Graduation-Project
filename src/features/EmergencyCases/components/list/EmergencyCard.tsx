@@ -8,7 +8,7 @@ import {
   Clock,
   Flame
 } from "lucide-react";
-import { URGENCY_LEVELS } from "@/api/services/sponsorshipService";
+import { URGENCY_LEVELS } from "@/shared/api/services/sponsorshipService";
 import type { EmergencyCase } from "../../types/emergencyCase.types";
 
 const urgencyConfig: Record<number, { label: string; icon: any; className: string }> = {

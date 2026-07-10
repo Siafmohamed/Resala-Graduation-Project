@@ -9,7 +9,7 @@ import {
   Clock,
   Flame
 } from "lucide-react";
-import { URGENCY_LEVELS } from "@/api/services/sponsorshipService";
+import { URGENCY_LEVELS } from "@/shared/api/services/sponsorshipService";
 
 const urgencyConfig: Record<number, { label: string; icon: any; className: string }> = {
   [URGENCY_LEVELS.NORMAL]: { label: 'عادية', icon: AlertCircle, className: 'bg-gradient-to-r from-blue-500 to-blue-400 border-blue-400/50' },

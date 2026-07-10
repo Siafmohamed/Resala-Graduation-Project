@@ -11,7 +11,7 @@ import {
   useUpdateEmergencyCase, 
   useDeleteEmergencyCase 
 } from "@/features/EmergencyCases/hooks/useEmergencyCases";
-import { normalizeUrgencyLevel } from "@/api/services/sponsorshipService";
+import { normalizeUrgencyLevel } from "@/shared/api/services/sponsorshipService";
 
 export type ModalStep = null | "choose-type" | "add-regular" | "add-urgent" | "edit-regular" | "edit-urgent" | "delete-regular" | "delete-urgent";
 

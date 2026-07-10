@@ -10,7 +10,7 @@
  * so future changes to the API layer don't scatter across hooks.
  */
 
-import { emergencyApi } from '@/api/services/sponsorshipService';
+import { emergencyApi } from '@/shared/api/services/sponsorshipService';
 import type { EmergencyCase, CreateEmergencyCasePayload, UpdateEmergencyCasePayload } from '../types/emergencyCase.types';
 
 export const emergencyCasesService = {

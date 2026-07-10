@@ -13,13 +13,14 @@ const AdminDashboard = lazy(() => import('../features/authentication/components/
 const ReceptionDashboard = lazy(() => import('../features/authentication/components/pages/ReceptionDashboard'));
 
 // Core feature pages
-const DonorsPage = lazy(() => import('../features/donors').then(m => ({ default: m.DonorsPage })));
-const AddDonorPage = lazy(() => import('../features/donors').then(m => ({ default: m.AddDonorPage })));
-const DonorDetailPage = lazy(() => import('../features/donors').then(m => ({ default: m.DonorDetailPage })));
+const DonorsPage = lazy(() => import('../features/donors/components/DonorsPage').then(m => ({ default: m.DonorsPage })));
+const AddDonorPage = lazy(() => import('../features/donors/components/AddDonorPage').then(m => ({ default: m.AddDonorPage })));
+const DonorProfileDashboard = lazy(() => import('../features/donors/components/DonorProfileDashboard').then(m => ({ default: m.DonorProfileDashboard })));
 const DashboardPage = lazy(() => import('../features/dashboard/components/DashboardPage'));
 const RegisterDonationPage = lazy(() => import('../features/donations/components/RegisterDonationPage').then(m => ({ default: m.RegisterDonationPage })));
 const InKindDonationsListPage = lazy(() => import('../features/donations/components/InKindDonationsListPage').then(m => ({ default: m.InKindDonationsListPage })));
-const NotificationsPage = lazy(() => import('../features/notifications/components/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
+const InKindDonationDetailPage = lazy(() => import('../features/donations/components/InKindDonationDetailPage').then(m => ({ default: m.InKindDonationDetailPage })));
+const StaffSupportChatPage = lazy(() => import('../features/StaffSupportChat').then(m => ({ default: m.StaffSupportChatPage })));
 const SettingsPage = lazy(() => import('../features/settings/components/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
 // Reception & donor management
@@ -41,8 +42,9 @@ const FormsDashboardPage = lazy(() => import('../features/formsDashboard/compone
 const AccountManagementPage = lazy(() => import('../features/AccountManagement/components/AccountManagementPage').then(m => ({ default: m.AccountManagementPage })));
 const ReportsPage = lazy(() => import('../features/AdminReports/components/ReportsPage').then(m => ({ default: m.ReportsPage })));
 const AdminAnalyticsPage = lazy(() => import('../features/Adminanalytics/components/AdminAnalyticsPage').then(m => ({ default: m.AdminAnalyticsPage })));
-const ComplaintsPage = lazy(() => import('../features/complaints/components/ComplaintsPage').then(m => ({ default: m.ComplaintsPage })));
+const FeedbackComplaintsPage = lazy(() => import('../features/FeedbackComplaints/components/FeedbackComplaintsPage').then(m => ({ default: m.FeedbackComplaintsPage })));
 const RepresentativesPage = lazy(() => import('../features/representatives/components/RepresentativesPage').then(m => ({ default: m.RepresentativesPage })));
+const SuccessStoriesPage = lazy(() => import('../features/SuccessStories').then(m => ({ default: m.SuccessStoriesPage })));
 
 // Layout
 const MainLayout = lazy(() => import('../shared/components/layout/MainLayout'));
@@ -127,7 +129,7 @@ const AppRoutes: React.FC = () => {
         >
           <Route path="/reception-dashboard" element={<ReceptionDashboard />} />
           <Route path="/donors" element={<DonorsPage />} />
-          <Route path="/donors/:id" element={<DonorDetailPage />} />
+          <Route path="/donors/:id" element={<DonorProfileDashboard />} />
           <Route path="/add-donor" element={<AddDonorPage />} />
           <Route path="/receipt-verification" element={<ReceiptVerificationPage />} />
           <Route path="/representative-orders" element={<RepresentativeOrdersPage />} />
@@ -138,11 +140,12 @@ const AppRoutes: React.FC = () => {
           <Route path="/donations" element={<RegisterDonationPage />} />
           <Route path="/in-kind-donations/new" element={<RegisterDonationPage />} />
           <Route path="/in-kind-donations/edit/:id" element={<RegisterDonationPage />} />
+          <Route path="/in-kind-donations/:id" element={<InKindDonationDetailPage />} />
           <Route path="/reception-settings" element={<ReceptionSettingsPage />} />
           <Route path="/emergency-payments" element={<EmergencyPaymentsDashboard />} />
           <Route path="/emergency-payments/:id" element={<EmergencyPaymentDetails />} />
           <Route path="/payment-details/:paymentId" element={<PaymentDetailsPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/notifications" element={<StaffSupportChatPage />} />
           <Route path="/donation-details/:id" element={<ReceptionDashboard />} />
         </Route>
 
@@ -187,8 +190,9 @@ const AppRoutes: React.FC = () => {
           <Route path="/account-management" element={<AccountManagementPage />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/admin-analytics" element={<AdminAnalyticsPage />} />
-          <Route path="/complaints" element={<ComplaintsPage />} />
+          <Route path="/complaints" element={<FeedbackComplaintsPage />} />
           <Route path="/representatives" element={<RepresentativesPage />} />
+          <Route path="/success-stories" element={<SuccessStoriesPage />} />
         </Route>
 
         {/* Fallback for any other path: redirect to root which will intelligently redirect */}

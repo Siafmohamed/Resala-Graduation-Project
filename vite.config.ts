@@ -19,6 +19,12 @@ server: {
       changeOrigin: true,
       secure: false,
     },
+    '/hubs': {
+      target: process.env.VITE_PROXY_TARGET || 'http://resala.runasp.net',
+      changeOrigin: true,
+      secure: false,
+      ws: true, // Enable WebSocket proxying!
+    },
   },
 },
 })

@@ -1,1 +1,1 @@
-export { inKindDonationService } from '@/api/services/donationService';
+export { inKindDonationService } from '@/shared/api/services/donationService';

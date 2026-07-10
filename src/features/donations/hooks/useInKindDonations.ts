@@ -5,6 +5,7 @@ import type {
   CreateInKindDonationDTO,
   InKindDonation,
   UpdateInKindDonationDTO,
+  DonorDropdownOption,
 } from '../types/inKindDonation.types';
 import { toast } from 'react-toastify';
 import { useDebounce } from '@/shared/hooks/useDebounce';
@@ -35,13 +36,12 @@ export function useDonorDropdown(rawSearch: string) {
   const isInitialized = useIsInitialized();
   const search = useDebounce(rawSearch.trim(), 300);
 
-  return useQuery({
+  return useQuery<DonorDropdownOption[]>({
     queryKey: inKindDonationQueryKeys.donorsDropdown(search),
     queryFn: () => inKindDonationService.fetchDonorDropdown(search),
-    enabled: search.length > 0 && isInitialized === true,
+    enabled: isInitialized === true,
     staleTime: 1000 * 30, // 30s cache
     placeholderData: (prev) => prev,
-    select: (res: any) => res.data || [],
   });
 }
 
@@ -81,8 +81,7 @@ export function useCreateInKindDonation() {
 
   return useMutation({
     mutationFn: (payload: CreateInKindDonationDTO) => inKindDonationService.create(payload),
-    onSuccess: (res) => {
-      const created = res.data;
+    onSuccess: (created) => {
       qc.setQueryData<InKindDonation[]>(
         inKindDonationQueryKeys.lists(),
         (old) => upsertDonationInArray(old, created),
@@ -107,8 +106,7 @@ export function useUpdateInKindDonation() {
   return useMutation({
     mutationFn: ({ id, payload }: { id: number | string; payload: UpdateInKindDonationDTO }) =>
       inKindDonationService.update(Number(id), payload),
-    onSuccess: (res) => {
-      const updated = res.data;
+    onSuccess: (updated) => {
       qc.setQueryData<InKindDonation[]>(
         inKindDonationQueryKeys.lists(),
         (old = []) => old.map((item) => (item.id === updated.id ? updated : item)),

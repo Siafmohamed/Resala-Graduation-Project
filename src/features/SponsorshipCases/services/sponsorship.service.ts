@@ -1,4 +1,4 @@
-import api from '@/api/axiosInstance';
+import api from '@/shared/api/axiosInstance';
 import { tokenManager } from '@/features/authentication/utils/tokenManager';
 import type { Sponsorship } from '../types/sponsorship.types';
 import { normalizeSponsorshipImageUrl } from '../utils/sponsorshipHelpers';

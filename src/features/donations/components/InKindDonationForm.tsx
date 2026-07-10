@@ -1,37 +1,40 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { 
-  Gift, 
-  User, 
-  Hash, 
-  FileText, 
-  Plus, 
-  CheckCircle2, 
-  Loader2, 
+import {
+  User,
+  CheckCircle2,
+  Loader2,
   X,
   Package,
   Layers,
-  ClipboardList
+  ClipboardList,
+  Plus,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button';
-import { Input } from '@/shared/components/ui/Input';
 import { DonorSearchSelect } from './DonorSearchSelect';
-import { 
-  useCreateInKindDonation, 
-  useUpdateInKindDonation 
+import {
+  useCreateInKindDonation,
+  useUpdateInKindDonation,
 } from '../hooks/useInKindDonations';
 import type { InKindDonation } from '../types/inKindDonation.types';
 
-const donationSchema = z.object({
+const createDonationSchema = z.object({
   donorId: z.number({ required_error: 'يجب اختيار المتبرع' }),
   donationTypeName: z.string().min(2, 'نوع التبرع مطلوب'),
   quantity: z.number().min(1, 'الكمية يجب أن تكون 1 على الأقل'),
   description: z.string().optional(),
 });
 
-type DonationFormValues = z.infer<typeof donationSchema>;
+const editDonationSchema = z.object({
+  donationTypeName: z.string().min(2, 'نوع التبرع مطلوب'),
+  quantity: z.number().min(1, 'الكمية يجب أن تكون 1 على الأقل'),
+  description: z.string().optional(),
+});
+
+type CreateDonationFormValues = z.infer<typeof createDonationSchema>;
+type EditDonationFormValues = z.infer<typeof editDonationSchema>;
 
 interface InKindDonationFormProps {
   existingDonation?: InKindDonation;
@@ -39,54 +42,65 @@ interface InKindDonationFormProps {
   onCancel?: () => void;
 }
 
-export function InKindDonationForm({ 
-  existingDonation, 
-  onSuccess, 
-  onCancel 
+export function InKindDonationForm({
+  existingDonation,
+  onSuccess,
+  onCancel,
 }: InKindDonationFormProps) {
   const isEditMode = !!existingDonation;
   const createMutation = useCreateInKindDonation();
   const updateMutation = useUpdateInKindDonation();
 
-  const { 
-    register, 
-    handleSubmit, 
-    setValue, 
-    watch, 
-    formState: { errors, isSubmitting }, 
-    reset 
-  } = useForm<DonationFormValues>({
-    resolver: zodResolver(donationSchema),
+  const createForm = useForm<CreateDonationFormValues>({
+    resolver: zodResolver(createDonationSchema),
     defaultValues: {
-      donorId: existingDonation?.donorId,
+      donationTypeName: '',
+      quantity: 1,
+      description: '',
+    },
+  });
+
+  const editForm = useForm<EditDonationFormValues>({
+    resolver: zodResolver(editDonationSchema),
+    defaultValues: {
       donationTypeName: existingDonation?.donationTypeName || '',
       quantity: existingDonation?.quantity || 1,
       description: existingDonation?.description || '',
     },
   });
 
-  const selectedDonorId = watch('donorId');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = isEditMode ? editForm : createForm;
+
+  const selectedDonorId = isEditMode ? undefined : createForm.watch('donorId');
 
   useEffect(() => {
     if (existingDonation) {
-      reset({
-        donorId: existingDonation.donorId,
+      editForm.reset({
         donationTypeName: existingDonation.donationTypeName,
         quantity: existingDonation.quantity,
         description: existingDonation.description || '',
       });
     }
-  }, [existingDonation, reset]);
+  }, [existingDonation, editForm]);
 
-  const onSubmit = async (data: DonationFormValues) => {
+  const onSubmit = async (data: CreateDonationFormValues | EditDonationFormValues) => {
     try {
       if (isEditMode && existingDonation) {
         await updateMutation.mutateAsync({
           id: existingDonation.id,
-          payload: data,
+          payload: {
+            donationTypeName: data.donationTypeName,
+            quantity: data.quantity,
+            description: data.description,
+          },
         });
       } else {
-        await createMutation.mutateAsync(data);
+        const createData = data as CreateDonationFormValues;
+        await createMutation.mutateAsync(createData);
       }
       onSuccess?.();
     } catch (error) {
@@ -97,27 +111,35 @@ export function InKindDonationForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" dir="rtl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Donor Selection - Full Width in Mobile, Half in Desktop */}
         <div className="md:col-span-2 space-y-3">
           <label className="text-sm font-bold text-[#101727] font-[Cairo] flex items-center gap-2 pr-1">
             <User size={16} className="text-[#00549A]" />
-            اختيار المتبرع <span className="text-red-500">*</span>
+            {isEditMode ? 'المتبرع' : 'اختيار المتبرع'} {!isEditMode && <span className="text-red-500">*</span>}
           </label>
-          <div className="relative group">
-            <DonorSearchSelect
-              onSelect={(id) => setValue('donorId', id, { shouldValidate: true })}
-              selectedDonorId={selectedDonorId}
-              selectedDonorName={existingDonation?.donorName}
-            />
-            {errors.donorId && (
-              <p className="text-xs text-red-500 font-[Cairo] mt-1.5 pr-1 flex items-center gap-1">
-                <X size={12} /> {errors.donorId.message}
-              </p>
-            )}
-          </div>
+
+          {isEditMode ? (
+            <div className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50/50 font-[Cairo] text-sm text-[#101727] flex items-center gap-3">
+              <User size={18} className="text-[#00549A]" />
+              <span className="font-bold">{existingDonation?.donorName || '—'}</span>
+              {existingDonation?.donorId ? (
+                <span className="text-[#697282] text-xs">#{existingDonation.donorId}</span>
+              ) : null}
+            </div>
+          ) : (
+            <div className="relative group">
+              <DonorSearchSelect
+                onSelect={(id) => createForm.setValue('donorId', id, { shouldValidate: true })}
+                selectedDonorId={selectedDonorId}
+              />
+              {'donorId' in errors && errors.donorId && (
+                <p className="text-xs text-red-500 font-[Cairo] mt-1.5 pr-1 flex items-center gap-1">
+                  <X size={12} /> {errors.donorId.message}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Donation Type */}
         <div className="space-y-3">
           <label className="text-sm font-bold text-[#101727] font-[Cairo] flex items-center gap-2 pr-1">
             <Layers size={16} className="text-[#00549A]" />
@@ -139,7 +161,6 @@ export function InKindDonationForm({
           </div>
         </div>
 
-        {/* Quantity */}
         <div className="space-y-3">
           <label className="text-sm font-bold text-[#101727] font-[Cairo] flex items-center gap-2 pr-1">
             <Package size={16} className="text-[#00549A]" />
@@ -162,7 +183,6 @@ export function InKindDonationForm({
           </div>
         </div>
 
-        {/* Description - Full Width */}
         <div className="md:col-span-2 space-y-3">
           <label className="text-sm font-bold text-[#101727] font-[Cairo] flex items-center gap-2 pr-1">
             <ClipboardList size={16} className="text-[#00549A]" />
@@ -177,7 +197,6 @@ export function InKindDonationForm({
         </div>
       </div>
 
-      {/* Action Buttons */}
       <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-100">
         <Button
           type="button"

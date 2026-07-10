@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deliveryAreasApi, type CreateDeliveryAreaPayload, type UpdateDeliveryAreaPayload } from '@/api/services/deliveryAreasService';
+import { deliveryAreasApi, type CreateDeliveryAreaPayload, type UpdateDeliveryAreaPayload } from '@/shared/api/services/deliveryAreasService';
 import { toast } from 'react-toastify';
-import { getApiErrorMessage } from '@/api/errorUtils';
+import { getApiErrorMessage } from '@/shared/api/errorUtils';
 
 // ---------------------------------------------------------------------------
 // Query Keys

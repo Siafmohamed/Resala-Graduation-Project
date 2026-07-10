@@ -19,9 +19,8 @@ export interface CreateInKindDonationDTO {
 }
 
 export interface UpdateInKindDonationDTO {
-  donorId: number;
-  donationTypeName: string;
-  quantity: number;
+  donationTypeName?: string;
+  quantity?: number;
   description?: string;
 }
 
@@ -33,6 +32,11 @@ export interface InKindDonationResponse {
 export interface InKindDonationsListResponse {
   succeeded: boolean;
   data: InKindDonation[];
+}
+
+export interface DonorDropdownOption {
+  value: number;
+  label: string;
 }
 
 export interface DonorOption {

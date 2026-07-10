@@ -10,10 +10,10 @@ import {
   Clock, 
   TrendingUp
 } from 'lucide-react';
-import SearchBar from '../../PendingPayments/components/SearchBar';
+import SearchBar from '@/shared/components/ui/SearchBar';
 import EmergencyPaymentTabs from './EmergencyPaymentTabs';
 import EmergencyPaymentTable from './EmergencyPaymentTable';
-import Pagination from '../../PendingPayments/components/Pagination';
+import { Pagination } from '@/shared/components/ui/Pagination';
 import EmergencyPdfExportButton from './EmergencyPdfExportButton';
 import { useEmergencyPayments } from '../hooks/useEmergencyPayments';
 import { useVerifyEmergencyPayment } from '../hooks/useVerifyEmergencyPayment';

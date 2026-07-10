@@ -1,231 +1,230 @@
-import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { Heart, CheckCircle, ChevronRight, Gift } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Users, CreditCard, ArrowUpRight, Search, Loader2, Award } from 'lucide-react';
 
-import { DonorSearchBar } from './DonorSearchBar';
-import { DonorFilters } from './DonorFilters';
-import { DonorsTable } from './DonorsTable';
 import { Pagination } from '@/shared/components/ui/Pagination';
 import { ErrorMessage } from '@/shared/components/feedback/ErrorMessage';
 import { useDonors } from '../hooks/useDonors';
-import { DEFAULT_DONOR_FILTERS, DEFAULT_DONOR_SORT, useDonorStore } from '../store/donorSlice';
+import { useDonorStore } from '../store/donorSlice';
 import { Card, CardContent } from '@/shared/components/ui/Card';
-import type { PaymentStatus, SponsorshipType, DonorSortField, SortDirection } from '../types/donor.types';
+import { Modal } from '@/shared/components/ui/Modal';
+import { DirectOperationsModal } from './DirectOperationsModal';
+import type { FinancialAnalysisDonor } from '../types/donor.types';
+import { useFinancialSummary } from '@/features/authentication/hooks/useDashboard';
 
 export function DonorsPage() {
   const { data, isLoading, isError, error, refetch } = useDonors();
   const setTotal = useDonorStore((s) => s.setTotal);
-  const filters = useDonorStore((s) => s.filters);
-  const pagination = useDonorStore((s) => s.pagination);
-  const sort = useDonorStore((s) => s.sort);
   const setPage = useDonorStore((s) => s.setPage);
   const setSearch = useDonorStore((s) => s.setSearch);
-  const setPaymentStatus = useDonorStore((s) => s.setPaymentStatus);
-  const setSponsorshipType = useDonorStore((s) => s.setSponsorshipType);
-  const setSortState = useDonorStore((s) => s.setSortState);
-  
-  const location = useLocation();
+  const [localSearch, setLocalSearch] = useState('');
+  const [selectedDonor, setSelectedDonor] = useState<FinancialAnalysisDonor | null>(null);
+  const [showDirectOpsModal, setShowDirectOpsModal] = useState(false);
+  const [showMostActiveDonorsModal, setShowMostActiveDonorsModal] = useState(false);
+  const { data: financialSummary, isLoading: isFinancialSummaryLoading } = useFinancialSummary();
+
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const didHydrateFromUrl = useRef(false);
-  const [showSmartSponsorship, setShowSmartSponsorship] = useState(false);
-  const [newDonorName, setNewDonorName] = useState('');
 
   useEffect(() => {
-    if (data) setTotal(data.total);
+    if (data) setTotal(data.totalRows);
   }, [data, setTotal]);
 
+  // Debounce search
   useEffect(() => {
-    if (didHydrateFromUrl.current) {
-      return;
-    }
+    const timer = setTimeout(() => {
+      setSearch(localSearch);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [localSearch, setSearch]);
 
-    const search = searchParams.get('search') ?? '';
-    const paymentStatus = (searchParams.get('paymentStatus') ?? 'all') as PaymentStatus | 'all';
-    const sponsorshipType = (searchParams.get('sponsorshipType') ?? 'all') as SponsorshipType | 'all';
-    const page = Number(searchParams.get('page') ?? 1);
-    const sortField = (searchParams.get('sortField') ?? DEFAULT_DONOR_SORT.field) as DonorSortField;
-    const sortDirection = (searchParams.get('sortDirection') ?? DEFAULT_DONOR_SORT.direction) as SortDirection;
-
-    if (search && search !== filters.search) setSearch(search);
-    if (paymentStatus !== filters.paymentStatus) setPaymentStatus(paymentStatus);
-    if (sponsorshipType !== filters.sponsorshipType) setSponsorshipType(sponsorshipType);
-    if (page > 0 && page !== pagination.page) setPage(page);
-    if (sortField !== sort.field || sortDirection !== sort.direction) {
-      setSortState({ field: sortField, direction: sortDirection });
-    }
-
-    didHydrateFromUrl.current = true;
-  }, [
-    searchParams,
-    filters.search,
-    filters.paymentStatus,
-    filters.sponsorshipType,
-    pagination.page,
-    sort.field,
-    sort.direction,
-    setSearch,
-    setPaymentStatus,
-    setSponsorshipType,
-    setPage,
-    setSortState,
-  ]);
-
-  useEffect(() => {
-    if (!didHydrateFromUrl.current) {
-      return;
-    }
-
-    const nextParams = new URLSearchParams();
-
-    if (filters.search) nextParams.set('search', filters.search);
-    if (filters.paymentStatus !== DEFAULT_DONOR_FILTERS.paymentStatus) {
-      nextParams.set('paymentStatus', filters.paymentStatus);
-    }
-    if (filters.sponsorshipType !== DEFAULT_DONOR_FILTERS.sponsorshipType) {
-      nextParams.set('sponsorshipType', filters.sponsorshipType);
-    }
-    if (pagination.page > 1) nextParams.set('page', String(pagination.page));
-    if (sort.field !== DEFAULT_DONOR_SORT.field) nextParams.set('sortField', sort.field);
-    if (sort.direction !== DEFAULT_DONOR_SORT.direction) {
-      nextParams.set('sortDirection', sort.direction);
-    }
-
-    const nextQuery = nextParams.toString();
-    const currentQuery = searchParams.toString();
-    if (nextQuery !== currentQuery) {
-      setSearchParams(nextParams, { replace: true });
-    }
-  }, [filters, pagination.page, sort, searchParams, setSearchParams]);
-
-  useEffect(() => {
-    // Check if we just came from registration with smart sponsorship intent
-    if (location.state?.openSponsorship) {
-      setShowSmartSponsorship(true);
-      setNewDonorName(location.state.donorName || 'المتبرع الجديد');
-      // Clear state so it doesn't pop up again on refresh
-      navigate(location.pathname, { replace: true, state: {} });
-    }
-  }, [location, navigate]);
-
-  const totalPages = Math.ceil(
-    pagination.total / pagination.pageSize || 1
-  );
-
-  const handleCompleteSponsorship = () => {
-    toast.success('تم إعداد الكفالة الذكية بنجاح');
-    setShowSmartSponsorship(false);
-    refetch();
-  };
+  const totalPages = data ? Math.ceil(data.totalRows / (data.pageSize || 10)) : 1;
 
   if (isError && error) {
     return (
-      <div className="p-6">
-        <ErrorMessage error={error} retry={refetch} />
+      <div className="p-8">
+        <ErrorMessage error={error instanceof Error ? error.message : "حدث خطأ"} retry={refetch} />
       </div>
     );
   }
 
   return (
-    <div
-      className="flex w-full min-h-screen p-8 flex-col gap-6"
-      dir="rtl"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <DonorSearchBar />
-        <DonorFilters />
+    <div className="flex w-full min-h-screen p-8 flex-col gap-6 bg-[#f8fafc]" dir="rtl">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setShowMostActiveDonorsModal(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00549A] text-white font-[Cairo] font-bold text-sm hover:bg-[#004077] transition-colors"
+        >
+          <Award size={16} />
+          أكثر المتبرعين نشاطًا
+        </button>
       </div>
 
-      <p className="text-sm text-muted-foreground font-[Cairo]">
-        عرض {data?.donors.length ?? 0} من {pagination.total} متبرع
-      </p>
+      {/* Search & Filter */}
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8]" size={18} />
+          <input
+            type="text"
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            placeholder="ابحث باسم المتبرع أو رقم الهاتف أو البريد الإلكتروني..."
+            className="w-full pr-12 pl-4 py-3 rounded-xl bg-gray-50 border border-transparent hover:border-gray-200 focus:outline-none focus:ring-4 focus:ring-[#00549A]/5 focus:border-[#00549A] transition-all font-[Cairo] text-sm"
+          />
+        </div>
+      </div>
 
-      <DonorsTable donors={data?.donors ?? []} isLoading={isLoading} />
+      {/* Table */}
+      <Card className="border-none shadow-[0_10px_40px_rgba(0,0,0,0.03)] rounded-3xl overflow-hidden bg-white">
+        <CardContent className="p-0">
+          {/* Table Header */}
+          <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between bg-linear-to-r from-white to-gray-50/30">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-8 bg-[#00549A] rounded-full"></span>
+              <h3 className="font-[Cairo] font-black text-[#101727] text-lg">قائمة المتبرعين</h3>
+              <div className="mr-3 px-3 py-1 bg-[#00549A]/5 text-[#00549A] rounded-lg text-xs font-bold font-[Cairo]">
+                {data?.totalRows ?? 0} متبرع
+              </div>
+            </div>
+          </div>
 
-      {totalPages > 1 && (
-        <Pagination
-          currentPage={pagination.page}
-          totalPages={totalPages}
-          onPageChange={setPage}
+          {isLoading ? (
+            <div className="py-24 flex flex-col items-center justify-center gap-4">
+              <Loader2 className="w-12 h-12 text-[#00549A] animate-spin" />
+              <p className="font-[Cairo] text-gray-400 font-bold animate-pulse">جاري تحميل البيانات...</p>
+            </div>
+          ) : data?.items.length === 0 ? (
+            <div className="py-24 flex flex-col items-center justify-center text-center px-6">
+              <div className="w-24 h-24 rounded-[32px] bg-gray-50 flex items-center justify-center mb-6 text-gray-200">
+                <Users size={48} />
+              </div>
+              <h3 className="font-[Cairo] font-bold text-[#101727] text-xl mb-2">لا توجد نتائج</h3>
+              <p className="font-[Cairo] text-[#697282] max-w-sm">لم نجد أي متبرعين يطابقون بحثك.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm" dir="rtl">
+                <thead>
+                  <tr className="bg-gray-50/50 text-[#697282] font-[Cairo] text-xs font-bold uppercase tracking-wider">
+                    <th className="px-8 py-5 text-right">اسم المتبرع</th>
+                    <th className="px-6 py-5 text-right">رقم الهاتف</th>
+                    <th className="px-6 py-5 text-left">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {data?.items.map((donor) => (
+                    <tr key={donor.donorId} className="hover:bg-blue-50/30 transition-colors group">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-[#00549A] to-[#0081ED] flex items-center justify-center text-white font-black font-[Cairo] text-lg shadow-lg shadow-blue-500/10 group-hover:scale-110 transition-transform">
+                            {donor.fullName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-[Cairo] font-bold text-[#101727] text-sm group-hover:text-[#00549A] transition-colors">{donor.fullName}</span>
+                            <span className="text-[11px] text-gray-400 font-[Cairo] font-medium">{donor.email}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="font-[Cairo] text-[#697282] text-sm">{donor.phoneNumber}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex flex-wrap gap-2 items-center justify-start">
+                          <button
+                            onClick={() => navigate(`/donors/${donor.donorId}`)}
+                            className="px-4 py-2 rounded-xl border border-[#00549A]/20 text-[#00549A] font-bold font-[Cairo] text-xs hover:bg-[#00549A] hover:text-white hover:border-[#00549A] hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300 flex items-center gap-2"
+                          >
+                            عرض التفاصيل
+                            <ArrowUpRight size={14} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedDonor(donor);
+                              setShowDirectOpsModal(true);
+                            }}
+                            className="px-4 py-2 rounded-xl bg-[#00549A] text-white font-bold font-[Cairo] text-xs hover:bg-[#004077] hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300 flex items-center gap-2"
+                          >
+                            <CreditCard size={14} />
+                            الإجراءات
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!isLoading && totalPages > 1 && (
+            <div className="bg-gray-50/50">
+              <Pagination
+                currentPage={data?.pageIndex || 1}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Direct Operations Modal */}
+      {showDirectOpsModal && selectedDonor && (
+        <DirectOperationsModal
+          isOpen={showDirectOpsModal}
+          onClose={() => {
+            setShowDirectOpsModal(false);
+            setSelectedDonor(null);
+          }}
+          donor={{
+            id: selectedDonor.donorId,
+            fullName: selectedDonor.fullName,
+            phone: selectedDonor.phoneNumber
+          }}
         />
       )}
 
-      {/* Smart Sponsorship Modal */}
-      {showSmartSponsorship && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#00549A]/20 backdrop-blur-md animate-in fade-in duration-300">
-          <Card className="w-full max-w-2xl border-none shadow-[0px_20px_60px_rgba(0,0,0,0.1)] rounded-[40px] overflow-hidden bg-white animate-in zoom-in-95 duration-300">
-            <CardContent className="p-0">
-              <div className="relative">
-                {/* Decorative Background */}
-                <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-br from-[#00549A] to-[#0081ED] opacity-[0.03]" />
-                
-                <div className="p-10 flex flex-col items-center text-center gap-8 relative z-10">
-                  {/* Icon & Success Message */}
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-24 h-24 rounded-[32px] bg-[#E6F4EA] flex items-center justify-center text-[#1E7E34] shadow-inner">
-                      <CheckCircle size={48} strokeWidth={1.5} />
-                    </div>
-                    <div className="space-y-2">
-                      <h2 className="font-[Cairo] font-bold text-3xl text-[#101727]">تم تسجيل المتبرع!</h2>
-                      <p className="font-[Cairo] text-[#697282] text-lg">
-                        تمت إضافة <span className="text-[#00549A] font-bold">{newDonorName}</span> بنجاح.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Smart Options Grid */}
-                  <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-6 rounded-[24px] border-2 border-[#00549A]/10 bg-[#00549A]/[0.02] hover:bg-[#00549A]/[0.05] transition-all group cursor-pointer text-right flex flex-col gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-[#00549A] text-white flex items-center justify-center shadow-lg shadow-[#00549A]/20 group-hover:scale-110 transition-transform">
-                        <Heart size={24} />
-                      </div>
-                      <div className="space-y-1">
-                        <h4 className="font-[Cairo] font-bold text-[#101727]">كفالة أيتام ذكية</h4>
-                        <p className="font-[Cairo] text-xs text-[#697282] leading-relaxed">توزيع مبلغ الكفالة على الحالات الأكثر احتياجاً بشكل تلقائي.</p>
-                      </div>
-                      <button 
-                        onClick={handleCompleteSponsorship}
-                        className="mt-auto flex items-center gap-2 text-[#00549A] font-bold font-[Cairo] text-sm group-hover:gap-3 transition-all"
-                      >
-                        تفعيل الآن
-                        <ChevronRight size={16} />
-                      </button>
-                    </div>
-
-                    <div className="p-6 rounded-[24px] border-2 border-gray-100 bg-white hover:border-[#00549A]/20 transition-all group cursor-pointer text-right flex flex-col gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-[#EEF3FB] text-[#00549A] flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Gift size={24} />
-                      </div>
-                      <div className="space-y-1">
-                        <h4 className="font-[Cairo] font-bold text-[#101727]">كفالة طالب علم</h4>
-                        <p className="font-[Cairo] text-xs text-[#697282] leading-relaxed">دعم المسيرة التعليمية لطلاب المدارس والجامعات غير القادرين.</p>
-                      </div>
-                      <button 
-                        onClick={handleCompleteSponsorship}
-                        className="mt-auto flex items-center gap-2 text-[#697282] font-bold font-[Cairo] text-sm group-hover:text-[#00549A] transition-all"
-                      >
-                        اختيار هذا النوع
-                        <ChevronRight size={16} />
-                      </button>
+      {/* Most Active Donors Modal */}
+      <Modal
+        isOpen={showMostActiveDonorsModal}
+        onClose={() => setShowMostActiveDonorsModal(false)}
+        title="أكثر المتبرعين نشاطًا"
+        maxWidth="max-w-2xl"
+      >
+        <div className="p-6" dir="rtl">
+          {isFinancialSummaryLoading ? (
+            <div className="py-10 flex items-center justify-center gap-3 text-[#697282] font-[Cairo]">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span>جاري تحميل البيانات...</span>
+            </div>
+          ) : (financialSummary?.mostActiveDonors?.length ?? 0) === 0 ? (
+            <div className="py-10 text-center text-[#697282] font-[Cairo]">لا توجد بيانات متاحة</div>
+          ) : (
+            <div className="space-y-3">
+              {financialSummary?.mostActiveDonors?.map((donor, index) => (
+                <div
+                  key={donor.donorId}
+                  className="flex items-center justify-between p-4 rounded-xl border border-gray-100 bg-[#f8fafc]"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-8 h-8 rounded-full bg-[#00549A]/10 text-[#00549A] font-bold text-sm flex items-center justify-center">
+                      {index + 1}
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="font-[Cairo] font-bold text-[#101727] text-sm">{donor.fullName}</span>
+                      <span className="font-[Cairo] text-xs text-[#697282]">معرف المتبرع: #{donor.donorId}</span>
                     </div>
                   </div>
-
-                  {/* Footer Actions */}
-                  <div className="w-full flex items-center gap-4 pt-4 border-t border-gray-100">
-                    <button 
-                      onClick={() => setShowSmartSponsorship(false)}
-                      className="flex-1 py-4 rounded-2xl bg-[#F8FAFC] text-[#697282] font-bold font-[Cairo] hover:bg-gray-100 transition-all"
-                    >
-                      إغلاق، سأقوم بذلك لاحقاً
-                    </button>
-                  </div>
+                  <span className="font-[Cairo] font-bold text-[#00549A] text-sm">
+                    {donor.totalAmount.toLocaleString()} ج.م
+                  </span>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

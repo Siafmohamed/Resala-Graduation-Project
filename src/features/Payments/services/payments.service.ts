@@ -1,4 +1,4 @@
-import api from '@/api/axiosInstance';
+import api from '@/shared/api/axiosInstance';
 import { API_PATH_GUIDE } from '@/shared/api/apiPathGuide';
 import type { 
   UnifiedPayment, 

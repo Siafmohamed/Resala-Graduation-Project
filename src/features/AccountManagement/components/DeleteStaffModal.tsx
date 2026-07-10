@@ -1,11 +1,11 @@
 import { Trash2 } from 'lucide-react';
 import { useDeleteStaff } from '../hooks/useAccounts';
-import type { Account } from '../types/accountManagement.types';
+import type { StaffAccount } from '../types/accountManagement.types';
 
 interface DeleteStaffModalProps {
   isOpen: boolean;
   onClose: () => void;
-  staff: Account;
+  staff: StaffAccount;
 }
 
 export function DeleteStaffModal({ isOpen, onClose, staff }: DeleteStaffModalProps) {
@@ -36,7 +36,7 @@ export function DeleteStaffModal({ isOpen, onClose, staff }: DeleteStaffModalPro
           </div>
           <h2 className="text-xl font-bold text-[#101727] font-[Cairo] mb-2">تأكيد حذف الحساب</h2>
           <p className="text-[#697282] font-[Cairo] mb-6">
-            هل أنت متأكد من حذف حساب <span className="font-bold text-[#101727]">"{staff.fullName}"</span>؟ هذا الإجراء لا يمكن التراجع عنه.
+            هل أنت متأكد من حذف حساب <span className="font-bold text-[#101727]">"{staff.name}"</span>؟ هذا الإجراء لا يمكن التراجع عنه.
           </p>
           
           <div className="flex flex-col w-full gap-3">

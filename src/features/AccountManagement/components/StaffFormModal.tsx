@@ -3,15 +3,14 @@ import { useForm } from 'react-hook-form';
 import { X, User, Mail, Phone, Lock, Shield, ShieldCheck, UserCog, AlertCircle } from 'lucide-react';
 import { useCreateStaff, useUpdateStaff } from '../hooks/useAccounts';
 import { extractApiError } from '@/features/authentication/services/authService';
-import type { Account, CreateStaffPayload } from '../types/accountManagement.types';
-import { Role } from '@/features/authentication';
+import type { CreateStaffPayload, StaffAccount } from '../types/accountManagement.types';
 import { containsPotentialXss } from '@/shared/utils/security/sanitization';
 import logger from '@/shared/utils/logger';
 
 interface StaffFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  staff: Account | null;
+  staff: StaffAccount | null;
 }
 
 export function StaffFormModal({ isOpen, onClose, staff }: StaffFormModalProps) {
@@ -38,11 +37,11 @@ export function StaffFormModal({ isOpen, onClose, staff }: StaffFormModalProps) 
     setServerError(null);
     if (staff) {
       reset({
-        name: staff.fullName,
+        name: staff.name,
         username: staff.username,
         email: staff.email,
-        phoneNumber: staff.phoneNumber,
-        staffType: staff.role === Role.ADMIN ? 1 : 2,
+        phoneNumber: staff.phone,
+        staffType: staff.staffType.toLowerCase().includes('admin') || staff.staffType.includes('1') ? 1 : 2,
       });
     } else {
       reset({

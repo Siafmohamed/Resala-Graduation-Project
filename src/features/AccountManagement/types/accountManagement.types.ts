@@ -2,16 +2,36 @@ import type { Role } from '@/features/authentication/types/role.types';
 
 export type AccountStatus = 'active' | 'inactive' | 'locked';
 
-export interface Account {
-  id: string;
-  fullName: string;
-  email: string;
+// Match the API's actual field names:
+export interface StaffAccount {
+  id: number;
+  name: string;
   username: string;
-  role: Role;
-  status: AccountStatus;
-  phoneNumber?: string;
-  createdAt?: string;
-  lastLoginAt?: string;
+  email: string;
+  phone: string;
+  staffType: string;
+  accountStatus: string;
+  isActive: boolean;
+  createdOn: string;
+}
+
+// Paginated result shape from API's "value" property
+export interface StaffPagedResult {
+  totalRows: number;
+  pageSize: number;
+  pageIndex: number;
+  items: StaffAccount[];
+}
+
+// StaffListResponse is now the paginated result
+export type StaffListResponse = StaffPagedResult;
+
+export interface ApiResponse<T> {
+  isSuccess: boolean;
+  value: T;
+  message: string;
+  errorType: number;
+  errors: Record<string, string[]>;
 }
 
 export interface CreateStaffPayload {
@@ -24,6 +44,7 @@ export interface CreateStaffPayload {
 }
 
 export interface UpdateStaffPayload extends Partial<Omit<CreateStaffPayload, 'password'>> {
-  status?: AccountStatus;
+  accountStatus?: string;
+  isActive?: boolean;
 }
 

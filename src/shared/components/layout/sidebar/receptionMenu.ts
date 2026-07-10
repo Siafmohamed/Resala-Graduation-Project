@@ -3,7 +3,7 @@ import {
   Users, 
   UserPlus, 
   FileText, 
-  Bell,
+  MessageSquare,
   Settings,
   Package,
   HeartHandshake
@@ -48,10 +48,10 @@ export const receptionMenu: NavConfig = [
     roles: [Role.RECEPTIONIST],
   },
   {
-    id: 'notifications',
-    label: 'الإشعارات',
+    id: 'donor-chat',
+    label: 'مراسلة المتبرعين',
     path: '/notifications',
-    icon: Bell,
+    icon: MessageSquare,
     roles: [Role.RECEPTIONIST],
   },
   {

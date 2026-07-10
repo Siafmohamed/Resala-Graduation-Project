@@ -216,15 +216,10 @@ export const SidebarNavigationSection = (): React.ReactElement => {
                   `}
                 >
                   {Icon && (
-                    <div className="relative">
-                      <Icon
-                        className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-[#00549A]" : "text-[#697282] group-hover:text-[#00549A]"}`}
-                        strokeWidth={isActive ? 2 : 1.5}
-                      />
-                      {navItem.id === 'notifications' && (
-                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white shadow-sm" />
-                      )}
-                    </div>
+                    <Icon
+                      className={`w-5 h-5 flex-shrink-0 transition-colors ${isActive ? "text-[#00549A]" : "text-[#697282] group-hover:text-[#00549A]"}`}
+                      strokeWidth={isActive ? 2 : 1.5}
+                    />
                   )}
                   <span className={`font-[Cairo] font-bold text-[14px] leading-5 flex-1 text-right ${isActive ? "text-[#00549A]" : "text-[#495565]"}`}>
                     {navItem.label}

@@ -7,7 +7,7 @@ import {
   useSubscriptionSlots,
   useCreateSubscriptionSlot,
 } from '../hooks/useSubscriptionSlots';
-import type { CreateSlotPayload } from '@/api/services/subscriptionSlotsService';
+import type { CreateSlotPayload } from '@/shared/api/services/subscriptionSlotsService';
 
 export function SubscriptionSlotsManager() {
   const { data: slots = [], isLoading } = useSubscriptionSlots();

@@ -9,7 +9,7 @@ import { emergencyCasesService } from '../services/emergencyCases.service';
 import { emergencyQueryKeys } from './useEmergencyCases';
 import type { EmergencyCase } from '../types/emergencyCase.types';
 import { toast } from 'react-toastify';
-import { getApiErrorMessage, getApiErrorStatus } from '@/api/errorUtils';
+import { getApiErrorMessage, getApiErrorStatus } from '@/shared/api/errorUtils';
 
 export function useUpdateEmergencyCase() {
   const queryClient = useQueryClient();

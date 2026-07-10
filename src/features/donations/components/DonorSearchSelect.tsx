@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useDonorDropdown } from '../hooks/useInKindDonations';
 import { Search, User, ChevronDown, Loader2 } from 'lucide-react';
+import type { DonorDropdownOption } from '../types/inKindDonation.types';
 
 interface DonorSearchSelectProps {
   /** Called with the selected donor's numeric id and display name */
@@ -41,9 +42,8 @@ export function DonorSearchSelect({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-8 py-5 rounded-2xl bg-[#F8FAFC] font-[Cairo] text-base text-right transition-all focus:ring-4 focus:ring-[#00549A]/5 border-none ${
-          error ? 'ring-2 ring-red-500' : ''
-        }`}
+        className={`w-full flex items-center justify-between px-8 py-5 rounded-2xl bg-[#F8FAFC] font-[Cairo] text-base text-right transition-all focus:ring-4 focus:ring-[#00549A]/5 border-none ${error ? 'ring-2 ring-red-500' : ''
+          }`}
       >
         <div className="flex items-center gap-3 text-[#101727]">
           <User size={20} className="text-[#94a3b8]" />
@@ -85,19 +85,19 @@ export function DonorSearchSelect({
                 لا يوجد متبرعين بهذا الاسم
               </div>
             ) : (
-              donors.map((donor) => (
+              donors.map((donor: DonorDropdownOption) => (
                 <button
-                  key={donor.id}
+                  key={donor.value}
                   type="button"
                   onClick={() => {
-                    onSelect(donor.id, donor.name);
-                    setSearchTerm(donor.name);
+                    onSelect(donor.value, donor.label);
+                    setSearchTerm(donor.label);
                     setIsOpen(false);
                   }}
                   className="w-full flex flex-col items-start px-6 py-4 hover:bg-[#EEF3FB] transition-colors text-right"
                 >
-                  <span className="font-[Cairo] font-bold text-[#101727] text-sm">{donor.name}</span>
-                  <span className="font-[Cairo] text-[#697282] text-xs">#{donor.id}</span>
+                  <span className="font-[Cairo] font-bold text-[#101727] text-sm">{donor.label}</span>
+                  <span className="font-[Cairo] text-[#697282] text-xs">#{donor.value}</span>
                 </button>
               ))
             )}

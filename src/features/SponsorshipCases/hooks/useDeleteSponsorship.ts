@@ -3,7 +3,7 @@ import { sponsorshipService } from '../services/sponsorship.service';
 import { sponsorshipQueryKeys } from './useSponsorships';
 import type { Sponsorship } from '../types/sponsorship.types';
 import { toast } from 'react-toastify';
-import { getApiErrorMessage } from '@/api/errorUtils';
+import { getApiErrorMessage } from '@/shared/api/errorUtils';
 
 export function useDeleteSponsorship() {
   const queryClient = useQueryClient();

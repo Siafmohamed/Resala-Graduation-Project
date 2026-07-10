@@ -2,7 +2,7 @@ import {
   Edit2, 
   Trash2, 
 } from "lucide-react";
-import { URGENCY_LEVELS } from "@/api/services/sponsorshipService";
+import { URGENCY_LEVELS } from "@/shared/api/services/sponsorshipService";
 
 interface SponsorshipTableRowProps {
   item: any;

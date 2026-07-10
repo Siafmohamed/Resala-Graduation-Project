@@ -5,20 +5,16 @@ export const PAGE_METADATA: { [key: string]: { title: string; subtitle: string }
     subtitle: 'نظرة شاملة على أداء الجمعية',
   },
   '/sponsorships': {
-    title: 'إدارة الكفالات',
-    subtitle: 'تتبع وإدارة جميع الكفالات والبرامج المسجلة',
+    title: 'إدارة الكفالات والحالات',
+    subtitle: 'متابعة وتعديل برامج الكفالات العادية والحالات الحرجة في الوقت الفعلي',
   },
   '/account-management': {
     title: 'إدارة الحسابات',
     subtitle: 'إدارة صلاحيات الموظفين ومسؤولي النظام',
   },
-  '/donors': {
-    title: 'قائمة المتبرعين',
-    subtitle: 'عرض وتصفية جميع المتبرعين المسجلين',
-  },
   '/reports': {
     title: 'التقارير والإحصائيات',
-    subtitle: 'تحليلات مفصلة وإحصائيات شاملة',
+    subtitle: 'تقارير شاملة لدعم اتخاذ القرار',
   },
   '/settings': {
     title: 'إعدادات النظام',
@@ -30,29 +26,29 @@ export const PAGE_METADATA: { [key: string]: { title: string; subtitle: string }
     title: 'لوحة الاستقبال',
     subtitle: 'إدارة المتبرعين وتأكيد عمليات الدفع',
   },
+  '/donors': {
+    title: 'إدارة المتبرعين',
+    subtitle: 'عرض جميع المتبرعين والوصول إلى تفاصيلهم',
+  },
   '/register-new-donor': {
     title: 'إضافة متبرع جديد',
     subtitle: 'تسجيل بيانات متبرع جديد في النظام',
   },
   '/donations': {
     title: 'تسجيل تبرع عيني',
-    subtitle: 'توثيق التبرعات العينية المستلمة من المتبرعين',
+    subtitle: 'إضافة تبرع عيني جديد إلى النظام',
   },
   '/in-kind-donations': {
-    title: 'قائمة التبرعات العينية',
-    subtitle: 'عرض وإدارة جميع التبرعات العينية المسجلة',
+    title: 'التبرعات العينية',
+    subtitle: 'إدارة ومتابعة جميع التبرعات العينية المسجلة في النظام',
   },
-  '/donations/edit': {
-    title: 'تعديل التبرع',
-    subtitle: 'تحديث بيانات التبرع العيني المسجل',
-  },
-  '/donations/detail': {
-    title: 'تفاصيل التبرع',
-    subtitle: 'عرض بيانات التبرع العيني بالتفصيل',
+  '/in-kind-donations/edit': {
+    title: 'تعديل التبرع العيني',
+    subtitle: 'تعديل بيانات التبرع العيني المسجل',
   },
   '/notifications': {
-    title: 'الإشعارات',
-    subtitle: 'تنبيهات وتحديثات عمليات الدفع',
+    title: 'مركز المحادثات',
+    subtitle: 'تواصل احترافي مع المتبرعين — سريع، منظم، وآمن',
   },
   '/reception-settings': {
     title: 'الإعدادات',

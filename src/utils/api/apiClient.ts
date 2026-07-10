@@ -1,3 +1,3 @@
-import api from '@/api/axiosInstance';
+import api from '@/shared/api/axiosInstance';
 
 export const apiClient = api;

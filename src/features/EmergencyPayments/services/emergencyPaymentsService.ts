@@ -1,4 +1,4 @@
-import axiosInstance from '@/api/axiosInstance';
+import axiosInstance from '@/shared/api/axiosInstance';
 import { API_PATH_GUIDE } from '@/shared/api/apiPathGuide';
 import type { EmergencyPayment, EmergencyPaymentMethod, ApiResponse, DeliveryArea } from '../types/emergencyPayments.types';
 

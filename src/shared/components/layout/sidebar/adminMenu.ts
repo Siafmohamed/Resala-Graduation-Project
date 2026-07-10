@@ -9,7 +9,8 @@ import {
   Package,
   Bell,
   MessageSquare,
-  PieChart
+  PieChart,
+  Sparkles
 } from "lucide-react";
 import { Role } from '@/features/authentication';
 import type { NavConfig } from './types';
@@ -27,6 +28,13 @@ export const adminMenu: NavConfig = [
     label: "إدارة الكفالات",
     path: "/sponsorships",
     icon: HeartHandshake,
+    roles: [Role.ADMIN],
+  },
+  {
+    id: "in-kind-donations",
+    label: "التبرعات العينية",
+    path: "/in-kind-donations",
+    icon: Package,
     roles: [Role.ADMIN],
   },
   {
@@ -48,6 +56,13 @@ export const adminMenu: NavConfig = [
     label: "الشكاوى",
     path: "/complaints",
     icon: MessageSquare,
+    roles: [Role.ADMIN],
+  },
+  {
+    id: "success-stories",
+    label: "قصص نجاح",
+    path: "/success-stories",
+    icon: Sparkles,
     roles: [Role.ADMIN],
   },
   {

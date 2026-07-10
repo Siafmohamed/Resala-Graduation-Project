@@ -18,7 +18,7 @@ import {
   normalizeUrgencyLevel,
   URGENCY_LEVELS,
   type UrgencyLevel,
-} from "@/api/services/sponsorshipService";
+} from "@/shared/api/services/sponsorshipService";
 
 interface CaseFormModalProps {
   urgent: boolean;

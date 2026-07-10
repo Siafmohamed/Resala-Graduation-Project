@@ -1,4 +1,4 @@
-import api from '@/api/axiosInstance';
+import api from '@/shared/api/axiosInstance';
 import type { PendingPayment, DeliveryArea, ApiResponse, PaymentMethod } from '../types/pendingPayments.types';
 import { API_PATH_GUIDE } from '@/shared/api/apiPathGuide';
 

@@ -10,7 +10,7 @@ import {
   Clock,
   TrendingUp
 } from 'lucide-react';
-import SearchBar from './SearchBar';
+import SearchBar from '@/shared/components/ui/SearchBar';
 import PaymentTabs from './PaymentTabs';
 import PaymentTable from './PaymentTable';
 import Pagination from './Pagination';

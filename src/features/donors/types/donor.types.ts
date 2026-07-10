@@ -10,6 +10,7 @@ export type SponsorshipType = 'orphan' | 'family' | 'student' | 'medical' | 'oth
 
 /** Sponsorship duration */
 export type SponsorshipDuration = 'month' | '3months' | '6months' | 'year';
+export type SponsorshipCycle = 1 | 2 | 3 | 4; // 1: شهري, 2: ربع سنوي, 3: نص سنوي,4: سنوي
 
 /** Payment method */
 export type PaymentMethod = 'vodafone_cash' | 'branch' | 'bank_transfer' | 'instapay';
@@ -19,6 +20,119 @@ export type SortDirection = 'asc' | 'desc';
 
 /** Sortable columns */
 export type DonorSortField = 'name' | 'sponsorshipType' | 'duration' | 'paymentStatus' | 'formDate' | 'amount';
+
+// ============================================
+// New Financial Analysis Types
+// ============================================
+
+export interface PaymentHistoryItem {
+    month: string;
+    year: number;
+    status: string;
+}
+
+export interface Sponsorship {
+    sponsorshipId: number;
+    sponsorshipName: string;
+    monthlySubscriptionAmount: number;
+    startDate: string;
+    endDate: string;
+    isActive: boolean;
+    totalExpectedAmount: number;
+    totalPaidAmount: number;
+    remainingAmount: number;
+    paymentHistory: PaymentHistoryItem[];
+}
+
+export interface InKindDonation {
+    donationId: number;
+    donationName: string;
+    quantity: number;
+    donationDate: string;
+    donationCategory: string;
+}
+
+export interface EmergencyDonation {
+    emergencyCaseId: number;
+    emergencyCaseTitle: string;
+    donationAmount: number;
+    donationDate: string;
+    paymentStatus: string;
+}
+
+export interface DonorSummary {
+    totalSponsorshipsCount: number;
+    activeSponsorshipsCount: number;
+    totalPaidAmount: number;
+    totalRemainingAmount: number;
+    totalEmergencyDonations: number;
+    totalInKindDonationsCount: number;
+    totalInKindDonationsQuantity: number;
+    lastPaymentDate: string;
+    financialStatusName: string;
+    financialStatusColor: string;
+    financialStatusPriority: number;
+    paymentRegularityPercentage: number;
+}
+
+export interface FinancialAnalysisDonor {
+    donorId: number;
+    userId: string;
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    accountCreationDate: string;
+    roleName: string;
+}
+
+export interface FinancialAnalysisListResponse {
+    succeeded: boolean;
+    message: string;
+    data: {
+        totalRows: number;
+        pageSize: number;
+        pageIndex: number;
+        items: FinancialAnalysisDonor[];
+    };
+    errors?: string[];
+    statusCode: number;
+    meta?: string;
+}
+
+export interface FinancialAnalysisDetailResponse {
+    succeeded: boolean;
+    message: string;
+    data: {
+        donorId: number;
+        userId: string;
+        fullName: string;
+        email: string;
+        phoneNumber: string;
+        accountCreationDate: string;
+        roleName: string;
+        sponsorships: Sponsorship[];
+        inKindDonations: InKindDonation[];
+        emergencyDonations: EmergencyDonation[];
+        summary: DonorSummary;
+    };
+    errors?: string[];
+    statusCode: number;
+    meta?: string;
+}
+
+export interface SponsorshipProgram {
+    id: number;
+    name: string;
+    description: string;
+    imageUrl?: string;
+    imagePublicId?: string;
+    icon?: string;
+    iconPublicId?: string;
+    targetAmount: number;
+    collectedAmount: number;
+    isActive: boolean;
+    createdAt: string;
+}
 
 // ============================================
 // Entities
@@ -68,6 +182,11 @@ export interface DonorFiltersState {
     search: string;
     paymentStatus: PaymentStatus | 'all';
     sponsorshipType: SponsorshipType | 'all';
+    statusFilter?: string;
+    activeSubscriptions?: boolean;
+    delayedUsers?: boolean;
+    emergencyDonors?: boolean;
+    inKindDonors?: boolean;
 }
 
 // ============================================
@@ -127,6 +246,13 @@ export const SPONSORSHIP_DURATION_LABELS: Record<SponsorshipDuration, string> = 
     '3months': '3 أشهر',
     '6months': '6 أشهر',
     year: 'سنة',
+};
+
+export const SPONSORSHIP_CYCLE_LABELS: Record<SponsorshipCycle, string> = {
+    1: 'شهري',
+    2: 'ربع سنوي',
+    3: 'نص سنوي',
+    4: 'سنوي',
 };
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {

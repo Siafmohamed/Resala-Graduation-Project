@@ -3,7 +3,7 @@ import { useIsInitialized } from '@/features/authentication';
 import { urgentCasesService } from '../services/urgentCasesService';
 import type { CreateUrgentCasePayload, UpdateUrgentCasePayload, UrgentCase } from '../services/urgentCasesService';
 import { toast } from 'react-toastify';
-import { getApiErrorMessage } from '@/api/errorUtils';
+import { getApiErrorMessage } from '@/shared/api/errorUtils';
 import { CACHE_DURATIONS, QUERY_GC_TIME } from '@/shared/constants/cacheDurations';
 
 export const urgentCaseQueryKeys = {

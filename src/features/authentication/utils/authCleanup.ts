@@ -1,5 +1,5 @@
 import { tokenManager } from './tokenManager';
-import { clearAxiosInterceptorState } from '@/api/axiosInstance';
+import { clearAxiosInterceptorState } from '@/shared/api/axiosInstance';
 import type { SessionData } from '../types/auth.types';
 
 /**

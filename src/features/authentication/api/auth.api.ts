@@ -1,4 +1,4 @@
-import api from '@/api/axiosInstance';
+import api from '@/shared/api/axiosInstance';
 import { tokenManager } from '@/features/authentication/utils/tokenManager';
 import type {
   ApiError,
@@ -15,7 +15,7 @@ import type {
   StaffCreatePayload,
   StaffCreateResponse,
 } from '@/features/authentication/types/auth.types';
-import type { UnifiedApiError } from '@/api/axiosInstance';
+import type { UnifiedApiError } from '@/shared/api/axiosInstance';
 
 export const authApi = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {

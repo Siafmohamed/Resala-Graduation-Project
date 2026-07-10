@@ -2,7 +2,6 @@ import {
   DollarSign,
   Users,
   HeartHandshake,
-  TrendingUp,
 } from "lucide-react";
 import {
   LineChart,
@@ -32,8 +31,6 @@ const metricCards = [
     Icon: DollarSign,
     label: "إجمالي المبالغ المحصلة",
     value: "425,000 ج.م",
-    change: "+15.2%",
-    changeLabel: "عن الشهر الماضي",
     iconBg: "bg-[#dbeafe]",
     iconColor: "text-[#1d4ed8]",
   },
@@ -41,8 +38,6 @@ const metricCards = [
     Icon: HeartHandshake,
     label: "إجمالي الكفالات النشطة",
     value: "856",
-    change: "+8.3%",
-    changeLabel: "عن الشهر الماضي",
     iconBg: "bg-[#dcfce7]",
     iconColor: "text-[#15803d]",
   },
@@ -50,8 +45,6 @@ const metricCards = [
     Icon: Users,
     label: "إجمالي المتبرعين",
     value: "1,247",
-    change: "+12.5%",
-    changeLabel: "عن الشهر الماضي",
     iconBg: "bg-[#ede9fe]",
     iconColor: "text-[#7c3aed]",
   },
@@ -119,7 +112,7 @@ export const MetricsDashboardSection = () => {
 
       {/* ── Top 3 metric cards ── */}
       <div className="grid grid-cols-3 gap-6 w-full">
-        {metricCards.map(({ Icon, label, value, change, changeLabel, iconBg, iconColor }, i) => (
+        {metricCards.map(({ Icon, label, value, iconBg, iconColor }, i) => (
           <Card
             key={i}
             className="bg-[#ecf2f8] rounded-[10px] border border-solid border-[#e2e8f0] shadow-none"
@@ -127,7 +120,7 @@ export const MetricsDashboardSection = () => {
             <CardContent className="pt-[25px] pb-4 px-[25px]">
               <div className="flex items-start gap-4 w-full" dir="rtl">
                 {/* Icon badge */}
-                <div className={`w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center ${iconBg}`}>
+                <div className={`w-12 h-12 shrink-0 rounded-xl flex items-center justify-center ${iconBg}`}>
                   <Icon className={`w-6 h-6 ${iconColor}`} strokeWidth={1.75} />
                 </div>
 
@@ -139,15 +132,6 @@ export const MetricsDashboardSection = () => {
                   <span className="font-[Cairo] font-bold text-[#101727] text-2xl leading-8 whitespace-nowrap">
                     {value}
                   </span>
-                  <div className="flex items-center gap-1">
-                    <span className="font-[Cairo] font-normal text-[#697282] text-sm leading-5">
-                      {changeLabel}
-                    </span>
-                    <span className="font-[Cairo] font-normal text-[#00549a] text-sm leading-5 font-semibold">
-                      {change}
-                    </span>
-                    <TrendingUp className="w-3.5 h-3.5 text-[#00549a]" strokeWidth={2} />
-                  </div>
                 </div>
               </div>
             </CardContent>

@@ -4,7 +4,7 @@ import { UrgencyLevel } from '../../types/urgency-level.types';
 import type { UrgentCase } from '../../types/urgent-case.types';
 import { UrgencyLevelSelector } from './UrgencyLevelSelector';
 import { useUpdateUrgentCase, useUrgentCase } from '../../hooks/useUrgentCases';
-import { normalizeUrgencyLevel } from '@/api/services/sponsorshipService';
+import { normalizeUrgencyLevel } from '@/shared/api/services/sponsorshipService';
 
 interface EditUrgentCaseModalProps {
   /**

@@ -1,2 +1,2 @@
-export { accountManagementService } from '@/api/services/accountManagementService';
+export { accountManagementService } from '@/shared/api/services/accountManagementService';
 
