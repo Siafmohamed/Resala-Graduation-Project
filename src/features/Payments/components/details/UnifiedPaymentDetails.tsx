@@ -228,13 +228,26 @@ export function UnifiedPaymentDetails({ payment, paymentType, onBack }: UnifiedP
                   <span className="font-bold text-[#101727] font-[Cairo] text-sm font-mono">{payment.phone}</span>
                 </div>
               </div>
-              {paymentType === 'subscription' && payment.subscriptionId && (
-                <div className="flex items-center gap-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
-                  <div className="p-2 rounded-xl bg-white text-[#00549A] shadow-sm"><Info size={18} /></div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-[#00549A] font-[Cairo]">رقم الاشتراك</span>
-                    <span className="font-bold text-[#00549A] font-[Cairo] text-sm">#{payment.subscriptionId}</span>
-                  </div>
+              {paymentType === 'subscription' && (
+                <div className="flex flex-col gap-4">
+                  {payment.sponsorshipTitle && (
+                    <div className="flex items-center gap-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
+                      <div className="p-2 rounded-xl bg-white text-[#00549A] shadow-sm"><Info size={18} /></div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-[#00549A] font-[Cairo]">برنامج الكفالة</span>
+                        <span className="font-bold text-[#00549A] font-[Cairo] text-sm">{payment.sponsorshipTitle}</span>
+                      </div>
+                    </div>
+                  )}
+                  {payment.subscriptionId && (
+                    <div className="flex items-center gap-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
+                      <div className="p-2 rounded-xl bg-white text-[#00549A] shadow-sm"><Info size={18} /></div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-[#00549A] font-[Cairo]">رقم الاشتراك</span>
+                        <span className="font-bold text-[#00549A] font-[Cairo] text-sm">#{payment.subscriptionId}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>

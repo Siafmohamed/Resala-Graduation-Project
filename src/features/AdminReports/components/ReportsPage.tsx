@@ -18,11 +18,9 @@ import {
 } from '@/shared/components/ui/Card';
 import {
   useMonthlyDonations,
-  useSponsorshipStats,
   useFinancialSummary,
 } from '@/features/authentication/hooks/useDashboard';
 import RevenueChart from '@/features/authentication/components/charts/RevenueChart';
-import SponsorshipDistributionChart from '@/features/authentication/components/charts/SponsorshipDistributionChart';
 import { downloadFile } from '@/shared/utils/downloadFile';
 import { generateExcelFile, generatePDFFile } from '../utils/generateReportFiles';
 
@@ -126,7 +124,7 @@ const KPICards = ({ data }: { data: KPIData[] }) => (
 // ── Component ─────────────────────────────────────────────────────
 
 export function ReportsPage() {
-  const [period, setPeriod] = useState<number>(2); // Default to last month
+  const [period, setPeriod] = useState<number>(2); // Controls monthly donations chart
   const [loadingStates, setLoadingStates] = useState<Record<ExportKey, boolean>>({
     sponsorship: false,
     monthly: false,
@@ -139,12 +137,6 @@ export function ReportsPage() {
     isLoading: isMonthlyLoading,
     isError: isMonthlyError,
   } = useMonthlyDonations({ period });
-
-  const {
-    data: sponsorshipStats,
-    isLoading: isSponsorshipLoading,
-    isError: isSponsorshipError,
-  } = useSponsorshipStats({ period });
 
   const {
     data: financialSummary,
@@ -215,31 +207,10 @@ export function ReportsPage() {
     }));
   }, [monthlyDonations]);
 
-  // Memoize sponsorship chart data
-  const sponsorshipChartData = useMemo(() => {
-    if (!sponsorshipStats?.topSponsorships) {
-      return [];
-    }
-    return sponsorshipStats.topSponsorships.map((s) => ({
-      name: s.title,
-      value: s.collectedAmount,
-    }));
-  }, [sponsorshipStats]);
 
   const generateSponsorshipReport = useCallback(() => {
-    if (!sponsorshipStats?.topSponsorships?.length) {
-      throw new Error('لا توجد بيانات لتحميل التقرير');
-    }
-
-    const data = sponsorshipStats.topSponsorships.map((item) => ({
-      'العنوان': item.title,
-      'المبلغ المحصّل': item.collectedAmount,
-      'المبلغ المستهدف': item.targetAmount,
-      'عدد المتبرعين': item.donorsCount,
-    }));
-
-    generateExcelFile(data, 'تقرير أداء الكفالات.xlsx');
-  }, [sponsorshipStats]);
+    throw new Error('لا توجد بيانات لتحميل التقرير');
+  }, []);
 
   const generateMonthlyReport = useCallback(() => {
     if (!monthlyDonations?.length) {
@@ -343,7 +314,9 @@ export function ReportsPage() {
     );
   };
 
-  if (isFinancialLoading || isMonthlyLoading || isSponsorshipLoading) {
+  // Only block the full page on the initial load of non-chart data.
+  // isSponsorshipLoading is handled inline by the chart's own loading overlay.
+  if (isFinancialLoading || isMonthlyLoading) {
     return (
       <div className="flex flex-col gap-8 p-8 bg-[#f8fafc] min-h-screen" dir="rtl">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -353,7 +326,7 @@ export function ReportsPage() {
     );
   }
 
-  if (isFinancialError || isMonthlyError || isSponsorshipError) {
+  if (isFinancialError || isMonthlyError) {
     return (
       <div className="flex flex-col gap-8 p-8 bg-[#f8fafc] min-h-screen" dir="rtl">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -362,7 +335,7 @@ export function ReportsPage() {
           </p>
         </div>
       </div>
-      );
+    );
   }
 
   return (
@@ -401,8 +374,6 @@ export function ReportsPage() {
       {/* Line Chart */}
       <RevenueChart data={monthlyChartData} />
 
-      {/* Sponsorship performance chart */}
-      <SponsorshipDistributionChart data={sponsorshipChartData} />
 
       {/* Export Reports Section */}
       <div className="flex flex-col gap-4">

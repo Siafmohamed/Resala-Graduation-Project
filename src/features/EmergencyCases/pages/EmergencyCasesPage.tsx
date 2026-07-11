@@ -4,17 +4,21 @@ import {
   LayoutGrid, 
   List, 
   AlertCircle,
-  Loader2
+  Loader2,
+  Flame,
+  Clock
 } from "lucide-react";
 import { useEmergencyManagementLogic } from "../hooks/useEmergencyManagementLogic";
 import { EmergencyCard } from "../components/list/EmergencyCard";
 import { EmergencyTableRow } from "../components/list/EmergencyTableRow";
 import { EmergencyFormModal } from "../components/modals/EmergencyFormModal";
 import { Card } from "@/shared/components/ui/Card";
+import { URGENCY_LEVELS } from "@/shared/api/services/sponsorshipService";
 
 export default function EmergencyCasesPage() {
   const {
     search, setSearch,
+    urgencyFilter, setUrgencyFilter,
     viewMode, setViewMode,
     modal, setModal,
     selectedCase, setSelectedCase,
@@ -54,6 +58,29 @@ export default function EmergencyCasesPage() {
           <button onClick={() => setViewMode("grid")} className={`p-2 rounded-lg ${viewMode === "grid" ? "bg-red-50 text-[#F04930]" : "text-gray-400"}`}><LayoutGrid size={20} /></button>
           <button onClick={() => setViewMode("table")} className={`p-2 rounded-lg ${viewMode === "table" ? "bg-red-50 text-[#F04930]" : "text-gray-400"}`}><List size={20} /></button>
         </div>
+      </div>
+
+      {/* Urgency filter pills */}
+      <div className="flex items-center gap-3 flex-wrap">
+        {[
+          { key: "all", label: "الكل", icon: null, activeClass: "bg-[#F04930] text-white shadow-lg shadow-[#F04930]/20" },
+          { key: String(URGENCY_LEVELS.NORMAL),  label: "عادي",      icon: <AlertCircle size={14} />, activeClass: "bg-blue-500 text-white shadow-lg shadow-blue-500/20" },
+          { key: String(URGENCY_LEVELS.URGENT),  label: "حرجة",      icon: <Clock size={14} />,       activeClass: "bg-orange-500 text-white shadow-lg shadow-orange-500/20" },
+          { key: String(URGENCY_LEVELS.CRITICAL), label: "حرجة جداً", icon: <Flame size={14} />,       activeClass: "bg-red-600 text-white shadow-lg shadow-red-600/20" },
+        ].map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setUrgencyFilter(f.key)}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold font-[Cairo] transition-all duration-200 border ${
+              urgencyFilter === f.key
+                ? f.activeClass + ' border-transparent'
+                : 'bg-white border-gray-100 text-[#697282] hover:border-gray-200 hover:text-[#101727]'
+            }`}
+          >
+            {f.icon}
+            {f.label}
+          </button>
+        ))}
       </div>
 
       {isLoading ? (

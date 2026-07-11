@@ -484,12 +484,12 @@ export const emergencyApi = {
     }
     if (payload.isActive !== undefined) formData.append('IsActive', String(payload.isActive));
     
-    // Handle image
+    // Handle image — API spec only accepts 'Attachment' (binary file).
+    // ImageUrl string is NOT a documented field on PUT; only send when a new file is provided.
     if ('imageFile' in payload && payload.imageFile) {
       formData.append('Attachment', payload.imageFile);
-    } else if (payload.imageUrl !== undefined && payload.imageUrl.trim()) {
-      formData.append('ImageUrl', payload.imageUrl.trim());
     }
+    // If no new file is provided, the backend should retain the existing image (no field sent).
 
     const raw = unwrapData<RawEmergencyCase>(
       await api.put(`/v1/emergency-cases/${id}`, formData),

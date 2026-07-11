@@ -90,7 +90,6 @@ export default function SponsorshipPage() {
               <tr>
                 <th className="px-6 py-4 font-bold font-[Cairo] text-sm">البرنامج</th>
                 <th className="px-6 py-4 font-bold font-[Cairo] text-sm text-center">النوع</th>
-                <th className="px-6 py-4 font-bold font-[Cairo] text-sm text-center">الحالة</th>
                 <th className="px-6 py-4 font-bold font-[Cairo] text-sm text-center">المستهدف</th>
                 <th className="px-6 py-4 font-bold font-[Cairo] text-sm text-center">المحصل</th>
                 <th className="px-6 py-4 font-bold font-[Cairo] text-sm text-center">الإجراءات</th>

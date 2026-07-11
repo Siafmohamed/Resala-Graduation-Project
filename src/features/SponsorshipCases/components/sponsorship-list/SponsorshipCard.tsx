@@ -124,55 +124,53 @@ export function SponsorshipCard({ item, onEdit, onDelete }: SponsorshipCardProps
           {item.description || "لا يوجد وصف متوفر لهذه الحالة حالياً. يتم تحديث البيانات دورياً لضمان الدقة."}
         </p>
 
-        {/* Financial Progress Section */}
-        <div className="space-y-4 p-5 bg-gray-50/50 rounded-3xl border border-gray-100/50">
-          {/* Amount Details */}
-          <div className="flex justify-between items-center text-sm">
-            <div className="flex flex-col">
-              <span className="text-[#697282] font-[Cairo] text-[10px] uppercase tracking-wider mb-1">المبلغ المحصل</span>
-              <span className="font-bold text-[#101727] font-[Cairo] text-base">{(item.collectedAmount ?? 0).toLocaleString('ar-EG')} <span className="text-[10px] font-medium text-gray-500">ج.م</span></span>
-            </div>
-            <div className="flex flex-col items-end">
-              <span className="text-[#697282] font-[Cairo] text-[10px] uppercase tracking-wider mb-1">المبلغ المستهدف</span>
-              <span className={`font-bold font-[Cairo] text-base ${item.caseType === 'urgent' ? 'text-red-500' : 'text-[#00549A]'}`}>{(item.targetAmount ?? 0).toLocaleString('ar-EG')} <span className="text-[10px] font-medium text-gray-500">ج.م</span></span>
-            </div>
-          </div>
-
-          {/* Elegant Progress Bar */}
-          <div className="space-y-3">
-            <div className="h-2.5 bg-gray-200/50 rounded-full overflow-hidden p-[2px]">
-              <div 
-                className={`h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden
-                  ${item.caseType === 'urgent' 
-                    ? 'bg-gradient-to-r from-red-600 to-orange-500' 
-                    : 'bg-gradient-to-r from-[#00549A] to-blue-400'}`} 
-                style={{ width: `${Math.min(((item.collectedAmount ?? 0) / (item.targetAmount || 1)) * 100, 100)}%` }} 
-              >
-                {/* Glossy shine effect on progress bar */}
-                <div className="absolute inset-0 bg-white/20 skew-x-12 translate-x-[-100%] animate-[shimmer_3s_infinite]" />
+        {/* Financial Progress Section — shown for urgent cases only */}
+        {item.caseType === 'urgent' && (
+          <div className="space-y-4 p-5 bg-gray-50/50 rounded-3xl border border-gray-100/50">
+            {/* Amount Details */}
+            <div className="flex justify-between items-center text-sm">
+              <div className="flex flex-col">
+                <span className="text-[#697282] font-[Cairo] text-[10px] uppercase tracking-wider mb-1">المبلغ المحصل</span>
+                <span className="font-bold text-[#101727] font-[Cairo] text-base">{(item.collectedAmount ?? 0).toLocaleString('ar-EG')} <span className="text-[10px] font-medium text-gray-500">ج.م</span></span>
+              </div>
+              <div className="flex flex-col items-end">
+                <span className="text-[#697282] font-[Cairo] text-[10px] uppercase tracking-wider mb-1">المبلغ المستهدف</span>
+                <span className="font-bold text-red-500 font-[Cairo] text-base">{(item.targetAmount ?? 0).toLocaleString('ar-EG')} <span className="text-[10px] font-medium text-gray-500">ج.م</span></span>
               </div>
             </div>
-            
-            {/* Progress Stats */}
-            <div className="flex justify-between items-center text-[11px] font-bold font-[Cairo]">
-              <div className="flex items-center gap-1.5 text-[#00549A]">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#00549A] animate-pulse" />
-                <span>{Math.min(((item.collectedAmount ?? 0) / (item.targetAmount || 1)) * 100, 100).toFixed(1)}% مكتمل</span>
+
+            {/* Elegant Progress Bar */}
+            <div className="space-y-3">
+              <div className="h-2.5 bg-gray-200/50 rounded-full overflow-hidden p-[2px]">
+                <div 
+                  className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden bg-gradient-to-r from-red-600 to-orange-500"
+                  style={{ width: `${Math.min(((item.collectedAmount ?? 0) / (item.targetAmount || 1)) * 100, 100)}%` }} 
+                >
+                  <div className="absolute inset-0 bg-white/20 skew-x-12 translate-x-[-100%] animate-[shimmer_3s_infinite]" />
+                </div>
               </div>
-              {(item.targetAmount ?? 0) > (item.collectedAmount ?? 0) ? (
-                <span className="text-gray-500">المتبقي: {((item.targetAmount ?? 0) - (item.collectedAmount ?? 0)).toLocaleString('ar-EG')} ج.م</span>
-              ) : (
-                <span className="text-green-600 flex items-center gap-1">
-                  <CheckCircle2 size={12} />
-                  تم اكتمال الهدف
-                </span>
-              )}
+              
+              {/* Progress Stats */}
+              <div className="flex justify-between items-center text-[11px] font-bold font-[Cairo]">
+                <div className="flex items-center gap-1.5 text-[#00549A]">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#00549A] animate-pulse" />
+                  <span>{Math.min(((item.collectedAmount ?? 0) / (item.targetAmount || 1)) * 100, 100).toFixed(1)}% مكتمل</span>
+                </div>
+                {(item.targetAmount ?? 0) > (item.collectedAmount ?? 0) ? (
+                  <span className="text-gray-500">المتبقي: {((item.targetAmount ?? 0) - (item.collectedAmount ?? 0)).toLocaleString('ar-EG')} ج.م</span>
+                ) : (
+                  <span className="text-green-600 flex items-center gap-1">
+                    <CheckCircle2 size={12} />
+                    تم اكتمال الهدف
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Completion Status Badge */}
-        {((item.collectedAmount ?? 0) >= (item.targetAmount ?? 0)) && (
+        {/* Completion Status Badge — urgent cases only */}
+        {item.caseType === 'urgent' && ((item.collectedAmount ?? 0) >= (item.targetAmount ?? 0)) && (
           <div className="mt-5 p-3.5 bg-green-50/80 backdrop-blur-sm rounded-2xl flex items-center justify-center gap-2 border border-green-100 animate-in fade-in slide-in-from-bottom-2">
             <CheckCircle2 size={18} className="text-green-600" />
             <span className="text-[12px] font-bold text-green-700 font-[Cairo]">تم تحقيق الهدف المالي بنجاح</span>

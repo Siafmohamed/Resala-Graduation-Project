@@ -2,6 +2,12 @@ import { HubConnection, HubConnectionBuilder, HubConnectionState } from '@micros
 import { tokenManager } from '@/features/authentication/utils/tokenManager';
 import type { SupportChatMessage } from '../types/support';
 
+const getBaseURL = () => {
+  const envBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envBaseUrl) return envBaseUrl;
+  return '/api';
+};
+
 export type ConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'disconnected' | 'error';
 
 class SupportSignalRService {
@@ -44,8 +50,26 @@ class SupportSignalRService {
     try {
       this.setStatus('connecting');
 
+      const baseUrl = getBaseURL();
+      let hubUrl: string;
+      
+      // If baseUrl is '/api', use '/hubs/support' (local dev without env var)
+      if (baseUrl === '/api') {
+        hubUrl = '/hubs/support';
+      } else {
+        // If baseUrl ends with '/api', remove it to get to the root
+        let normalizedBaseUrl = baseUrl.endsWith('/api') 
+          ? baseUrl.slice(0, -4) 
+          : baseUrl;
+        // Remove trailing slash if present
+        normalizedBaseUrl = normalizedBaseUrl.endsWith('/') 
+          ? normalizedBaseUrl.slice(0, -1) 
+          : normalizedBaseUrl;
+        hubUrl = `${normalizedBaseUrl}/hubs/support`;
+      }
+
       const connection = new HubConnectionBuilder()
-        .withUrl(`/hubs/support?access_token=${token}`)
+        .withUrl(`${hubUrl}?access_token=${token}`)
         .withAutomaticReconnect()
         .build();
 

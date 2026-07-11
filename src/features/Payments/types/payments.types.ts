@@ -22,6 +22,7 @@ export interface BasePayment {
 
 export interface SubscriptionPayment extends BasePayment {
   subscriptionId: number | null;
+  sponsorshipTitle: string | null;
 }
 
 export interface EmergencyPayment extends BasePayment {

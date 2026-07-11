@@ -7,8 +7,7 @@ import {
   DollarSign,
   Upload,
   Image as ImageIcon,
-  Loader2,
-  Shield
+  Loader2
 } from "lucide-react";
 import { CheckCircle2 } from "lucide-react";
 import type { Sponsorship } from "../../types/sponsorship.types";
@@ -39,7 +38,6 @@ export function SponsorshipFormModal({
   const [description, setDescription] = useState(initialData?.description || "");
   const [targetAmount, setTargetAmount] = useState(initialData?.targetAmount || 0);
   const [collectedAmount, setCollectedAmount] = useState(initialData?.collectedAmount || 0);
-  const [isActive, setIsActive] = useState(initialData?.isActive ?? true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(initialData?.imageUrl || null);
   const [iconFile, setIconFile] = useState<File | null>(null);
@@ -55,7 +53,6 @@ export function SponsorshipFormModal({
       setDescription(initialData.description || "");
       setTargetAmount(initialData.targetAmount || 0);
       setCollectedAmount(initialData.collectedAmount || 0);
-      setIsActive(initialData.isActive ?? true);
       setImagePreview(initialData.imageUrl || null);
       setIconPreview(initialData.icon || null);
       setImageFile(null);
@@ -68,7 +65,6 @@ export function SponsorshipFormModal({
     setDescription("");
     setTargetAmount(0);
     setCollectedAmount(0);
-    setIsActive(true);
     setImagePreview(null);
     setIconPreview(null);
     setImageFile(null);
@@ -90,7 +86,6 @@ export function SponsorshipFormModal({
     formData.append('Name', name.trim());
     formData.append('Description', description.trim());
     formData.append('TargetAmount', String(targetAmount));
-    formData.append('IsActive', String(isActive));
     formData.append('CollectedAmount', String(collectedAmount));
 
     if (imageFile) formData.append('ImageFile', imageFile);
@@ -180,22 +175,6 @@ export function SponsorshipFormModal({
                     />
                     <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs group-focus-within:text-[#00549A] transition-colors">ج.م</span>
                   </div>
-                </div>
-
-                <div className="p-5 bg-gradient-to-br from-blue-50/50 to-cyan-50/50 rounded-2xl border border-blue-100 flex items-center gap-4 group hover:shadow-md transition-all">
-                  <div className={`p-3 rounded-xl transition-all ${isActive ? 'bg-[#00549A] text-white shadow-lg shadow-[#00549A]/20' : 'bg-gray-200 text-gray-400'}`}>
-                    <Shield size={20} />
-                  </div>
-                  <div className="flex-1">
-                    <span className="text-sm font-bold text-[#101727] font-[Cairo] block">حالة البرنامج</span>
-                    <span className="text-[11px] text-[#697282] font-[Cairo]">{isActive ? "نشط ويظهر للمتبرعين" : "غير نشط حالياً"}</span>
-                  </div>
-                  <button
-                    onClick={() => setIsActive(!isActive)}
-                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 focus:outline-none ${isActive ? 'bg-[#00549A]' : 'bg-gray-300'}`}
-                  >
-                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-300 ${isActive ? 'translate-x-6' : 'translate-x-1'}`} />
-                  </button>
                 </div>
               </div>
 

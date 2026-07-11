@@ -186,7 +186,6 @@ export default function SponsorshipsAPIManagement() {
                 <tr className="bg-[#f8fafc] border-b border-gray-100">
                   <th className="px-6 py-4 font-bold text-[#495565] font-[Cairo] text-sm">الحالة / البرنامج</th>
                   <th className="px-6 py-4 font-bold text-[#495565] font-[Cairo] text-sm text-center">النوع</th>
-                  <th className="px-6 py-4 font-bold text-[#495565] font-[Cairo] text-sm">الحالة</th>
                   <th className="px-6 py-4 font-bold text-[#495565] font-[Cairo] text-sm">المستهدف</th>
                   <th className="px-6 py-4 font-bold text-[#495565] font-[Cairo] text-sm">المحصل</th>
                   <th className="px-6 py-4 font-bold text-[#495565] font-[Cairo] text-sm">تاريخ البدء</th>

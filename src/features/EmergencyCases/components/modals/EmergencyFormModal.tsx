@@ -44,11 +44,10 @@ export function EmergencyFormModal({
   const [title, setTitle] = useState(initialData?.title || "");
   const [description, setDescription] = useState(initialData?.description || "");
   const [targetAmount, setTargetAmount] = useState(initialData?.targetAmount || initialData?.requiredAmount || 0);
-  const [collectedAmount, setCollectedAmount] = useState(initialData?.collectedAmount || 0);
   const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel>(normalizeUrgencyLevel(initialData?.urgencyLevel) || URGENCY_LEVELS.URGENT);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(initialData?.imageUrl || null);
-  const [draggingImg, setDraggingImg] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const imgRef = useRef<HTMLInputElement>(null);
@@ -58,9 +57,9 @@ export function EmergencyFormModal({
       setTitle(initialData.title || "");
       setDescription(initialData.description || "");
       setTargetAmount(initialData.targetAmount || initialData.requiredAmount || 0);
-      setCollectedAmount(initialData.collectedAmount || 0);
       setUrgencyLevel(normalizeUrgencyLevel(initialData.urgencyLevel));
       setImagePreview(initialData.imageUrl || null);
+      setImageFile(null);
     }
   }, [initialData]);
 
@@ -80,6 +79,8 @@ export function EmergencyFormModal({
     formData.append('Description', description.trim());
     formData.append('UrgencyLevel', String(urgencyLevel));
     formData.append('RequiredAmount', String(targetAmount));
+    // Ensure new cases are always created as active
+    if (mode === 'add') formData.append('IsActive', 'true');
     if (imageFile) formData.append('Attachment', imageFile);
     onSave(formData);
   };
@@ -91,6 +92,30 @@ export function EmergencyFormModal({
       setImageFile(file);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      handleImageSelect(file);
+    } else if (file) {
+      setError('يرجى اختيار ملف صورة صالح (jpg, png, webp...).');
+    }
   };
 
   return (
@@ -194,9 +219,22 @@ export function EmergencyFormModal({
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-[#101727] font-[Cairo] pr-1 uppercase tracking-wider">صورة الحالة</label>
                   <div 
-                    className="group relative border-2 border-dashed border-gray-200 rounded-[24px] h-32 flex flex-col items-center justify-center cursor-pointer hover:border-[#F04930] hover:bg-red-50/30 transition-all overflow-hidden"
+                    className={`group relative border-2 border-dashed rounded-[24px] h-32 flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden ${
+                      isDragging
+                        ? 'border-[#F04930] bg-red-50/60 scale-[1.02]'
+                        : 'border-gray-200 hover:border-[#F04930] hover:bg-red-50/30'
+                    }`}
                     onClick={() => imgRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                   >
+                    {isDragging && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-red-50/80 z-10 gap-2">
+                        <Upload size={28} className="text-[#F04930]" />
+                        <span className="text-[11px] font-bold font-[Cairo] text-[#F04930]">أفلت الصورة هنا</span>
+                      </div>
+                    )}
                     {imagePreview ? (
                       <>
                         <img src={imagePreview} className="h-full w-full object-cover" />
@@ -207,7 +245,7 @@ export function EmergencyFormModal({
                     ) : (
                       <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-[#F04930] transition-colors">
                         <Upload size={32} />
-                        <span className="text-[11px] font-bold font-[Cairo]">ارفع صورة توضيحية</span>
+                        <span className="text-[11px] font-bold font-[Cairo]">ارفع أو اسحب صورة توضيحية</span>
                       </div>
                     )}
                   </div>

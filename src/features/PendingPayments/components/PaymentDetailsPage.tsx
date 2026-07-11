@@ -277,7 +277,7 @@ const PaymentDetailsPage: React.FC = () => {
                   <p className="text-xs text-gray-500 mb-2 font-[Cairo]">برنامج الكفالة</p>
                   <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl">
                     <p className="font-bold text-[#00549A] text-lg font-[Cairo]">
-                      {payment.emergencyCaseTitle || 'كفالة شهرية'}
+                      {payment.emergencyCaseTitle || payment.sponsorshipTitle || 'كفالة شهرية'}
                     </p>
                     {payment.subscriptionId && (
                       <div className="flex items-center gap-2 mt-2 text-xs text-[#00549A]/70 font-bold font-[Cairo]">

@@ -53,14 +53,6 @@ export function SponsorshipTableRow({ item, onEdit, onDelete }: SponsorshipTable
         </div>
       </td>
       <td className="px-8 py-5">
-        <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${item.isActive ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-gray-300"}`} />
-          <span className={`text-[11px] font-bold font-[Cairo] ${item.isActive ? "text-green-700" : "text-gray-400"}`}>
-            {item.isActive ? "نشط حالياً" : "غير نشط"}
-          </span>
-        </div>
-      </td>
-      <td className="px-8 py-5">
         <div className="flex flex-col">
           <span className="text-[10px] text-gray-400 font-[Cairo] mb-0.5 uppercase tracking-wider">المستهدف</span>
           <span className="font-bold text-[#101727] font-[Cairo] text-sm tracking-tight">{(item.targetAmount ?? 0).toLocaleString('ar-EG')} <span className="text-[10px] text-gray-400">ج.م</span></span>

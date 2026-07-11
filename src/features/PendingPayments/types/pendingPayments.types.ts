@@ -3,6 +3,7 @@ export interface PendingPayment {
   subscriptionId: number | null;
   emergencyCaseId: number | null;
   emergencyCaseTitle: string | null;
+  sponsorshipTitle: string | null;
   userName: string;
   phone: string;
   method: string;
